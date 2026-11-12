@@ -1,0 +1,79 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+  
+  [dir="rtl"] {
+    font-family: 'Cairo', 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Print Stylesheet for flawless document and badge printing */
+@media print {
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 12pt !important;
+  }
+
+  /* Hide navigation, sidebars, headers, action buttons, overlays during print */
+  aside,
+  header,
+  nav,
+  button,
+  .no-print,
+  [data-no-print="true"],
+  .modal-backdrop,
+  .toast-container {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Printable A4 Sheets (Report Cards, Receipts, Formal Letters) */
+  .printable-document:not(#student-id-card-printable):not(.pvc-card),
+  #printable-area:not(#student-id-card-printable),
+  .print-only {
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 10mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+    page-break-inside: avoid;
+  }
+
+  /* Specific ID Card & PVC Badge Print Rules - PRESERVE 100% OF DESIGN */
+  #student-id-card-printable,
+  #card-face-recto,
+  #card-face-verso,
+  #pvc-print-platter,
+  .pvc-card {
+    display: flex !important;
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    margin: 20px auto !important;
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+  }
+
+  /* Preserve colors and borders for badges, report cards, and receipts */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

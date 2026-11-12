@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  smartschool-web:
+    build: .
+    container_name: smartschool_erp
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./dist:/usr/share/nginx/html
