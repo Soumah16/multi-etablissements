@@ -40,7 +40,7 @@ interface SuperAdminUsersViewProps {
 }
 
 export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwitchToUser }) => {
-  const { schools, showToast } = useApp();
+  const { schools, showToast, addLog } = useApp();
   const [accounts, setAccounts] = useState<DemoAccount[]>(() => getStoredAccounts());
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
@@ -48,6 +48,8 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
 
   // Modals state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [showMasterPasswordsModal, setShowMasterPasswordsModal] = useState(false);
+  const [showAllPasswordsInline, setShowAllPasswordsInline] = useState(false);
   const [selectedAccountForSlip, setSelectedAccountForSlip] = useState<DemoAccount | null>(null);
   const [passwordResetAccount, setPasswordResetAccount] = useState<DemoAccount | null>(null);
   const [newPasswordValue, setNewPasswordValue] = useState('');
@@ -151,6 +153,9 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
     if (showToast) {
       showToast(`Compte créé avec succès pour ${fullName} ! Fiche d'accès générée.`);
     }
+    if (addLog) {
+      addLog(`Création du compte [${newAcc.matricule}] pour ${fullName} (${newAcc.title})`, newAcc.schoolName, 'admin', 'info');
+    }
 
     // Reset inputs
     setNewFirstName('');
@@ -164,7 +169,12 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
 
     const updated = accounts.map(a => {
       if (a.email === passwordResetAccount.email) {
-        return { ...a, password: newPasswordValue.trim() };
+        return { 
+          ...a, 
+          password: newPasswordValue.trim(),
+          plainPassword: newPasswordValue.trim(),
+          mustChangePassword: true 
+        };
       }
       return a;
     });
@@ -173,6 +183,9 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
     saveStoredAccounts(updated);
     if (showToast) {
       showToast(`Mot de passe réinitialisé pour ${passwordResetAccount.name}.`);
+    }
+    if (addLog) {
+      addLog(`Réinitialisation du mot de passe pour ${passwordResetAccount.name} (${passwordResetAccount.matricule})`, passwordResetAccount.schoolName, 'securite', 'warning');
     }
     setPasswordResetAccount(null);
     setNewPasswordValue('');
@@ -189,6 +202,36 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
       setAccounts(updated);
       saveStoredAccounts(updated);
       if (showToast) showToast(`Compte de ${accToDelete.name} supprimé avec succès.`);
+      if (addLog) {
+        addLog(`Révocation & Suppression définitive du compte [${accToDelete.matricule}] ${accToDelete.name}`, accToDelete.schoolName, 'securite', 'critical');
+      }
+    }
+  };
+
+  const exportAllAccountsCsv = () => {
+    const headers = ['Nom', 'Prénom', 'Rôle', 'Matricule', 'Email', 'Mot de passe Initial', 'Établissement', 'Statut'];
+    const rows = accounts.map(a => [
+      `"${a.lastName || ''}"`,
+      `"${a.firstName || ''}"`,
+      `"${a.role}"`,
+      `"${a.matricule}"`,
+      `"${a.email}"`,
+      `"${a.plainPassword || a.password || 'Smart@2026'}"`,
+      `"${a.schoolName}"`,
+      `"${a.status}"`
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `registre_comptes_mots_de_passe_smartschool_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if (showToast) showToast('Exportation CSV des comptes et mots de passe réussie !');
+    if (addLog) {
+      addLog('Exportation CSV du registre confidentiel de tous les comptes et mots de passe', 'Direction Nationale MEPU-A', 'securite', 'warning');
     }
   };
 
@@ -237,19 +280,41 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
 
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
+            type="button"
+            onClick={() => setShowMasterPasswordsModal(true)}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold text-amber-200 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 transition-colors shadow-xs cursor-pointer"
+            title="Consulter et exporter la liste intégrale des comptes et mots de passe"
+          >
+            <Key className="w-4 h-4 text-amber-400" />
+            <span>Liste de Tous les Comptes & Mots de Passe</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={exportAllAccountsCsv}
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors shadow-xs cursor-pointer"
+            title="Télécharger fichier CSV complet"
+          >
+            <Download className="w-4 h-4 text-blue-400" />
+            <span>CSV</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => triggerPrint('master-users-list-printable', 'Registre_National_Comptes_Utilisateurs')}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors shadow-xs cursor-pointer"
           >
             <Printer className="w-4 h-4 text-slate-400" />
-            <span>Imprimer le Registre</span>
+            <span>Imprimer</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setIsCreateModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30 transition-all cursor-pointer"
           >
             <UserPlus className="w-4 h-4" />
-            <span>+ Créer un Compte Utilisateur</span>
+            <span>+ Créer un Compte</span>
           </button>
         </div>
       </div>
@@ -822,6 +887,153 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Liste Complète de Tous les Comptes & Mots de Passe */}
+      {showMasterPasswordsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-5 sm:p-6 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold">
+                  <Key className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-black text-white">
+                      Répertoire des Comptes & Mots de Passe
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold border border-amber-500/30">
+                      SUPER ADMIN CONFIDENTIEL
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {accounts.length} comptes enregistrés avec leurs identifiants de connexion et mots de passe.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={exportAllAccountsCsv}
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Exporter CSV</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowMasterPasswordsModal(false)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body: Table of all accounts */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+              <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs flex items-start gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Avis de sécurité ministériel :</strong> Ce registre contient les identifiants et mots de passe d'accès initiaux. Toute modification ou réinitialisation effectuée est tracée dans le journal d'audit de sécurité.
+                </span>
+              </div>
+
+              <div className="rounded-2xl border border-slate-800 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] font-mono border-b border-slate-800">
+                      <tr>
+                        <th className="p-3">Utilisateur / Fonction</th>
+                        <th className="p-3">Rôle</th>
+                        <th className="p-3">Établissement</th>
+                        <th className="p-3">Identifiant / Email</th>
+                        <th className="p-3">Matricule</th>
+                        <th className="p-3 text-amber-400">Mot de Passe</th>
+                        <th className="p-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/80 bg-slate-900/60 font-sans">
+                      {accounts.map(acc => {
+                        const pass = acc.plainPassword || acc.password || 'Smart@2026';
+                        return (
+                          <tr key={acc.id} className="hover:bg-slate-800/40 transition-colors">
+                            <td className="p-3">
+                              <div className="font-bold text-white text-xs">{acc.name}</div>
+                              <div className="text-[10px] text-slate-400">{acc.title}</div>
+                            </td>
+                            <td className="p-3">
+                              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                                {acc.role}
+                              </span>
+                            </td>
+                            <td className="p-3 text-slate-300 text-xs">
+                              {acc.schoolName}
+                            </td>
+                            <td className="p-3 font-mono text-[11px] text-blue-300">
+                              {acc.email}
+                            </td>
+                            <td className="p-3 font-mono text-[11px] text-slate-400">
+                              {acc.matricule}
+                            </td>
+                            <td className="p-3 font-mono text-xs text-amber-300 font-bold bg-amber-500/5">
+                              <code>{pass}</code>
+                            </td>
+                            <td className="p-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => handleCopy(pass, `pass-${acc.id}`)}
+                                className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold border border-slate-700 cursor-pointer inline-flex items-center gap-1"
+                              >
+                                {copiedKey === `pass-${acc.id}` ? (
+                                  <>
+                                    <Check className="w-3 h-3 text-emerald-400" />
+                                    <span className="text-emerald-400">Copié</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3 h-3" />
+                                    <span>Copier</span>
+                                  </>
+                                )}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-900/95 flex items-center justify-between shrink-0">
+              <span className="text-xs text-slate-400 font-mono">
+                Total : {accounts.length} comptes certifiés MEPU-A
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={exportAllAccountsCsv}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 cursor-pointer sm:hidden"
+                >
+                  Télécharger CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowMasterPasswordsModal(false)}
+                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md cursor-pointer"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

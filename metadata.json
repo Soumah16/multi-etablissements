@@ -1,1 +1,6 @@
-{"name":"SmartSchool ERP -  Multi-Établissements","description":"Espace Super Administrateur de gouvernance multi-établissements pour SmartSchool ERP. Gestion globale des écoles, admins, abonnements, finances en GNF, sécurité et sauvegardes.","requestFramePermissions":[],"majorCapabilities":["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]}
+{
+  "name": "SmartSchool ERP - Super Admin Multi-Établissements",
+  "description": "Espace Super Administrateur de gouvernance multi-établissements pour SmartSchool ERP. Gestion globale des écoles, admins, abonnements, finances en GNF, sécurité et sauvegardes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

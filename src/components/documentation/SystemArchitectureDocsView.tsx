@@ -22,13 +22,14 @@ import {
   Share2,
   Workflow,
   Lock,
-  UserCheck
+  UserCheck,
+  Smartphone
 } from 'lucide-react';
 
 export const SystemArchitectureDocsView: React.FC = () => {
   const { showToast, schools } = useApp();
   const [activeDocTab, setActiveDocTab] = useState<
-    'cahier_charges' | 'uml' | 'sql' | 'api' | 'manuals' | 'opensource_pack' | 'backup_export'
+    'cahier_charges' | 'uml' | 'sql' | 'api' | 'manuals' | 'opensource_pack' | 'backup_export' | 'apk_mobile'
   >('cahier_charges');
   
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -384,7 +385,7 @@ networks:
                 </span>
               </h1>
               <p className="text-xs text-slate-400 mt-0.5">
-                Spécifications techniques complètes, modélisation UML, schémas SQL, API Swagger et pack de déploiement autonome.
+                Conçu et développé par <strong className="text-white">Saïd Soumah</strong> (<a href="mailto:saidsoumah23@gmail.com" className="text-blue-400 hover:underline">saidsoumah23@gmail.com</a>) · Spécifications techniques complètes et pack de déploiement autonome MEPU-A.
               </p>
             </div>
           </div>
@@ -409,7 +410,8 @@ networks:
           { id: 'api', label: '4. API REST & Swagger', icon: Code2 },
           { id: 'manuals', label: '5. Manuels (Utilisateur / Admin)', icon: BookOpen },
           { id: 'opensource_pack', label: '6. Pack Open-Source & Déploiement', icon: Server },
-          { id: 'backup_export', label: '7. Sauvegarde & Restauration', icon: HardDrive }
+          { id: 'backup_export', label: '7. Sauvegarde & Restauration', icon: HardDrive },
+          { id: 'apk_mobile', label: '8. Génération APK & Android', icon: Smartphone }
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeDocTab === tab.id;
@@ -806,6 +808,129 @@ docker compose up -d
           </div>
         </div>
       )}
+
+      {/* Tab 8: Génération APK & Mobile Android */}
+      {activeDocTab === 'apk_mobile' && (
+        <div className="space-y-4 text-left">
+          <div className="p-5 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+              <div>
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[11px] font-bold border border-emerald-500/30 mb-1.5">
+                  <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Package Android Natif .APK</span>
+                </div>
+                <h2 className="text-lg font-black text-white">
+                  Transformation en Application Mobile Android (.APK)
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Conçu et configuré pour SmartSchool ERP Guinée par <strong>Saïd Soumah</strong> (saidsoumah23@gmail.com).
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleDownloadFile('build_apk.sh', `#!/bin/bash
+echo "=== Compilation APK SmartSchool ERP Guinée ==="
+npm run build
+if [ ! -d "node_modules/@capacitor/android" ]; then
+  npm install @capacitor/core @capacitor/android
+  npm install -D @capacitor/cli
+fi
+npx cap add android
+npx cap copy android
+npx cap sync android
+cd android && ./gradlew assembleDebug
+echo "APK prêt dans : android/app/build/outputs/apk/debug/app-debug.apk"
+`, 'text/x-sh')}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/30 cursor-pointer shrink-0"
+              >
+                <Download className="w-4 h-4" />
+                <span>Télécharger build_apk.sh</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Option 1: Capacitor */}
+              <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-emerald-400 text-sm">Méthode 1 : Capacitor (Recommandée)</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">100% Hors-Ligne</span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Compile l'application en un fichier <code>app-debug.apk</code> autonome que vous pouvez installer directement sur n'importe quel téléphone Android sans passer par le Play Store.
+                  </p>
+                </div>
+                <div className="space-y-1 text-[11px] text-slate-400 font-mono bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                  <div className="text-emerald-400 font-bold"># En 1 seule commande :</div>
+                  <div>bash build_apk.sh</div>
+                </div>
+              </div>
+
+              {/* Option 2: Bubblewrap Google TWA */}
+              <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-blue-400 text-sm">Méthode 2 : Bubblewrap (Google TWA)</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold">Google Play Prêt</span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    L'outil officiel de Google génère un APK ultra-léger (&lt; 2 Mo) directement à partir de votre URL hébergée et du fichier <code>manifest.json</code> préconfiguré.
+                  </p>
+                </div>
+                <div className="space-y-1 text-[11px] text-slate-400 font-mono bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                  <div className="text-blue-400 font-bold"># Commande TWA :</div>
+                  <div>npx @bubblewrap/cli build</div>
+                </div>
+              </div>
+
+              {/* Option 3: Instant PWA Install */}
+              <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-amber-400 text-sm">Méthode 3 : Installation PWA Directe</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">Zéro Logiciel</span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Les utilisateurs ouvrent le lien du site sur Chrome Android ou Safari iOS et cliquent sur <strong>« Ajouter à l'écran d'accueil »</strong>. L'app s'installe comme une appli native avec son icône.
+                  </p>
+                </div>
+                <div className="text-[11px] text-amber-300 font-medium bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
+                  Prêt à l'emploi grâce au fichier <code>manifest.json</code> intégré !
+                </div>
+              </div>
+            </div>
+
+            {/* Step by Step Details */}
+            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 font-mono text-xs">
+              <div className="text-slate-300 font-bold text-sm font-sans flex items-center justify-between">
+                <span>Guide pas-à-pas pour générer votre APK manuellement :</span>
+                <span className="text-xs text-slate-400 font-normal">Temps estimé : 2 minutes</span>
+              </div>
+
+              <div className="space-y-2 text-slate-300">
+                <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
+                  <div className="text-emerald-400 font-bold mb-1">// Étape 1 : Compiler les fichiers de production</div>
+                  <div className="text-white">npm run build</div>
+                </div>
+
+                <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
+                  <div className="text-emerald-400 font-bold mb-1">// Étape 2 : Ajouter et synchroniser la plateforme Android</div>
+                  <div className="text-white">npx cap add android</div>
+                  <div className="text-white">npx cap copy android</div>
+                </div>
+
+                <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
+                  <div className="text-emerald-400 font-bold mb-1">// Étape 3 : Compiler le fichier .APK final</div>
+                  <div className="text-white">cd android && ./gradlew assembleDebug</div>
+                  <div className="text-slate-400 text-[11px] mt-1"># Votre fichier APK sera généré dans : android/app/build/outputs/apk/debug/app-debug.apk</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+

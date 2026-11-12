@@ -85,6 +85,7 @@ interface AppContextType {
   updateProfile: (updates: Partial<SuperAdminProfile>) => void;
   // Security
   auditLogs: SecurityAuditLog[];
+  addLog: (action: string, target?: string, type?: SecurityAuditLog['type'], severity?: SecurityAuditLog['severity']) => void;
   sessions: SecuritySession[];
   terminateSession: (sessionId: string) => void;
   blockedIps: string[];
@@ -189,19 +190,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast(`Langue changée : ${lang.toUpperCase()}`);
   };
 
-  // Add an audit log entry helper
-  const addLog = (action: string, target: string, type: SecurityAuditLog['type'], severity: SecurityAuditLog['severity'] = 'info') => {
+  // Add an audit log entry helper (visible to Super Admin)
+  const addLog = (
+    action: string, 
+    target: string = 'Système MEPU-A', 
+    type: SecurityAuditLog['type'] = 'admin', 
+    severity: SecurityAuditLog['severity'] = 'info'
+  ) => {
     const newEntry: SecurityAuditLog = {
-      id: `log-${Date.now()}`,
+      id: `log-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
       action,
       actor: `${profile.name} (Super Admin)`,
       target,
-      ip: '197.149.198.42',
+      ip: '197.149.198.42 (Conakry, Guinée)',
       type,
       severity
     };
-    setAuditLogs(prev => [newEntry, ...prev]);
+    setAuditLogs(prev => {
+      const updated = [newEntry, ...prev];
+      try {
+        localStorage.setItem('smartschool_audit_logs', JSON.stringify(updated.slice(0, 150)));
+      } catch {
+        // ignore
+      }
+      return updated;
+    });
   };
 
   // School actions
@@ -536,6 +550,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     profile,
     updateProfile,
     auditLogs,
+    addLog,
     sessions,
     terminateSession,
     blockedIps,

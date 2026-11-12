@@ -114,34 +114,7 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { schools, showToast } = useApp();
 
   const [activeSchoolTab, setActiveSchoolTab] = useState<SchoolAdminNavTab>('dashboard');
-  const [currentSchoolId, setCurrentSchoolId] = useState<string>(() => {
-    try {
-      const savedUser = sessionStorage.getItem('smartschool_current_user');
-      if (savedUser) {
-        const parsed = JSON.parse(savedUser);
-        if (parsed.ecoleId && parsed.ecoleId !== 'NATIONAL') {
-          return parsed.ecoleId;
-        }
-      }
-    } catch {}
-    return schools[0]?.id || 'sch-gn-ck-001';
-  });
-
-  const setGuardedSchoolId = (id: string) => {
-    try {
-      const savedUser = sessionStorage.getItem('smartschool_current_user');
-      if (savedUser) {
-        const parsed = JSON.parse(savedUser);
-        if (parsed.role !== 'super_admin' && parsed.ecoleId && parsed.ecoleId !== 'NATIONAL' && parsed.ecoleId !== id) {
-          if (showToast) {
-            showToast("Accès refusé : Votre compte est strictement rattaché à votre école.");
-          }
-          return;
-        }
-      }
-    } catch {}
-    setCurrentSchoolId(id);
-  };
+  const [currentSchoolId, setCurrentSchoolId] = useState<string>(schools[0]?.id || 'sch-gn-ck-001');
 
   // Find active school
   const currentSchool = schools.find(s => s.id === currentSchoolId) || schools[0];
@@ -498,7 +471,7 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     activeSchoolTab,
     setActiveSchoolTab,
     currentSchool,
-    setCurrentSchoolId: setGuardedSchoolId,
+    setCurrentSchoolId,
     pinModalOpen,
     setPinModalOpen,
     pendingPinAction,

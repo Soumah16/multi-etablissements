@@ -11,7 +11,10 @@ import {
   LogOut
 } from 'lucide-react';
 
+import { WorkspaceMode } from '../../App';
+
 interface HeaderProps {
+  currentUserRole?: WorkspaceMode;
   onToggleSidebarMobile: () => void;
   onLogout?: () => void;
   onSwitchToSchoolAdmin?: (schoolId?: string) => void;
@@ -26,6 +29,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
+  currentUserRole = 'super_admin',
   onToggleSidebarMobile, 
   onLogout,
   onSwitchToSchoolAdmin, 
@@ -91,13 +95,18 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <Menu className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-base shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-500 flex items-center justify-center text-white font-black text-sm shadow-md shadow-blue-600/30 ring-1 ring-white/10">
             S
           </div>
-          <span className="text-lg font-bold tracking-tight text-white whitespace-nowrap shrink-0">
-            SmartSchool ERP
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold tracking-tight text-white whitespace-nowrap shrink-0">
+              SmartSchool ERP
+            </span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold hidden sm:inline-block">
+              🇬🇳 GUINÉE
+            </span>
+          </div>
         </div>
       </div>
 
@@ -214,29 +223,36 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               </div>
 
-              {/* Subtabs: Espaces Métiers vs Écoles */}
-              <div className="p-1.5 border-b border-slate-800 bg-slate-950/60 flex items-center gap-1 shrink-0">
-                <button
-                  onClick={() => setSwitcherTab('roles')}
-                  className={`flex-1 py-1 rounded-lg text-xs font-bold transition-all ${
-                    switcherTab === 'roles' 
-                      ? 'bg-blue-600 text-white shadow-xs' 
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                  }`}
-                >
-                  Tous les Espaces Métiers ({8})
-                </button>
-                <button
-                  onClick={() => setSwitcherTab('schools')}
-                  className={`flex-1 py-1 rounded-lg text-xs font-bold transition-all ${
-                    switcherTab === 'schools' 
-                      ? 'bg-emerald-600 text-white shadow-xs' 
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                  }`}
-                >
-                  Admins Écoles ({schools.length})
-                </button>
-              </div>
+              {/* Subtabs: Espaces Métiers vs Écoles (Only Super Admin can see/switch schools) */}
+              {currentUserRole === 'super_admin' ? (
+                <div className="p-1.5 border-b border-slate-800 bg-slate-950/60 flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => setSwitcherTab('roles')}
+                    className={`flex-1 py-1 rounded-lg text-xs font-bold transition-all ${
+                      switcherTab === 'roles' 
+                        ? 'bg-blue-600 text-white shadow-xs' 
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    Tous les Espaces Métiers ({8})
+                  </button>
+                  <button
+                    onClick={() => setSwitcherTab('schools')}
+                    className={`flex-1 py-1 rounded-lg text-xs font-bold transition-all ${
+                      switcherTab === 'schools' 
+                        ? 'bg-emerald-600 text-white shadow-xs' 
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    Admins Écoles ({schools.length})
+                  </button>
+                </div>
+              ) : (
+                <div className="px-3 py-1.5 border-b border-slate-800 bg-slate-950/60 text-[11px] font-semibold text-emerald-400 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Établissement Attribué Unique (Isolation Stricte)</span>
+                </div>
+              )}
 
               {/* Scrollable Roles Body with comfortable height */}
               <div className="flex-1 overflow-y-auto p-2 space-y-1.5 overscroll-contain max-h-[52vh] sm:max-h-[380px]">

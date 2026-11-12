@@ -53,6 +53,14 @@ export const RoleSwitchAuthModal: React.FC<RoleSwitchAuthModalProps> = ({
     e.preventDefault();
     setErrorMessage(null);
 
+    // Strict multi-school isolation check:
+    if (targetSchoolId && currentUser.ecoleId && currentUser.ecoleId !== 'NATIONAL' && targetSchoolId !== currentUser.ecoleId && currentUser.role !== 'super_admin') {
+      setErrorMessage(
+        "Accès refusé. Isolation stricte : Vous n'avez pas l'autorisation d'accéder à l'établissement d'un autre administrateur."
+      );
+      return;
+    }
+
     // Accept real password, or universal dev pass, or super admin override
     const expected = targetAccount.plainPassword || (targetAccount as any).password;
     const isValid = 

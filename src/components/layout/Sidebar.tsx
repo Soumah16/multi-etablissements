@@ -93,13 +93,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
               : '-translate-x-full md:translate-x-0'
         }`}
       >
+        {/* Tricolor Guinean top strip */}
+        <div className="h-1 w-full grid grid-cols-3 shrink-0">
+          <div className="bg-[#CE1126]" />
+          <div className="bg-[#FCD116]" />
+          <div className="bg-[#009460]" />
+        </div>
+
         {/* Brand header on mobile / small screens */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 md:hidden">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-500 flex items-center justify-center text-white font-black text-sm shadow-md shadow-blue-600/30">
               S
             </div>
-            <span className="font-bold text-white text-sm">SmartSchool ERP</span>
+            <span className="font-black text-white text-sm">SmartSchool ERP</span>
           </div>
           <button 
             onClick={onCloseMobile}
@@ -109,10 +116,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
           </button>
         </div>
 
-        {/* Section title */}
+        {/* Section title with sovereign badge */}
         <div className="px-5 pt-3.5 pb-2">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            Console Propriétaire
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Console MEPU-A
+            </div>
+            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
+              🇬🇳 Guinée
+            </span>
           </div>
           <div className="text-[11px] text-slate-500 mt-0.5">
             Gouvernance Multi-Tenant

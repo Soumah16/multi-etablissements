@@ -171,23 +171,20 @@ export const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
           </button>
         </div>
 
-        {/* School Locked Information (No dropdown - strictly isolated) */}
-        <div className="p-3 border-b border-slate-800 bg-slate-950/60">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Établissement Attribué</span>
-            </span>
-            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
-              Cloisonné
-            </span>
-          </div>
-          <div className="text-xs font-bold text-white leading-snug">{currentSchool.name}</div>
-          <div className="text-[10px] text-slate-400 flex items-center gap-1.5 mt-1 font-mono">
-            <span>{currentSchool.city}</span>
-            <span>·</span>
-            <span className="text-slate-500">Code: {currentSchool.code}</span>
-          </div>
+        {/* School Selector Dropdown */}
+        <div className="p-3 border-b border-slate-800 bg-slate-950/40">
+          <label className="text-[10px] uppercase font-semibold text-slate-400 block mb-1">
+            Établissement Administré
+          </label>
+          <select
+            value={currentSchool.id}
+            onChange={e => setCurrentSchoolId(e.target.value)}
+            className="w-full px-2 py-1.5 text-xs rounded bg-slate-800 border border-slate-700 text-white font-medium focus:outline-none"
+          >
+            {schools.map(s => (
+              <option key={s.id} value={s.id}>{s.name} ({s.city})</option>
+            ))}
+          </select>
         </div>
 
         {/* Categorized Navigation list - ORDERLY & ELEGANT */}
@@ -330,11 +327,14 @@ export const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* School Locked Badge in Header */}
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/90 border border-emerald-500/30 text-xs">
+            {/* School Isolation Lock Badge: An admin cannot access other schools */}
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-xs">
               <Lock className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-slate-400 font-medium">Session Cloisonnée :</span>
-              <span className="text-white font-bold">{currentSchool.name}</span>
+              <span className="text-slate-400 text-[11px]">Établissement Attribué :</span>
+              <span className="font-bold text-white text-xs">{currentSchool.name}</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">
+                {currentSchool.code || currentSchool.id}
+              </span>
             </div>
 
             {/* Admin identity badge */}
@@ -384,6 +384,10 @@ export const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
         <main className="flex-1 p-4 md:p-8 max-w-[1560px] w-full mx-auto">
           {renderContent()}
         </main>
+
+        <footer className="mt-auto px-4 py-3 text-center text-xs text-slate-500 border-t border-slate-800/60">
+          <span>SmartSchool ERP Guinée · Conçu et développé par <strong className="text-slate-300">Saïd Soumah</strong> (<a href="mailto:saidsoumah23@gmail.com" className="text-blue-400 hover:underline">saidsoumah23@gmail.com</a>)</span>
+        </footer>
       </div>
     </div>
   );

@@ -1,5 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useSchoolAdmin } from '../../context/SchoolAdminContext';
+import { 
+  buildPvcPrintSheetHtml, 
+  drawPvcCardToCanvas, 
+  downloadCanvasImage, 
+  PvcRenderData 
+} from '../../utils/pvcCardRenderer';
+import { exportPrintableDocument } from '../../utils/printHelper';
 import { 
   CreditCard, 
   Printer, 
@@ -115,12 +123,13 @@ export const PVC_TEMPLATES: CardTemplateStyle[] = [
 
 export const PvcCardStudio: React.FC = () => {
   const { schools, showToast } = useApp();
+  const { currentSchool } = useSchoolAdmin();
 
   // Selected State
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('mepu_national');
   const [selectedCategory, setSelectedCategory] = useState<CardCategory>('eleve');
   const [activeFace, setActiveFace] = useState<CardFace>('both');
-  const [selectedSchoolId, setSelectedSchoolId] = useState<string>(schools[0]?.id || 'ECOLE-001');
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string>(currentSchool?.id || schools[0]?.id || 'ECOLE-001');
   const [selectedAccountId, setSelectedAccountId] = useState<string>('USR-ELV-001');
 
   // Customization Toggles
@@ -167,78 +176,96 @@ export const PvcCardStudio: React.FC = () => {
     showToast(`Données chargées pour : ${acc.name}`);
   };
 
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+
+  const getRenderData = (): PvcRenderData => {
+    return {
+      schoolName: selectedSchool?.name || "Lycée d'Excellence de Conakry",
+      schoolCode: selectedSchool?.code || "EXC",
+      categoryLabel: selectedCategory === 'eleve' ? 'Carte Scolaire' : selectedCategory === 'enseignant' ? 'Corps Professoral' : selectedCategory.toUpperCase(),
+      fullName: customName,
+      title: customTitle,
+      matricule: customMatricule,
+      nationalUid: customUid,
+      bloodGroup: customBloodGroup,
+      validityPeriod: validityPeriod,
+      photoUrl: customPhoto,
+      themeColor: selectedTemplate.accentColor,
+      accentBg: selectedTemplate.headerBg,
+      isDarkTheme: selectedTemplate.id === 'or_prestige' || selectedTemplate.id === 'diplomatique_anthracite',
+      showNationalArms,
+      showTricolorBanner,
+      showOfficialStamp,
+      showMicrotext,
+      showWatermark,
+      showBarcode
+    };
+  };
+
   const handlePrintPvcCards = () => {
-    triggerPrint('pvc-print-platter', `Cartes_PVC_CR80_${selectedSchool?.code}_${customMatricule}`);
-  };
+    const data = getRenderData();
+    const fullHtml = buildPvcPrintSheetHtml(data, activeFace);
+    const title = `Planche_PVC_CR80_${selectedSchool?.code}_${customMatricule}`;
+    
+    // Infallible export of self-contained print-ready file
+    exportPrintableDocument(title, fullHtml);
 
-  const handleDownloadHd = (format: 'pdf' | 'png' | 'jpeg') => {
-    triggerPrint('pvc-print-platter', `Badge_CR80_300DPI_${customMatricule}_${format.toUpperCase()}`);
-    showToast(`Document HD imprimable téléchargé avec design et couleurs 100% préservés.`);
-  };
-
-  const handleDownloadPngImage = (face: 'recto' | 'verso') => {
-    const cardId = face === 'recto' ? 'card-face-recto' : 'card-face-verso';
-    const cardEl = document.getElementById(cardId);
-    if (!cardEl) {
-      showToast(`Activez l'affichage de la face ${face.toUpperCase()} pour l'exporter.`);
-      return;
+    // Direct browser print modal trigger
+    try {
+      let printFrame = document.getElementById('smartschool-pvc-print-frame') as HTMLIFrameElement;
+      if (printFrame) printFrame.remove();
+      
+      printFrame = document.createElement('iframe');
+      printFrame.id = 'smartschool-pvc-print-frame';
+      printFrame.setAttribute('style', 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:none;opacity:0.01;pointer-events:none;z-index:-999;');
+      document.body.appendChild(printFrame);
+      
+      const frameDoc = printFrame.contentWindow?.document;
+      if (frameDoc) {
+        frameDoc.open();
+        frameDoc.write(fullHtml);
+        frameDoc.close();
+        setTimeout(() => {
+          try {
+            printFrame.contentWindow?.focus();
+            printFrame.contentWindow?.print();
+          } catch (e) {
+            console.warn('Iframe print blocked, file downloaded.', e);
+          }
+        }, 400);
+      }
+    } catch (err) {
+      console.warn(err);
     }
 
+    showToast("Planche PVC A4 générée avec fidélité 100% des couleurs et dimensions !");
+  };
+
+  const handleDownloadImage = async (format: 'png' | 'jpeg', face: 'recto' | 'verso') => {
+    if (!canvasRef.current) return;
+    const data = getRenderData();
+    setIsExporting(true);
+    showToast(`Génération haute résolution 300 DPI (${format.toUpperCase()}) en cours...`);
+
     try {
-      const width = 1020;
-      const height = 642;
-      const clone = cardEl.cloneNode(true) as HTMLElement;
-      clone.style.margin = '0';
-      clone.style.boxShadow = 'none';
-
-      let styles = '';
-      document.querySelectorAll('style').forEach(s => { styles += s.innerHTML; });
-
-      const svgData = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-          <style>${styles}</style>
-          <foreignObject width="100%" height="100%">
-            <div xmlns="http://www.w3.org/1999/xhtml" style="transform: scale(3); transform-origin: top left; width: 340px; height: 214px; background: white;">
-              ${clone.outerHTML}
-            </div>
-          </foreignObject>
-        </svg>
-      `;
-
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-      const URLObj = window.URL || window.webkitURL || window;
-      const svgUrl = URLObj.createObjectURL(svgBlob);
-
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, width, height);
-          ctx.drawImage(img, 0, 0);
-          const pngUrl = canvas.toDataURL('image/png');
-          const downloadLink = document.createElement('a');
-          downloadLink.href = pngUrl;
-          downloadLink.download = `Badge_PVC_${customMatricule}_${face.toUpperCase()}_300DPI.png`;
-          downloadLink.click();
-          showToast(`Image PNG HD (${face.toUpperCase()}) 300 DPI téléchargée !`);
-        }
-        URLObj.revokeObjectURL(svgUrl);
-      };
-      img.onerror = () => {
-        triggerPrint(cardId, `Badge_${customMatricule}_${face.toUpperCase()}`);
-      };
-      img.src = svgUrl;
-    } catch {
-      triggerPrint(cardId, `Badge_${customMatricule}_${face.toUpperCase()}`);
+      await drawPvcCardToCanvas(canvasRef.current, data, face);
+      const filename = `Badge_PVC_CR80_${customMatricule}_${face.toUpperCase()}`;
+      downloadCanvasImage(canvasRef.current, filename, format);
+      showToast(`Badge ${face.toUpperCase()} téléchargé avec fidélité graphique intégrale !`);
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur lors de la génération de l'image");
+    } finally {
+      setIsExporting(false);
     }
   };
 
   return (
     <div className="space-y-6">
+      {/* Hidden off-screen canvas for high-definition 300 DPI rendering */}
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+
       {/* Studio Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
@@ -254,13 +281,13 @@ export const PvcCardStudio: React.FC = () => {
                 </span>
               </h1>
               <p className="text-xs text-slate-400 mt-0.5">
-                Format standard 85.60 × 53.98 mm · Résolution 300 DPI · Recto / Verso avec Armoiries & Sécurités MEPU-A
+                Format standard 85.60 × 53.98 mm · Résolution 300 DPI · Fidélité 100% à l'impression et au téléchargement
               </p>
             </div>
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons with high-fidelity outputs */}
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
@@ -268,46 +295,41 @@ export const PvcCardStudio: React.FC = () => {
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer"
           >
             <Eye className="w-4 h-4 text-cyan-400" />
-            <span>Tester Scan QR</span>
+            <span>Tester Scan QR Code</span>
           </button>
 
+          {/* High-Res Image Downloads (PNG 300 DPI) */}
           <button
             type="button"
-            onClick={() => handleDownloadPngImage('recto')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer"
-            title="Télécharger l'image PNG haute résolution du Recto"
-          >
-            <Download className="w-4 h-4 text-blue-400" />
-            <span>PNG Recto (300 DPI)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleDownloadPngImage('verso')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer"
-            title="Télécharger l'image PNG haute résolution du Verso"
-          >
-            <Download className="w-4 h-4 text-purple-400" />
-            <span>PNG Verso (300 DPI)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleDownloadHd('pdf')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer"
-            title="Télécharger document autonome imprimable"
+            disabled={isExporting}
+            onClick={() => handleDownloadImage('png', 'recto')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer disabled:opacity-50"
+            title="Télécharger l'image HD 300 DPI de la face Recto (Fidélité 100%)"
           >
             <Download className="w-4 h-4 text-emerald-400" />
-            <span>Export Doc HD</span>
+            <span>PNG HD Recto</span>
           </button>
 
+          <button
+            type="button"
+            disabled={isExporting}
+            onClick={() => handleDownloadImage('png', 'verso')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer disabled:opacity-50"
+            title="Télécharger l'image HD 300 DPI de la face Verso (Fidélité 100%)"
+          >
+            <Download className="w-4 h-4 text-teal-400" />
+            <span>PNG HD Verso</span>
+          </button>
+
+          {/* High-Fidelity Printable Sheet / PDF */}
           <button
             type="button"
             onClick={handlePrintPvcCards}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30 cursor-pointer"
+            title="Imprimer ou enregistrer en PDF avec styles et dimensions exactes"
           >
             <Printer className="w-4 h-4 text-white" />
-            <span>Imprimer Planche PVC A4</span>
+            <span>Imprimer Planche PVC A4 (Fidélité 100%)</span>
           </button>
         </div>
       </div>
@@ -602,7 +624,6 @@ export const PvcCardStudio: React.FC = () => {
 
                 {/* ISO/IEC 7810 ID-1 Card Layout (Aspect ratio 85.6 / 53.98 ~ 1.586) */}
                 <div 
-                  id="card-face-recto"
                   className={`w-[340px] h-[214px] rounded-2xl ${selectedTemplate.primaryBg} ${selectedTemplate.borderColor} border-2 shadow-2xl relative overflow-hidden flex flex-col justify-between select-none print:shadow-none print:border`}
                   style={{
                     boxShadow: '0 20px 30px -10px rgba(0, 0, 0, 0.4)'
@@ -738,7 +759,6 @@ export const PvcCardStudio: React.FC = () => {
                 </span>
 
                 <div 
-                  id="card-face-verso"
                   className={`w-[340px] h-[214px] rounded-2xl ${selectedTemplate.primaryBg} ${selectedTemplate.borderColor} border-2 shadow-2xl relative overflow-hidden flex flex-col justify-between select-none print:shadow-none print:border`}
                   style={{
                     boxShadow: '0 20px 30px -10px rgba(0, 0, 0, 0.4)'

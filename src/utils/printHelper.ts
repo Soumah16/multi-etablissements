@@ -14,15 +14,16 @@ export interface PrintOptions {
  * Clean printable template with official MEPU-A styling and high-contrast typography
  */
 export const buildPrintableHtml = (title: string, bodyContent: string): string => {
-  // Grab all in-page styles to preserve complete Tailwind & component styling
-  let existingStyles = '';
+  let extractedStyles = '';
   try {
-    const styleTags = document.querySelectorAll('style, link[rel="stylesheet"]');
-    styleTags.forEach(tag => {
-      existingStyles += tag.outerHTML + '\n';
-    });
-  } catch {
-    // ignore in non-browser context
+    if (typeof document !== 'undefined') {
+      const styleElements = document.querySelectorAll('style, link[rel="stylesheet"]');
+      styleElements.forEach(el => {
+        extractedStyles += el.outerHTML + '\n';
+      });
+    }
+  } catch (e) {
+    // ignore
   }
 
   return `<!DOCTYPE html>
@@ -31,45 +32,25 @@ export const buildPrintableHtml = (title: string, bodyContent: string): string =
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
-  <!-- Load Tailwind CSS runtime to ensure all utility classes (gradients, flex, borders, colors) render perfectly -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#eff6ff',
-              100: '#dbeafe',
-              500: '#3b82f6',
-              600: '#2563eb',
-              700: '#1d4ed8'
-            }
-          }
-        }
-      }
-    }
-  </script>
-  ${existingStyles}
+  ${extractedStyles}
   <style>
     @page {
       size: A4 portrait;
-      margin: 8mm;
+      margin: 10mm;
     }
     *, *::before, *::after {
       box-sizing: border-box;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
-      color-adjust: exact !important;
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #0f172a;
-      background: #ffffff !important;
+      background: #ffffff;
       margin: 0;
-      padding: 12px;
+      padding: 16px;
       font-size: 12px;
-      line-height: 1.4;
+      line-height: 1.5;
     }
     .no-print {
       display: none !important;
@@ -79,78 +60,24 @@ export const buildPrintableHtml = (title: string, bodyContent: string): string =
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 12px 18px;
+      padding: 12px 16px;
       background: #eff6ff;
       border: 1px solid #bfdbfe;
-      border-radius: 12px;
-      margin-bottom: 24px;
+      border-radius: 10px;
+      margin-bottom: 20px;
       font-family: sans-serif;
     }
     .btn-print {
       background: #2563eb;
       color: #ffffff;
       border: none;
-      padding: 10px 22px;
+      padding: 9px 20px;
       font-size: 13px;
       font-weight: 700;
       border-radius: 8px;
       cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
     }
     .btn-print:hover { background: #1d4ed8; }
-
-    /* CR-80 ISO/IEC 7810 ID-1 Card Exact Dimensions & Styling for Printing */
-    .pvc-card-container, #pvc-print-platter {
-      background: transparent !important;
-      padding: 0 !important;
-      border: none !important;
-      display: flex !important;
-      flex-wrap: wrap !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 16px !important;
-    }
-
-    /* Specific student ID card styling */
-    #student-id-card-printable {
-      width: 380px !important;
-      max-width: 380px !important;
-      height: 240px !important;
-      border-radius: 16px !important;
-      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e3a8a 100%) !important;
-      border: 2px solid #60a5fa !important;
-      color: #ffffff !important;
-      padding: 16px !important;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: space-between !important;
-      position: relative !important;
-      overflow: hidden !important;
-      margin: 20px auto !important;
-      page-break-inside: avoid !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-
-    /* Force CR-80 card proportions when printed */
-    [class*="w-[340px]"], #card-face-recto, #card-face-verso {
-      width: 340px !important;
-      min-width: 340px !important;
-      max-width: 340px !important;
-      height: 214px !important;
-      min-height: 214px !important;
-      max-height: 214px !important;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: space-between !important;
-      page-break-inside: avoid !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
@@ -169,24 +96,12 @@ export const buildPrintableHtml = (title: string, bodyContent: string): string =
     .text-right { text-align: right; }
     .font-bold { font-weight: bold; }
     img { max-width: 100%; height: auto; }
-
     @media print {
       body {
-        padding: 0 !important;
-        background: #ffffff !important;
+        padding: 0;
       }
       .print-banner {
         display: none !important;
-      }
-      /* Ensure colors, gradients and borders don't fade or invert in print */
-      * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      #pvc-print-platter {
-        background: #ffffff !important;
-        color: #0f172a !important;
-        gap: 20px !important;
       }
     }
   </style>
@@ -194,12 +109,10 @@ export const buildPrintableHtml = (title: string, bodyContent: string): string =
 <body>
   <div class="print-banner no-print">
     <div>
-      <strong style="color: #1e3a8a; font-size: 14px;">SmartSchool ERP Guinée · Document & Badges PVC Officiels</strong>
-      <div style="font-size: 11px; color: #475569; margin-top: 2px;">
-        Le design exact affiché à l'écran (couleurs, dégradés, armoiries, QR codes, dimensions CR-80) est préservé à 100%.
-      </div>
+      <strong style="color: #1e3a8a; font-size: 14px;">SmartSchool ERP Guinée · Document Officiel Imprimable</strong>
+      <div style="font-size: 11px; color: #475569;">Cliquez sur le bouton ci-contre pour lancer l'impression ou enregistrer en PDF (Ctrl+P / Cmd+P).</div>
     </div>
-    <button class="btn-print" onclick="window.print()">🖨️ Imprimer / Sauvegarder en PDF</button>
+    <button class="btn-print" onclick="window.print()">🖨️ Lancer l'Impression / Sauvegarder en PDF</button>
   </div>
   ${bodyContent}
 </body>
@@ -288,8 +201,7 @@ export const triggerPrint = (elementIdOrTitle?: string, customTitle?: string) =>
   if (elementIdOrTitle) {
     const el = document.getElementById(elementIdOrTitle);
     if (el) {
-      // Use outerHTML so that the container element with its background gradient, borders, and dimensions is 100% preserved
-      content = el.outerHTML;
+      content = el.innerHTML;
       if (!customTitle) {
         title = elementIdOrTitle;
       }
@@ -307,7 +219,7 @@ export const triggerPrint = (elementIdOrTitle?: string, customTitle?: string) =>
       document.querySelector('article') ||
       document.querySelector('main');
     if (candidate) {
-      content = (candidate as HTMLElement).outerHTML;
+      content = candidate.innerHTML;
     } else {
       content = document.body.innerHTML;
     }
@@ -335,22 +247,14 @@ export const triggerPrint = (elementIdOrTitle?: string, customTitle?: string) =>
       frameDoc.write(buildPrintableHtml(title, content));
       frameDoc.close();
 
-      const runPrint = () => {
+      setTimeout(() => {
         try {
           printFrame.contentWindow?.focus();
           printFrame.contentWindow?.print();
         } catch (iframeErr) {
           console.warn('Iframe direct print modal blocked by environment sandbox. Document file downloaded.', iframeErr);
         }
-      };
-
-      // Wait for iframe stylesheets and images to load before printing
-      if (printFrame.contentWindow) {
-        printFrame.contentWindow.onload = () => {
-          setTimeout(runPrint, 250);
-        };
-      }
-      setTimeout(runPrint, 600);
+      }, 350);
     }
   } catch (err) {
     console.warn('Direct print iframe error:', err);

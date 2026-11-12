@@ -421,17 +421,12 @@ const ACCOUNTS_STORAGE_KEY = 'smartschool_accounts_v3';
 const DEMO_MODE_STORAGE_KEY = 'smartschool_mode_demo_flag';
 
 export const isDemoModeActive = (): boolean => {
-  try {
-    const raw = localStorage.getItem(DEMO_MODE_STORAGE_KEY);
-    return raw !== null ? raw === 'true' : true; // default true for first time preview
-  } catch {
-    return true;
-  }
+  return false;
 };
 
-export const setDemoModeActive = (active: boolean): void => {
+export const setDemoModeActive = (_active: boolean): void => {
   try {
-    localStorage.setItem(DEMO_MODE_STORAGE_KEY, String(active));
+    localStorage.setItem(DEMO_MODE_STORAGE_KEY, 'false');
   } catch {
     // ignore
   }

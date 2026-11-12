@@ -89,6 +89,13 @@ const MainLayout: React.FC = () => {
     }
   };
 
+  // Keep school synchronized with logged-in user
+  React.useEffect(() => {
+    if (currentUser?.ecoleId && currentUser.ecoleId !== 'NATIONAL') {
+      setCurrentSchoolId(currentUser.ecoleId);
+    }
+  }, [currentUser?.ecoleId, setCurrentSchoolId]);
+
   const handleLogout = () => {
     setCurrentUser(null);
     setPendingRoleSwitch(null);
@@ -101,15 +108,13 @@ const MainLayout: React.FC = () => {
 
   // Safe Role Switch Request: Always demands credentials verification & school isolation
   const requestRoleSwitch = (targetRole: WorkspaceMode, schoolId?: string) => {
-    // Multi-tenant isolation: A school admin or staff CANNOT switch to another school
-    if (currentUser && currentUser.role !== 'super_admin') {
-      if (schoolId && schoolId !== currentUser.ecoleId) {
-        if (showToast) {
-          showToast("Accès refusé : Vous ne pouvez pas accéder à un autre établissement scolaire.");
-        }
-        return;
+    // Multi-School Isolation Guarantee:
+    // An admin or user CANNOT access another admin's school!
+    if (currentUser?.role !== 'super_admin' && schoolId && currentUser?.ecoleId && schoolId !== currentUser.ecoleId) {
+      if (showToast) {
+        showToast("Accès refusé : Cloisonnement strict. Un administrateur ne peut pas accéder à l'école d'un autre administrateur.");
       }
-      schoolId = currentUser.ecoleId;
+      return;
     }
 
     // If target role is identical to current and no school change, stay
@@ -345,6 +350,7 @@ const MainLayout: React.FC = () => {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0 min-h-screen">
           <Header 
+            currentUserRole={currentUser?.role}
             onToggleSidebarMobile={() => setMobileSidebarOpen(!mobileSidebarOpen)} 
             onLogout={handleLogout}
             onSwitchToSchoolAdmin={(schoolId) => handleSwitchToSchoolAdmin(schoolId || schools[0]?.id)}
@@ -361,6 +367,10 @@ const MainLayout: React.FC = () => {
           <main className="flex-1 p-4 md:p-8 max-w-[1560px] w-full mx-auto">
             {renderActiveView()}
           </main>
+
+          <footer className="mt-auto px-4 py-4 text-center text-xs text-slate-500 border-t border-slate-800/60">
+            <span>SmartSchool ERP Guinée · Conçu et développé par <strong className="text-slate-300">Saïd Soumah</strong> (<a href="mailto:saidsoumah23@gmail.com" className="text-blue-400 hover:underline">saidsoumah23@gmail.com</a>)</span>
+          </footer>
         </div>
       </div>
     );

@@ -51,7 +51,7 @@ export const StudentProfileCardView: React.FC = () => {
             onClick={() => {
               const el = document.getElementById('student-id-card-printable');
               if (el) {
-                exportPrintableDocument(`Carte_Scolaire_${profile.matricule}`, el.outerHTML);
+                exportPrintableDocument(`Carte_Scolaire_${profile.matricule}`, el.innerHTML);
               }
             }}
             className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold cursor-pointer"
@@ -61,7 +61,7 @@ export const StudentProfileCardView: React.FC = () => {
             <span>Télécharger</span>
           </button>
           <button
-            onClick={() => triggerPrint('student-id-card-printable', `Carte_Scolaire_${profile.matricule}`)}
+            onClick={() => triggerPrint('student-id-card-printable')}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/20 cursor-pointer"
           >
             <Printer className="w-4 h-4" />
@@ -79,14 +79,7 @@ export const StudentProfileCardView: React.FC = () => {
 
           <div 
             id="student-id-card-printable"
-            style={{
-              background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e3a8a 100%)',
-              borderColor: '#60a5fa',
-              color: '#ffffff',
-              aspectRatio: '1.586 / 1',
-              borderRadius: '16px'
-            }}
-            className="w-full max-w-md mx-auto rounded-2xl border-2 shadow-2xl p-5 flex flex-col justify-between text-white relative overflow-hidden pvc-card"
+            className="w-full max-w-md mx-auto aspect-[1.586/1] rounded-2xl bg-gradient-to-br from-blue-950 via-slate-900 to-indigo-950 border-2 border-blue-400/40 shadow-2xl p-5 flex flex-col justify-between text-white relative overflow-hidden printable-document"
           >
             {/* Hologram aesthetic */}
             <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-blue-500/10 blur-xl pointer-events-none" />
