@@ -22,13 +22,19 @@ import {
   DemoAccount, 
   authenticateUser 
 } from '../../data/accountsData';
+import { useApp } from '../../context/AppContext';
+import { PWAInstallButton } from '../common/PWAInstallButton';
+import heroImg from '../../assets/images/guinea_school_hero_1794497471323.jpg';
+import classroomImg from '../../assets/images/students_modern_classroom_1794497472286.jpg';
+import teacherImg from '../../assets/images/teacher_excellence_portrait_1794497472066.jpg';
+import libraryImg from '../../assets/images/library_students_reading_1794497472173.jpg';
 
-// High-fidelity image assets generated for Guinean educational excellence
+// High-fidelity image assets bundled by Vite for production web & APK builds
 const IMAGES = {
-  hero: '/src/assets/images/guinea_school_hero_1794497471323.jpg',
-  classroom: '/src/assets/images/students_modern_classroom_1794497472286.jpg',
-  teacher: '/src/assets/images/teacher_excellence_portrait_1794497472066.jpg',
-  library: '/src/assets/images/library_students_reading_1794497472173.jpg',
+  hero: heroImg,
+  classroom: classroomImg,
+  teacher: teacherImg,
+  library: libraryImg,
 };
 
 export interface AuthenticatedUser {
@@ -50,6 +56,15 @@ interface AuthPortalProps {
 }
 
 export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
+  const { settings } = useApp();
+  const customPhotos = settings.homepagePhotos;
+  const activePhotos = {
+    hero: customPhotos?.hero?.trim() || IMAGES.hero,
+    classroom: customPhotos?.classroom?.trim() || IMAGES.classroom,
+    teacher: customPhotos?.teacher?.trim() || IMAGES.teacher,
+    library: customPhotos?.library?.trim() || IMAGES.library,
+  };
+
   // Production Credentials Form State (No demo pre-fill)
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -189,6 +204,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
 
         {/* Right Header Navigation */}
         <div className="flex items-center gap-2 shrink-0">
+          <PWAInstallButton variant="header" />
           <button
             type="button"
             onClick={scrollToLogin}
@@ -250,6 +266,8 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
                   <ShieldCheck className="w-4 h-4 text-blue-600" />
                   <span>Attribution des Comptes</span>
                 </button>
+
+                <PWAInstallButton variant="hero" />
               </div>
 
               {/* Trust Indicators */}
@@ -277,11 +295,16 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
             <div className="lg:col-span-5 relative min-w-0">
               <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border-4 border-white shadow-2xl shadow-blue-900/10 group">
                 <img
-                  src={IMAGES.hero}
+                  src={activePhotos.hero}
                   alt="Élèves guinéens au Lycée d'Excellence de Conakry"
                   referrerPolicy="no-referrer"
                   className="w-full h-60 sm:h-80 lg:h-96 object-cover object-center group-hover:scale-105 transition-transform duration-700"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  onError={(e) => {
+                    if (!e.currentTarget.dataset.fallback) {
+                      e.currentTarget.dataset.fallback = '1';
+                      e.currentTarget.src = IMAGES.hero;
+                    }
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-transparent pointer-events-none" />
 
@@ -475,11 +498,16 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
             <div className="rounded-3xl overflow-hidden bg-white border border-blue-100 hover:border-blue-200 transition-all shadow-md shadow-blue-900/5 flex flex-col group">
               <div className="relative h-52 overflow-hidden">
                 <img
-                  src={IMAGES.classroom}
+                  src={activePhotos.classroom}
                   alt="Apprentissage et technologie en classe"
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  onError={(e) => {
+                    if (!e.currentTarget.dataset.fallback) {
+                      e.currentTarget.dataset.fallback = '1';
+                      e.currentTarget.src = IMAGES.classroom;
+                    }
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
                 <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-blue-600 text-white text-[11px] font-bold shadow-xs">
@@ -506,11 +534,16 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
             <div className="rounded-3xl overflow-hidden bg-white border border-blue-100 hover:border-blue-200 transition-all shadow-md shadow-blue-900/5 flex flex-col group">
               <div className="relative h-52 overflow-hidden">
                 <img
-                  src={IMAGES.teacher}
+                  src={activePhotos.teacher}
                   alt="Enseignants d'excellence"
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  onError={(e) => {
+                    if (!e.currentTarget.dataset.fallback) {
+                      e.currentTarget.dataset.fallback = '1';
+                      e.currentTarget.src = IMAGES.teacher;
+                    }
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
                 <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-amber-600 text-white text-[11px] font-bold shadow-xs">
@@ -537,11 +570,16 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
             <div className="rounded-3xl overflow-hidden bg-white border border-blue-100 hover:border-blue-200 transition-all shadow-md shadow-blue-900/5 flex flex-col group">
               <div className="relative h-52 overflow-hidden">
                 <img
-                  src={IMAGES.library}
+                  src={activePhotos.library}
                   alt="Bibliothèque scolaire et lecture"
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  onError={(e) => {
+                    if (!e.currentTarget.dataset.fallback) {
+                      e.currentTarget.dataset.fallback = '1';
+                      e.currentTarget.src = IMAGES.library;
+                    }
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
                 <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-emerald-600 text-white text-[11px] font-bold shadow-xs">

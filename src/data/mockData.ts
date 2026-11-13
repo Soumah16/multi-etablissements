@@ -319,7 +319,7 @@ export const initialSchools: School[] = [
     name: "Lycée Moderne de Ratoma",
     type: 'Lycée',
     logo: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
-    banner: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80',
+    banner: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop&q=80',
     address: "Carrefour Kipé, Ratoma",
     city: "Conakry",
     prefecture: "Ratoma",
@@ -677,7 +677,7 @@ export const initialAnnouncements: GlobalAnnouncement[] = [
 export const initialSettings: GlobalSettings = {
   platformName: "SmartSchool ERP Guinée",
   platformLogo: "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=120&auto=format&fit=crop&q=80",
-  favicon: "https://cdn-icons-png.flaticon.com/512/2997/2997295.png",
+  favicon: "./pwa-192x192.png",
   primaryColor: "#2563eb",
   systemEmail: "notifications@smartschool.gn",
   smtpHost: "smtp.mailgun.org",
@@ -689,7 +689,13 @@ export const initialSettings: GlobalSettings = {
   maintenanceMode: false,
   sessionTimeoutMinutes: 45,
   backupSchedule: "daily",
-  backupTime: "02:00 GMT"
+  backupTime: "02:00 GMT",
+  homepagePhotos: {
+    hero: '',
+    classroom: '',
+    teacher: '',
+    library: ''
+  }
 };
 
 export const initialBadgeTemplate: BadgeTemplateConfig = {

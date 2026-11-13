@@ -37,7 +37,7 @@ export const EbooksDigitalView: React.FC = () => {
     fileSize: '4.8 Mo',
     url: '#',
     description: '',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1532012164546-f432f2e37b73?w=300'
+    thumbnailUrl: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80'
   });
 
   const formats = ['all', 'PDF', 'EPUB', 'DOCX', 'PPTX', 'Vidéo', 'Audio'];

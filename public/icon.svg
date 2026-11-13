@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="55%" stop-color="#1D4ED8" />
+      <stop offset="100%" stop-color="#0F766E" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FCD116" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="108" fill="url(#bgGrad)" />
+  <!-- Subtle inner border -->
+  <rect x="18" y="18" width="476" height="476" rx="92" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="4" />
+  <!-- Guinea Tricolor Top Accent Bar -->
+  <g transform="translate(156, 72)">
+    <rect x="0" y="0" width="66.6" height="12" rx="6" fill="#CE1126" />
+    <rect x="66.6" y="0" width="66.6" height="12" fill="#FCD116" />
+    <rect x="133.2" y="0" width="66.8" height="12" rx="6" fill="#009460" />
+  </g>
+  <!-- Graduation Cap Silhouette -->
+  <g transform="translate(256, 150)" fill="none" stroke="#FFFFFF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="0,-36 96,0 0,36 -96,0" fill="rgba(255,255,255,0.16)" stroke="#FFFFFF" stroke-width="12" />
+    <path d="M-56,16 L-56,48 C-56,64 56,64 56,48 L56,16" stroke="#FCD116" stroke-width="10" />
+    <line x1="96" y1="0" x2="96" y2="52" stroke="#FCD116" stroke-width="10" />
+    <circle cx="96" cy="58" r="8" fill="#FCD116" stroke="none" />
+  </g>
+  <!-- Bold Monogram S -->
+  <text x="256" y="380" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="196" fill="#FFFFFF" letter-spacing="-4">S</text>
+  <!-- Subtitle -->
+  <text x="256" y="438" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="30" fill="#DBEAFE" letter-spacing="5">SMARTSCHOOL</text>
+</svg>

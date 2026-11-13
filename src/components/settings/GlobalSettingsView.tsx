@@ -10,10 +10,23 @@ import {
   ShieldAlert, 
   Check, 
   Palette,
-  Power
+  Power,
+  Image as ImageIcon,
+  RotateCcw
 } from 'lucide-react';
-import { LanguageCode } from '../../types';
+import { LanguageCode, HomepagePhotosConfig } from '../../types';
 import { ImageUploadField } from '../common/ImageUploadField';
+import defaultHeroImg from '../../assets/images/guinea_school_hero_1794497471323.jpg';
+import defaultClassroomImg from '../../assets/images/students_modern_classroom_1794497472286.jpg';
+import defaultTeacherImg from '../../assets/images/teacher_excellence_portrait_1794497472066.jpg';
+import defaultLibraryImg from '../../assets/images/library_students_reading_1794497472173.jpg';
+
+const DEFAULT_HOMEPAGE_PREVIEWS: Record<keyof HomepagePhotosConfig, string> = {
+  hero: defaultHeroImg,
+  classroom: defaultClassroomImg,
+  teacher: defaultTeacherImg,
+  library: defaultLibraryImg,
+};
 
 export const GlobalSettingsView: React.FC = () => {
   const { settings, updateSettings, language, setLanguage, t, showToast } = useApp();
@@ -30,6 +43,12 @@ export const GlobalSettingsView: React.FC = () => {
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(settings.pushNotificationsEnabled);
   const [maintenanceMode, setMaintenanceMode] = useState(settings.maintenanceMode);
   const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState(settings.sessionTimeoutMinutes);
+  const [homepagePhotos, setHomepagePhotos] = useState<HomepagePhotosConfig>({
+    hero: settings.homepagePhotos?.hero || '',
+    classroom: settings.homepagePhotos?.classroom || '',
+    teacher: settings.homepagePhotos?.teacher || '',
+    library: settings.homepagePhotos?.library || '',
+  });
 
   // Active languages toggles
   const [enabledLanguages, setEnabledLanguages] = useState<Record<LanguageCode, boolean>>({
@@ -54,9 +73,22 @@ export const GlobalSettingsView: React.FC = () => {
       whatsAppEnabled,
       pushNotificationsEnabled,
       maintenanceMode,
-      sessionTimeoutMinutes
+      sessionTimeoutMinutes,
+      homepagePhotos,
     });
-    showToast("Paramètres globaux sauvegardés avec succès !");
+    showToast("Paramètres globaux et photos d'accueil sauvegardés avec succès !");
+  };
+
+  const handleSavePhotosOnly = () => {
+    updateSettings({ homepagePhotos });
+    showToast("Photos de la page d'accueil mises à jour et publiées !");
+  };
+
+  const handleResetAllPhotos = () => {
+    const emptyPhotos: HomepagePhotosConfig = { hero: '', classroom: '', teacher: '', library: '' };
+    setHomepagePhotos(emptyPhotos);
+    updateSettings({ homepagePhotos: emptyPhotos });
+    showToast("Photos d'accueil réinitialisées aux images officielles par défaut.");
   };
 
   const toggleLanguageStatus = (code: LanguageCode) => {
@@ -83,6 +115,128 @@ export const GlobalSettingsView: React.FC = () => {
       </div>
 
       <form onSubmit={handleSaveSettings} className="space-y-6">
+        {/* Section 0: Homepage Photos Manager (Super Admin Exclusive) */}
+        <div className="p-4 sm:p-5 rounded-xl bg-white border border-blue-200 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-blue-100">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center shrink-0">
+                <ImageIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-blue-950">
+                  Photos de la Page d'Accueil (Portail Public)
+                </h2>
+                <p className="text-[11px] text-slate-500">
+                  Modifiez les 4 images affichées aux visiteurs sur la page d'accueil et de connexion (depuis votre PC, téléphone ou via lien URL).
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleResetAllPhotos}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Réinitialiser par défaut</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleSavePhotosOnly}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>Publier les Photos</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(
+              [
+                {
+                  key: 'hero' as const,
+                  title: "Photo Principale (Bannière d'Accueil)",
+                  hint: "Affichée en grand à droite du titre sur la page d'accueil.",
+                },
+                {
+                  key: 'classroom' as const,
+                  title: 'Carte 1 : Élèves & Pédagogie (Classe)',
+                  hint: 'Affichée sur la carte « Saisie des Notes & Bulletins Officiels ».',
+                },
+                {
+                  key: 'teacher' as const,
+                  title: 'Carte 2 : Corps Enseignant & Cartes PVC',
+                  hint: 'Affichée sur la carte « Cartes Scolaires PVC & Emplois du Temps ».',
+                },
+                {
+                  key: 'library' as const,
+                  title: 'Carte 3 : Bibliothèque & Savoir',
+                  hint: 'Affichée sur la carte « Bibliothèque Numérique & Vrais Livres ».',
+                },
+              ]
+            ).map((slot) => {
+              const currentValue = homepagePhotos[slot.key];
+              const previewSrc = currentValue?.trim() || DEFAULT_HOMEPAGE_PREVIEWS[slot.key];
+              const isCustom = Boolean(currentValue?.trim());
+
+              return (
+                <div
+                  key={slot.key}
+                  className="p-3.5 rounded-xl bg-blue-50/40 border border-blue-100 space-y-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-20 h-14 rounded-lg overflow-hidden border border-blue-200 bg-white shrink-0">
+                      <img
+                        src={previewSrc}
+                        alt={slot.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-blue-950 truncate">{slot.title}</span>
+                        <span
+                          className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold shrink-0 ${
+                            isCustom
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}
+                        >
+                          {isCustom ? 'Personnalisée' : 'Par défaut'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">{slot.hint}</p>
+                      {isCustom && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setHomepagePhotos((prev) => ({ ...prev, [slot.key]: '' }))
+                          }
+                          className="text-[10px] text-blue-700 hover:underline font-semibold mt-1 cursor-pointer"
+                        >
+                          Revenir à l'image par défaut
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <ImageUploadField
+                    label="Choisir une nouvelle photo"
+                    value={currentValue}
+                    onChange={(val) =>
+                      setHomepagePhotos((prev) => ({ ...prev, [slot.key]: val }))
+                    }
+                    aspectRatio="banner"
+                    placeholder="https://.../photo.jpg"
+                    helperText="Importez une image depuis votre PC/Téléphone (compressée automatiquement) ou collez un lien HTTPS."
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Section 1: Platform Branding */}
         <div className="p-5 rounded-xl bg-blue-50/60 border border-slate-200 space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-slate-200">

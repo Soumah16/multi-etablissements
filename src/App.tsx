@@ -36,6 +36,7 @@ import { StudentLayout } from './components/student/StudentLayout';
 import { AuthPortal, AuthenticatedUser } from './components/auth/AuthPortal';
 import { RoleSwitchAuthModal } from './components/auth/RoleSwitchAuthModal';
 import { SuperAdminUsersView } from './components/users/SuperAdminUsersView';
+import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { CheckCircle2, ShieldCheck, ArrowRight, Building2 } from 'lucide-react';
 
 export type WorkspaceMode = 
@@ -379,6 +380,7 @@ const MainLayout: React.FC = () => {
   return (
     <>
       {renderCurrentWorkspace()}
+      <OfflineIndicator />
       {pendingRoleSwitch && (
         <RoleSwitchAuthModal
           targetRole={pendingRoleSwitch.role}

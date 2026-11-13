@@ -46,9 +46,9 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
       return;
     }
 
-    // Limit to 5MB to keep base64 storage fast and responsive
-    if (file.size > 5 * 1024 * 1024) {
-      setError("L'image ne doit pas dépasser 5 Mo.");
+    // Allow up to 10MB input and compress raster images automatically for fast web/mobile storage
+    if (file.size > 10 * 1024 * 1024) {
+      setError("L'image ne doit pas dépasser 10 Mo.");
       return;
     }
 
@@ -56,9 +56,42 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
-      if (result) {
+      if (!result) return;
+
+      // Keep SVG or small files (< 220KB) untouched
+      if (file.type === 'image/svg+xml' || file.size < 220 * 1024) {
         onChange(result);
+        return;
       }
+
+      // Compress larger PNG/JPG/WEBP onto a canvas (max 1400px) so localStorage stays lightweight
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 1400;
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          onChange(result);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressed = canvas.toDataURL('image/jpeg', 0.82);
+        onChange(compressed);
+      };
+      img.onerror = () => onChange(result);
+      img.src = result;
     };
     reader.onerror = () => {
       setError('Erreur lors de la lecture du fichier.');
@@ -107,24 +140,24 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <label className="text-xs font-medium text-slate-700">
           {label} {required && <span className="text-rose-600">*</span>}
         </label>
         
         {/* Source Toggle Mode */}
-        <div className="inline-flex rounded-lg bg-slate-50 p-0.5 border border-slate-200">
+        <div className="inline-flex rounded-lg bg-slate-50 p-0.5 border border-slate-200 shrink-0">
           <button
             type="button"
             onClick={() => { setMode('upload'); setError(null); }}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+            className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium transition-colors cursor-pointer ${
               mode === 'upload'
                 ? 'bg-blue-600 text-white shadow-xs'
                 : 'text-slate-500 hover:text-blue-950'
             }`}
           >
             <Upload className="w-3 h-3" />
-            <span>Depuis PC</span>
+            <span>PC / Mobile</span>
           </button>
           <button
             type="button"

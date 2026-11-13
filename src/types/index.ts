@@ -159,6 +159,13 @@ export interface BackupArchive {
   status: 'success' | 'warning';
 }
 
+export interface HomepagePhotosConfig {
+  hero: string;
+  classroom: string;
+  teacher: string;
+  library: string;
+}
+
 export interface GlobalSettings {
   platformName: string;
   platformLogo: string;
@@ -175,6 +182,7 @@ export interface GlobalSettings {
   sessionTimeoutMinutes: number;
   backupSchedule: 'daily' | 'weekly' | 'monthly';
   backupTime: string;
+  homepagePhotos?: HomepagePhotosConfig;
 }
 
 export interface BadgeTemplateConfig {

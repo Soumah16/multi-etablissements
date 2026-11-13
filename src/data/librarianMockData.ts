@@ -91,7 +91,7 @@ Toute similitude directe S non constante est de la forme complexe z' = a·z + b 
     availableQuantity: 14,
     shelfLocation: 'Rayon Sciences - Étagère 3A',
     state: 'Neuf',
-    coverUrl: 'https://images.unsplash.com/photo-1532012164546-f432f2e3777f?auto=format&fit=crop&w=400&q=80',
+    coverUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80',
     qrCodeId: 'QR-BIB-2026-002',
     yearPublished: 2025
   },
@@ -306,7 +306,7 @@ Corrigé de l'Exercice 1 :
     downloadCount: 289,
     url: '#',
     description: 'E-book enrichi de schémas interactifs 3D des molécules et réactions d’estérification.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1532012164546-f432f2e3777f?auto=format&fit=crop&w=400&q=80'
+    thumbnailUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80'
   },
   {
     id: 'eb-003',

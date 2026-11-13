@@ -17,7 +17,8 @@ import {
   Clock, 
   Plus, 
   ExternalLink,
-  HardDrive
+  HardDrive,
+  Image as ImageIcon
 } from 'lucide-react';
 import { GovernanceBanner } from '../common/GovernanceBanner';
 
@@ -104,6 +105,29 @@ export const DashboardView: React.FC = () => {
     <div className="space-y-6">
       {/* Top Banner: Strict Governance Boundary */}
       <GovernanceBanner />
+
+      {/* Super Admin Quick Shortcut: Homepage Photos */}
+      <div className="p-3.5 rounded-xl bg-white border border-blue-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center shrink-0">
+            <ImageIcon className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-blue-950">Apparence du Portail Public</div>
+            <div className="text-[11px] text-slate-500">
+              Changez les 4 photos de la page d'accueil (Bannière principale, Élèves, Enseignants, Bibliothèque).
+            </div>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setActiveTab('settings')}
+          className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition-colors shrink-0 cursor-pointer"
+        >
+          <ImageIcon className="w-3.5 h-3.5" />
+          <span>Modifier les Photos d'Accueil</span>
+        </button>
+      </div>
 
       {/* Primary KPI Grid: High-level overview */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

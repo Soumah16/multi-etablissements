@@ -154,7 +154,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [blockedIps, setBlockedIps] = useState<string[]>(['185.220.101.5', '91.240.118.2']);
   const [backups, setBackups] = useState<BackupArchive[]>(initialBackups);
   const [announcements, setAnnouncements] = useState<GlobalAnnouncement[]>(initialAnnouncements);
-  const [settings, setSettings] = useState<GlobalSettings>(initialSettings);
+  const [settings, setSettings] = useState<GlobalSettings>(() => {
+    try {
+      const saved = localStorage.getItem('smartschool_global_settings');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...initialSettings,
+          ...parsed,
+          homepagePhotos: {
+            ...initialSettings.homepagePhotos,
+            ...(parsed.homepagePhotos || {}),
+          },
+        };
+      }
+    } catch {
+      // ignore parse errors
+    }
+    return initialSettings;
+  });
   const [badgeTemplate, setBadgeTemplate] = useState<BadgeTemplateConfig>(initialBadgeTemplate);
   const [selectedSchoolForAudit, setSelectedSchoolForAudit] = useState<School | null>(null);
 
@@ -170,6 +188,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('smartschool_transactions', JSON.stringify(transactions));
   }, [transactions]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('smartschool_global_settings', JSON.stringify(settings));
+    } catch {
+      // ignore storage quota errors gracefully
+    }
+  }, [settings]);
 
   // Set RTL attribute and lang on html document element
   const isRtl = language === 'ar';
