@@ -108,19 +108,19 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="text-xs font-medium text-slate-300">
-          {label} {required && <span className="text-rose-400">*</span>}
+        <label className="text-xs font-medium text-slate-700">
+          {label} {required && <span className="text-rose-600">*</span>}
         </label>
         
         {/* Source Toggle Mode */}
-        <div className="inline-flex rounded-lg bg-slate-800 p-0.5 border border-slate-700">
+        <div className="inline-flex rounded-lg bg-slate-50 p-0.5 border border-slate-200">
           <button
             type="button"
             onClick={() => { setMode('upload'); setError(null); }}
             className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
               mode === 'upload'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-500 hover:text-blue-950'
             }`}
           >
             <Upload className="w-3 h-3" />
@@ -132,7 +132,7 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
             className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
               mode === 'url'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-500 hover:text-blue-950'
             }`}
           >
             <LinkIcon className="w-3 h-3" />
@@ -162,18 +162,18 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
                   dragActive 
-                    ? 'border-blue-500 bg-blue-500/10' 
-                    : 'border-slate-700 hover:border-slate-600 bg-slate-900/60 hover:bg-slate-900'
+                    ? 'border-blue-500 bg-blue-50' 
+                    : 'border-slate-200 hover:border-slate-300 bg-white/90 hover:bg-white'
                 }`}
               >
                 <div className="flex flex-col items-center justify-center gap-1.5">
-                  <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
                     <FileUp className="w-4 h-4" />
                   </div>
-                  <div className="text-xs font-semibold text-slate-200">
+                  <div className="text-xs font-semibold text-slate-900">
                     Cliquez pour choisir une photo ou glissez-déposez
                   </div>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[10px] text-slate-500">
                     PNG, JPG, WEBP, SVG (Max. 5 Mo)
                   </p>
                 </div>
@@ -191,13 +191,13 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
                 onChange(e.target.value);
               }}
               placeholder={isDataUrl ? 'Fichier importé depuis le PC (ou entrez une URL)' : placeholder}
-              className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500 pr-8"
+              className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500 pr-8"
             />
             {value && !isDataUrl && (
               <button
                 type="button"
                 onClick={handleClear}
-                className="absolute right-2 top-2 text-slate-400 hover:text-rose-400 transition-colors"
+                className="absolute right-2 top-2 text-slate-500 hover:text-rose-600 transition-colors"
                 title="Effacer"
               >
                 <X className="w-4 h-4" />
@@ -208,7 +208,7 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
 
         {/* Error message */}
         {error && (
-          <div className="flex items-center gap-1.5 text-xs text-rose-400 bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">
+          <div className="flex items-center gap-1.5 text-xs text-rose-600 bg-rose-50 p-2 rounded-lg border border-rose-200">
             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
             <span>{error}</span>
           </div>
@@ -216,10 +216,10 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
 
         {/* Preview Card when image is available */}
         {value && (
-          <div className="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700 flex items-center justify-between gap-3">
+          <div className="p-2.5 rounded-lg bg-blue-50/60 border border-slate-200 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               {/* Thumbnail */}
-              <div className={`overflow-hidden border border-slate-600 bg-slate-900 shrink-0 flex items-center justify-center ${
+              <div className={`overflow-hidden border border-slate-300 bg-white shrink-0 flex items-center justify-center ${
                 aspectRatio === 'circle' 
                   ? 'w-10 h-10 rounded-full' 
                   : aspectRatio === 'banner'
@@ -237,14 +237,14 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
               {/* Details */}
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-semibold text-white truncate max-w-[160px]">
+                  <span className="text-[11px] font-semibold text-blue-950 truncate max-w-[160px]">
                     {fileName || (isDataUrl ? 'Fichier importé du PC' : 'Image en ligne')}
                   </span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
                     {isDataUrl ? 'Local PC' : 'URL Web'}
                   </span>
                 </div>
-                <div className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
+                <div className="text-[10px] text-emerald-600 flex items-center gap-1 mt-0.5">
                   <Check className="w-3 h-3" />
                   <span>Image prête et valide</span>
                 </div>
@@ -257,7 +257,7 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-2 py-1 text-[11px] font-medium text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 rounded transition-colors"
+                  className="px-2 py-1 text-[11px] font-medium text-slate-700 hover:text-blue-950 bg-slate-100 hover:bg-slate-200 rounded transition-colors"
                 >
                   Remplacer
                 </button>
@@ -265,7 +265,7 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
               <button
                 type="button"
                 onClick={handleClear}
-                className="p-1 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded transition-colors"
+                className="p-1 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
                 title="Supprimer l'image"
               >
                 <X className="w-4 h-4" />
@@ -275,7 +275,7 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
         )}
 
         {helperText && (
-          <p className="text-[10px] text-slate-400">{helperText}</p>
+          <p className="text-[10px] text-slate-500">{helperText}</p>
         )}
       </div>
     </div>

@@ -83,19 +83,19 @@ export const DirectorReportsView: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900 border border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-blue-100">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
               Direction des Études · Données Pédagogiques
             </span>
-            <span className="text-xs text-slate-400">Formats PDF & Tableur Excel</span>
+            <span className="text-xs text-slate-500">Formats PDF & Tableur Excel</span>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <BarChart3 className="w-6 h-6 text-blue-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2">
+            <BarChart3 className="w-6 h-6 text-blue-600" />
             <span>Rapports & Statistiques Pédagogiques</span>
           </h1>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs text-slate-700 mt-1">
             Génération des bilans académiques officiels pour l'inspection d'académie, la direction et les conseils pédagogiques.
           </p>
         </div>
@@ -106,27 +106,27 @@ export const DirectorReportsView: React.FC = () => {
         {reportsList.map(rep => (
           <div 
             key={rep.id}
-            className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4"
+            className="p-5 rounded-2xl bg-white border border-blue-100 hover:border-slate-200 transition-all flex flex-col justify-between space-y-4"
           >
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
                   {rep.category}
                 </span>
-                <span className="text-xs font-mono text-slate-400">{rep.date}</span>
+                <span className="text-xs font-mono text-slate-500">{rep.date}</span>
               </div>
 
-              <h3 className="text-base font-bold text-white leading-snug">
+              <h3 className="text-base font-bold text-blue-950 leading-snug">
                 {rep.title}
               </h3>
 
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <p className="text-xs text-slate-700 leading-relaxed">
                 {rep.description}
               </p>
             </div>
 
-            <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-3">
-              <div className="text-[11px] text-slate-400 font-mono">
+            <div className="pt-3 border-t border-blue-100 flex items-center justify-between gap-3">
+              <div className="text-[11px] text-slate-500 font-mono">
                 Certifié conforme SmartSchool
               </div>
 

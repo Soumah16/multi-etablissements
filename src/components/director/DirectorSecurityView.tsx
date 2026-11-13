@@ -70,19 +70,19 @@ export const DirectorSecurityView: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900 border border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-blue-100">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
               Protection Cryptographique & Signature
             </span>
-            <span className="text-xs text-slate-400">Code PIN 6 Chiffres + 2FA Obligatoire</span>
+            <span className="text-xs text-slate-500">Code PIN 6 Chiffres + 2FA Obligatoire</span>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <ShieldCheck className="w-6 h-6 text-amber-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2">
+            <ShieldCheck className="w-6 h-6 text-amber-700" />
             <span>Sécurité, Code PIN & Journal d'Audit</span>
           </h1>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs text-slate-700 mt-1">
             Gestion du coffre-fort de signature du Directeur et traçabilité inviolable de toutes les actions académiques.
           </p>
         </div>
@@ -90,39 +90,39 @@ export const DirectorSecurityView: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Box 1: Change 6-Digit PIN */}
-        <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="p-6 rounded-2xl bg-white border border-blue-100 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-blue-100">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
                 <Lock className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white">Code PIN Directeur (6 chiffres)</h3>
-                <p className="text-xs text-slate-400">Requis pour viser les bulletins et valider les examens</p>
+                <h3 className="text-sm font-bold text-blue-950">Code PIN Directeur (6 chiffres)</h3>
+                <p className="text-xs text-slate-500">Requis pour viser les bulletins et valider les examens</p>
               </div>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-200">
               Actif (••••••)
             </span>
           </div>
 
           <form onSubmit={handleUpdatePin} className="space-y-3 text-xs">
             {pinError && (
-              <div className="p-2.5 rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-300 flex items-center gap-2">
+              <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{pinError}</span>
               </div>
             )}
 
             {pinSuccess && (
-              <div className="p-2.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 flex items-center gap-2">
+              <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
                 <span>Votre code PIN 6 chiffres a été renouvelé avec succès !</span>
               </div>
             )}
 
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">
+              <label className="block text-slate-700 font-semibold mb-1">
                 Ancien code PIN actuel
               </label>
               <input
@@ -131,14 +131,14 @@ export const DirectorSecurityView: React.FC = () => {
                 value={oldPin}
                 onChange={(e) => setOldPin(e.target.value.replace(/\D/g, ''))}
                 placeholder="Ex: 654321"
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white font-mono tracking-widest text-center focus:outline-hidden focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono tracking-widest text-center focus:outline-hidden focus:border-amber-500"
                 required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">
+                <label className="block text-slate-700 font-semibold mb-1">
                   Nouveau PIN (6 chiffres)
                 </label>
                 <input
@@ -147,13 +147,13 @@ export const DirectorSecurityView: React.FC = () => {
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
                   placeholder="••••••"
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white font-mono tracking-widest text-center focus:outline-hidden focus:border-amber-500"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono tracking-widest text-center focus:outline-hidden focus:border-amber-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">
+                <label className="block text-slate-700 font-semibold mb-1">
                   Confirmer le nouveau PIN
                 </label>
                 <input
@@ -162,7 +162,7 @@ export const DirectorSecurityView: React.FC = () => {
                   value={confirmPin}
                   onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
                   placeholder="••••••"
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white font-mono tracking-widest text-center focus:outline-hidden focus:border-amber-500"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono tracking-widest text-center focus:outline-hidden focus:border-amber-500"
                   required
                 />
               </div>
@@ -178,24 +178,24 @@ export const DirectorSecurityView: React.FC = () => {
         </div>
 
         {/* Box 2: 2FA Configuration */}
-        <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="p-6 rounded-2xl bg-white border border-blue-100 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-blue-100">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
                 <KeyRound className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white">Double Authentification (2FA)</h3>
-                <p className="text-xs text-slate-400">Protection renforcée contre les signatures non autorisées</p>
+                <h3 className="text-sm font-bold text-blue-950">Double Authentification (2FA)</h3>
+                <p className="text-xs text-slate-500">Protection renforcée contre les signatures non autorisées</p>
               </div>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
               Obligatoire
             </span>
           </div>
 
           <div className="space-y-3 text-xs">
-            <p className="text-slate-300">
+            <p className="text-slate-700">
               Choisissez le canal de délivrance du code temporaire à 6 chiffres (OTP) :
             </p>
 
@@ -209,13 +209,13 @@ export const DirectorSecurityView: React.FC = () => {
                 onClick={() => handleSave2faMethod(method.id as any)}
                 className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
                   method.active 
-                    ? 'bg-blue-600/15 border-blue-500 text-white' 
-                    : 'bg-slate-800/40 border-slate-800 text-slate-300 hover:border-slate-700'
+                    ? 'bg-blue-50 border-blue-500 text-blue-950' 
+                    : 'bg-blue-50/60 border-blue-100 text-slate-700 hover:border-slate-200'
                 }`}
               >
                 <div>
                   <div className="font-bold text-xs">{method.title}</div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">{method.desc}</div>
+                  <div className="text-[11px] text-slate-500 mt-0.5">{method.desc}</div>
                 </div>
                 {method.active && (
                   <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white shrink-0">
@@ -229,15 +229,15 @@ export const DirectorSecurityView: React.FC = () => {
       </div>
 
       {/* Security Audit Trail Table */}
-      <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden space-y-2">
-        <div className="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div className="rounded-2xl bg-white border border-blue-100 overflow-hidden space-y-2">
+        <div className="p-5 border-b border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <History className="w-5 h-5 text-purple-400" />
+            <History className="w-5 h-5 text-purple-600" />
             <div>
-              <h3 className="text-sm font-bold text-white">
+              <h3 className="text-sm font-bold text-blue-950">
                 Journal d'Audit de Sécurité du Directeur des Études
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Traçabilité horodatée de toutes les connexions, signatures de bulletins et publications d'examens.
               </p>
             </div>
@@ -246,7 +246,7 @@ export const DirectorSecurityView: React.FC = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-800/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700">
+            <thead className="bg-blue-50/60 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200">
               <tr>
                 <th className="py-2.5 px-4">Horodatage</th>
                 <th className="py-2.5 px-3">Action Réalisée</th>
@@ -257,35 +257,35 @@ export const DirectorSecurityView: React.FC = () => {
                 <th className="py-2.5 px-4 text-right">Statut</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-blue-100">
               {auditLogs.map(log => (
-                <tr key={log.id} className="hover:bg-slate-800/40">
-                  <td className="py-3 px-4 font-mono text-slate-400 text-[11px] whitespace-nowrap">
+                <tr key={log.id} className="hover:bg-blue-50">
+                  <td className="py-3 px-4 font-mono text-slate-500 text-[11px] whitespace-nowrap">
                     {log.timestamp}
                   </td>
-                  <td className="py-3 px-3 font-semibold text-white">
+                  <td className="py-3 px-3 font-semibold text-blue-950">
                     {log.action}
                   </td>
-                  <td className="py-3 px-3 text-slate-300">
+                  <td className="py-3 px-3 text-slate-700">
                     {log.target}
                   </td>
-                  <td className="py-3 px-3 font-mono text-slate-400 text-[11px]">
+                  <td className="py-3 px-3 font-mono text-slate-500 text-[11px]">
                     {log.ip}
                   </td>
-                  <td className="py-3 px-3 text-slate-400 text-[11px]">
+                  <td className="py-3 px-3 text-slate-500 text-[11px]">
                     {log.device}
                   </td>
                   <td className="py-3 px-3">
                     <span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase ${
-                      log.securityLevel === 'critique' ? 'bg-red-500/20 text-red-300 border-red-500/30' :
-                      log.securityLevel === 'sensible' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
-                      'bg-blue-500/10 text-blue-300 border-blue-500/20'
+                      log.securityLevel === 'critique' ? 'bg-red-50 text-red-700 border-red-200' :
+                      log.securityLevel === 'sensible' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                      'bg-blue-50 text-blue-700 border-blue-200'
                     }`}>
                       {log.securityLevel}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-right">
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
                       <CheckCircle2 className="w-3 h-3" />
                       <span>Succès</span>
                     </span>

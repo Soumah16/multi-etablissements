@@ -52,12 +52,12 @@ export const AdministrativeDocumentsView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-blue-950">
             Documents Administratifs & Modèles Officiels
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Gabarits paramétrables pour certificats de scolarité, attestations d'inscription et modèles de bulletins
           </p>
         </div>
@@ -66,7 +66,7 @@ export const AdministrativeDocumentsView: React.FC = () => {
           onClick={() => triggerPrint('admin-specimen-printable', `Document_${activeTemplate.title.replace(/\s+/g, '_')}`)}
           className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors whitespace-nowrap self-start sm:self-auto shadow-xs cursor-pointer"
         >
-          <Printer className="w-4 h-4 text-white" />
+          <Printer className="w-4 h-4 text-blue-950" />
           <span>Imprimer Spécimen Officiel</span>
         </button>
       </div>
@@ -75,8 +75,8 @@ export const AdministrativeDocumentsView: React.FC = () => {
         {/* Left Column: Document Select & Form */}
         <div className="lg:col-span-5 space-y-4">
           {/* Doc Type Selector */}
-          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+          <div className="p-4 rounded-xl bg-white border border-blue-100 space-y-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               Modèle de Document à Personnaliser
             </span>
             <div className="space-y-1.5">
@@ -87,76 +87,76 @@ export const AdministrativeDocumentsView: React.FC = () => {
                   onClick={() => handleSelectDoc(doc)}
                   className={`w-full flex items-center justify-between p-3 rounded-lg border text-left text-xs transition-colors ${
                     selectedDocId === doc.id
-                      ? 'bg-blue-600/20 border-blue-500 text-white font-bold'
-                      : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:text-white'
+                      ? 'bg-blue-50 border-blue-500 text-blue-950 font-bold'
+                      : 'bg-blue-50/60 border-slate-200 text-slate-700 hover:text-blue-950'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <FileText className="w-4 h-4 text-blue-400" />
+                    <FileText className="w-4 h-4 text-blue-600" />
                     <span>{doc.title}</span>
                   </div>
-                  <span className="text-[10px] text-slate-400 font-mono">Prêt</span>
+                  <span className="text-[10px] text-slate-500 font-mono">Prêt</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSave} className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-3.5 text-xs">
+          <form onSubmit={handleSave} className="p-5 rounded-xl bg-white border border-blue-100 space-y-3.5 text-xs">
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">En-tête officiel / République *</label>
+              <label className="text-slate-700 font-medium">En-tête officiel / République *</label>
               <textarea
                 rows={2}
                 required
                 value={headerText}
                 onChange={e => setHeaderText(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-slate-300 font-medium">Titre du signataire</label>
+                <label className="text-slate-700 font-medium">Titre du signataire</label>
                 <input
                   type="text"
                   value={signatoryTitle}
                   onChange={e => setSignatoryTitle(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-300 font-medium">Nom du signataire</label>
+                <label className="text-slate-700 font-medium">Nom du signataire</label>
                 <input
                   type="text"
                   value={signatoryName}
                   onChange={e => setSignatoryName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Mentions de bas de page (Pied de document)</label>
+              <label className="text-slate-700 font-medium">Mentions de bas de page (Pied de document)</label>
               <textarea
                 rows={2}
                 value={footerText}
                 onChange={e => setFooterText(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
               />
             </div>
 
             <div className="flex items-center justify-between pt-1">
-              <span className="text-slate-300 font-medium">Apposer le tampon rond officiel</span>
+              <span className="text-slate-700 font-medium">Apposer le tampon rond officiel</span>
               <input
                 type="checkbox"
                 checked={includeStamp}
                 onChange={e => setIncludeStamp(e.target.checked)}
-                className="w-4 h-4 rounded text-blue-600 bg-slate-800 border-slate-700"
+                className="w-4 h-4 rounded text-blue-600 bg-slate-50 border-slate-200"
               />
             </div>
 
-            <div className="pt-3 border-t border-slate-800 flex justify-end">
+            <div className="pt-3 border-t border-blue-100 flex justify-end">
               <button
                 type="submit"
                 className="flex items-center gap-1.5 px-4 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors text-xs shadow-sm"
@@ -170,7 +170,7 @@ export const AdministrativeDocumentsView: React.FC = () => {
 
         {/* Right Column: Live Printable Specimen View */}
         <div className="lg:col-span-7 space-y-2">
-          <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
             Aperçu Direct du Document Certifié Conforme
           </div>
 

@@ -63,18 +63,18 @@ export const SecurityView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-blue-950">
             {t.security.title}
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             {t.security.subtitle}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-mono">
             <ShieldCheck className="w-4 h-4" />
             <span>Chiffrement AES-256 & TLS 1.3 Actifs</span>
           </div>
@@ -82,13 +82,13 @@ export const SecurityView: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800 text-xs">
+      <div className="flex items-center gap-2 border-b border-blue-100 text-xs">
         <button
           onClick={() => setActiveTab('sessions')}
           className={`pb-3 font-semibold transition-colors border-b-2 ${
             activeTab === 'sessions'
-              ? 'text-blue-400 border-blue-500'
-              : 'text-slate-400 hover:text-slate-200 border-transparent'
+              ? 'text-blue-600 border-blue-500'
+              : 'text-slate-500 hover:text-slate-900 border-transparent'
           }`}
         >
           Sessions & Appareils Actifs ({sessions.length})
@@ -98,8 +98,8 @@ export const SecurityView: React.FC = () => {
           onClick={() => setActiveTab('logs')}
           className={`pb-3 font-semibold transition-colors border-b-2 ${
             activeTab === 'logs'
-              ? 'text-blue-400 border-blue-500'
-              : 'text-slate-400 hover:text-slate-200 border-transparent'
+              ? 'text-blue-600 border-blue-500'
+              : 'text-slate-500 hover:text-slate-900 border-transparent'
           }`}
         >
           Journaux d'Audit & Sécurité ({auditLogs.length})
@@ -109,8 +109,8 @@ export const SecurityView: React.FC = () => {
           onClick={() => setActiveTab('ip_blocklist')}
           className={`pb-3 font-semibold transition-colors border-b-2 ${
             activeTab === 'ip_blocklist'
-              ? 'text-blue-400 border-blue-500'
-              : 'text-slate-400 hover:text-slate-200 border-transparent'
+              ? 'text-blue-600 border-blue-500'
+              : 'text-slate-500 hover:text-slate-900 border-transparent'
           }`}
         >
           Pare-feu & Adresses IP Bloquées ({blockedIps.length})
@@ -120,8 +120,8 @@ export const SecurityView: React.FC = () => {
           onClick={() => setActiveTab('2fa')}
           className={`pb-3 font-semibold transition-colors border-b-2 ${
             activeTab === '2fa'
-              ? 'text-blue-400 border-blue-500'
-              : 'text-slate-400 hover:text-slate-200 border-transparent'
+              ? 'text-blue-600 border-blue-500'
+              : 'text-slate-500 hover:text-slate-900 border-transparent'
           }`}
         >
           Authentification 2FA & Accès
@@ -131,11 +131,11 @@ export const SecurityView: React.FC = () => {
       {/* Content 1: Sessions */}
       {activeTab === 'sessions' && (
         <div className="space-y-4">
-          <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
-            <h3 className="text-sm font-bold text-white mb-1">
+          <div className="p-4 rounded-xl bg-blue-50/60 border border-slate-200">
+            <h3 className="text-sm font-bold text-blue-950 mb-1">
               Appareils Actuellement Connectés à la Console Super Admin
             </h3>
-            <p className="text-xs text-slate-400 mb-4">
+            <p className="text-xs text-slate-500 mb-4">
               Vous pouvez révoquer instantanément n'importe quelle session distante pour forcer la déconnexion.
             </p>
 
@@ -143,10 +143,10 @@ export const SecurityView: React.FC = () => {
               {sessions.map((sess) => (
                 <div 
                   key={sess.id}
-                  className="p-3.5 rounded-lg bg-slate-900 border border-slate-700/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                  className="p-3.5 rounded-lg bg-white border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-slate-800 text-blue-400 mt-0.5">
+                    <div className="p-2 rounded-lg bg-slate-50 text-blue-600 mt-0.5">
                       {sess.device.includes('iPhone') || sess.device.includes('Android') ? (
                         <Smartphone className="w-4 h-4" />
                       ) : (
@@ -155,17 +155,17 @@ export const SecurityView: React.FC = () => {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-white text-xs">{sess.device}</span>
+                        <span className="font-bold text-blue-950 text-xs">{sess.device}</span>
                         {sess.isCurrent && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
                             Session actuelle
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5 flex flex-wrap items-center gap-2">
+                      <div className="text-[11px] text-slate-500 mt-0.5 flex flex-wrap items-center gap-2">
                         <span>{sess.browser}</span>
                         <span>·</span>
-                        <span className="font-mono text-slate-300">IP: {sess.ip}</span>
+                        <span className="font-mono text-slate-700">IP: {sess.ip}</span>
                         <span>·</span>
                         <span>{sess.location}</span>
                       </div>
@@ -178,7 +178,7 @@ export const SecurityView: React.FC = () => {
                   {!sess.isCurrent && (
                     <button
                       onClick={() => terminateSession(sess.id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-colors whitespace-nowrap self-end sm:self-auto"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-50 hover:bg-rose-50 text-rose-600 border border-rose-200 transition-colors whitespace-nowrap self-end sm:self-auto"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       <span>{t.security.forceLogout}</span>
@@ -196,20 +196,20 @@ export const SecurityView: React.FC = () => {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
               <input
                 type="text"
                 placeholder="Filtrer les journaux par mot-clé, acteur, IP..."
                 value={logSearch}
                 onChange={e => setLogSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-slate-800/80 border border-slate-700/80 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-blue-50/60 border border-slate-200 text-blue-950 placeholder-slate-400 focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <select
               value={logTypeFilter}
               onChange={e => setLogTypeFilter(e.target.value)}
-              className="px-3 py-2 text-xs rounded-lg bg-slate-800/80 border border-slate-700/80 text-slate-200 focus:outline-none focus:border-blue-500"
+              className="px-3 py-2 text-xs rounded-lg bg-blue-50/60 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500"
             >
               <option value="all">Tous les types d'événements</option>
               <option value="connexion">Connexions & Authentification</option>
@@ -221,10 +221,10 @@ export const SecurityView: React.FC = () => {
             </select>
           </div>
 
-          <div className="rounded-xl border border-slate-700/60 bg-slate-800/60 overflow-hidden">
+          <div className="rounded-xl border border-slate-200 bg-white overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-slate-700 bg-slate-800/90 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
+                <tr className="border-b border-slate-200 bg-blue-50/60 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
                   <th className="py-2.5 px-3">Horodatage (GMT)</th>
                   <th className="py-2.5 px-3">Action Enregistrée</th>
                   <th className="py-2.5 px-3">Acteur / Déclencheur</th>
@@ -232,29 +232,29 @@ export const SecurityView: React.FC = () => {
                   <th className="py-2.5 px-3">Gravité</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700/40 text-slate-200">
+              <tbody className="divide-y divide-slate-200 text-slate-900">
                 {filteredLogs.map(log => (
-                  <tr key={log.id} className="hover:bg-slate-700/30">
-                    <td className="py-3 px-3 font-mono text-[11px] text-slate-400 whitespace-nowrap">
+                  <tr key={log.id} className="hover:bg-blue-100">
+                    <td className="py-3 px-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">
                       {log.timestamp}
                     </td>
-                    <td className="py-3 px-3 font-medium text-slate-200">
+                    <td className="py-3 px-3 font-medium text-slate-900">
                       {log.action}
-                      <div className="text-[10px] text-slate-400 mt-0.5">Cible : {log.target}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">Cible : {log.target}</div>
                     </td>
-                    <td className="py-3 px-3 text-slate-300 text-[11px]">
+                    <td className="py-3 px-3 text-slate-700 text-[11px]">
                       {log.actor}
                     </td>
-                    <td className="py-3 px-3 font-mono text-[11px] text-slate-400">
+                    <td className="py-3 px-3 font-mono text-[11px] text-slate-500">
                       {log.ip}
                     </td>
                     <td className="py-3 px-3 whitespace-nowrap">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
                         log.severity === 'critical'
-                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                          ? 'bg-rose-50 text-rose-600 border border-rose-200'
                           : log.severity === 'warning'
-                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                            : 'bg-blue-500/10 text-blue-400'
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                            : 'bg-blue-50 text-blue-600'
                       }`}>
                         {log.severity}
                       </span>
@@ -270,11 +270,11 @@ export const SecurityView: React.FC = () => {
       {/* Content 3: IP Blocklist */}
       {activeTab === 'ip_blocklist' && (
         <div className="space-y-4">
-          <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
-            <h3 className="text-sm font-bold text-white mb-1">
+          <div className="p-4 rounded-xl bg-blue-50/60 border border-slate-200">
+            <h3 className="text-sm font-bold text-blue-950 mb-1">
               Liste Noire du Pare-feu WAF (Adresses IP Bannies)
             </h3>
-            <p className="text-xs text-slate-400 mb-4">
+            <p className="text-xs text-slate-500 mb-4">
               Toute tentative de connexion ou de requête API issue de ces adresses est immédiatement rejetée avec HTTP 403.
             </p>
 
@@ -285,7 +285,7 @@ export const SecurityView: React.FC = () => {
                 placeholder="Ex: 198.51.100.25"
                 value={newIpToBlock}
                 onChange={e => setNewIpToBlock(e.target.value)}
-                className="flex-1 px-3 py-2 text-xs rounded-lg bg-slate-900 border border-slate-700 text-white font-mono focus:outline-none focus:border-rose-500"
+                className="flex-1 px-3 py-2 text-xs rounded-lg bg-white border border-slate-200 text-blue-950 font-mono focus:outline-none focus:border-rose-500"
               />
               <button
                 type="submit"
@@ -296,17 +296,17 @@ export const SecurityView: React.FC = () => {
               </button>
             </form>
 
-            <div className="divide-y divide-slate-700/40">
+            <div className="divide-y divide-slate-200">
               {blockedIps.map(ip => (
                 <div key={ip} className="py-2.5 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <Ban className="w-4 h-4 text-rose-400" />
-                    <span className="font-mono text-slate-200 font-semibold">{ip}</span>
-                    <span className="text-[11px] text-slate-400">(Trafic malveillant / Tentatives non autorisées)</span>
+                    <Ban className="w-4 h-4 text-rose-600" />
+                    <span className="font-mono text-slate-900 font-semibold">{ip}</span>
+                    <span className="text-[11px] text-slate-500">(Trafic malveillant / Tentatives non autorisées)</span>
                   </div>
                   <button
                     onClick={() => toggleBlockIp(ip)}
-                    className="px-2.5 py-1 text-xs rounded bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
+                    className="px-2.5 py-1 text-xs rounded bg-slate-100 hover:bg-slate-200 text-slate-900 transition-colors"
                   >
                     Débloquer
                   </button>
@@ -319,13 +319,13 @@ export const SecurityView: React.FC = () => {
 
       {/* Content 4: 2FA Settings */}
       {activeTab === '2fa' && (
-        <div className="p-5 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-4 text-xs">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-700/60">
+        <div className="p-5 rounded-xl bg-blue-50/60 border border-slate-200 space-y-4 text-xs">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200">
             <div>
-              <h3 className="font-bold text-white text-sm">
+              <h3 className="font-bold text-blue-950 text-sm">
                 Double Facteur d'Authentification (2FA TOTP)
               </h3>
-              <p className="text-slate-400 mt-0.5">
+              <p className="text-slate-500 mt-0.5">
                 Oblige la saisie d'un code à 6 chiffres généré par Google Authenticator ou Twilio Authy à chaque ouverture de session Super Admin.
               </p>
             </div>
@@ -333,7 +333,7 @@ export const SecurityView: React.FC = () => {
               onClick={handleToggle2fa}
               className={`px-4 py-2 rounded-lg font-semibold text-xs transition-colors ${
                 profile.twoFactorEnabled 
-                  ? 'bg-rose-600/20 text-rose-300 border border-rose-500/30 hover:bg-rose-600/30' 
+                  ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-50' 
                   : 'bg-emerald-600 text-white hover:bg-emerald-500'
               }`}
             >
@@ -342,26 +342,26 @@ export const SecurityView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 rounded-lg bg-slate-900 border border-slate-700/80 space-y-2">
-              <div className="font-semibold text-white flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <div className="p-4 rounded-lg bg-white border border-slate-200 space-y-2">
+              <div className="font-semibold text-blue-950 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 Statut Actuel
               </div>
-              <p className="text-slate-300">
-                La protection 2FA est actuellement <strong className={profile.twoFactorEnabled ? 'text-emerald-400' : 'text-rose-400'}>{profile.twoFactorEnabled ? 'ACTIVÉE' : 'DÉSACTIVÉE'}</strong> sur votre compte administrateur.
+              <p className="text-slate-700">
+                La protection 2FA est actuellement <strong className={profile.twoFactorEnabled ? 'text-emerald-600' : 'text-rose-600'}>{profile.twoFactorEnabled ? 'ACTIVÉE' : 'DÉSACTIVÉE'}</strong> sur votre compte administrateur.
               </p>
-              <div className="text-[11px] text-slate-400 font-mono mt-1">
+              <div className="text-[11px] text-slate-500 font-mono mt-1">
                 Méthode : Application d'authentification (TOTP RFC 6238)
               </div>
             </div>
 
-            <div className="p-4 rounded-lg bg-slate-900 border border-slate-700/80 space-y-2">
-              <div className="font-semibold text-white flex items-center gap-2">
-                <Lock className="w-4 h-4 text-blue-400" />
+            <div className="p-4 rounded-lg bg-white border border-slate-200 space-y-2">
+              <div className="font-semibold text-blue-950 flex items-center gap-2">
+                <Lock className="w-4 h-4 text-blue-600" />
                 Politique d'Expiration de Session
               </div>
-              <p className="text-slate-300">
-                Déconnexion automatique après <strong className="text-white">45 minutes</strong> d'inactivité continue sur le navigateur pour éviter tout accès indu.
+              <p className="text-slate-700">
+                Déconnexion automatique après <strong className="text-blue-950">45 minutes</strong> d'inactivité continue sur le navigateur pour éviter tout accès indu.
               </p>
             </div>
           </div>

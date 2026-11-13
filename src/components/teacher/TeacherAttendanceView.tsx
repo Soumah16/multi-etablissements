@@ -42,11 +42,11 @@ export const TeacherAttendanceView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-            <ClipboardCheck className="w-6 h-6 text-emerald-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2.5">
+            <ClipboardCheck className="w-6 h-6 text-emerald-600" />
             <span>Feuille d'Appel & Présences Numériques</span>
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Émargement en direct des élèves et signalement instantané des absences
           </p>
         </div>
@@ -54,7 +54,7 @@ export const TeacherAttendanceView: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => triggerPrint('teacher-attendance-printable-list', `Feuille_Presence_${attendanceSession.className}`)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 hover:bg-blue-100 text-slate-900 text-xs font-semibold border border-slate-200 transition-colors cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Imprimer feuille d'appel</span>
@@ -68,7 +68,7 @@ export const TeacherAttendanceView: React.FC = () => {
               <span>Clôturer & Transmettre</span>
             </button>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
               <CheckCircle2 className="w-4 h-4" />
               <span>Appel transmis à la Vie Scolaire</span>
             </div>
@@ -77,14 +77,14 @@ export const TeacherAttendanceView: React.FC = () => {
       </div>
 
       {/* Session Information Card */}
-      <div className="rounded-2xl bg-slate-900 border border-slate-800 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="rounded-2xl bg-white border border-blue-100 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-xs">
-            <span className="font-bold text-white text-sm">{attendanceSession.className}</span>
+            <span className="font-bold text-blue-950 text-sm">{attendanceSession.className}</span>
             <span className="text-slate-600">·</span>
-            <span className="text-blue-400 font-mono">{attendanceSession.subject}</span>
+            <span className="text-blue-600 font-mono">{attendanceSession.subject}</span>
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
             <span className="flex items-center gap-1 font-mono">
               <Calendar className="w-3.5 h-3.5 text-slate-500" />
               {attendanceSession.date}
@@ -102,31 +102,31 @@ export const TeacherAttendanceView: React.FC = () => {
 
         {/* Counter badges */}
         <div className="flex items-center gap-2">
-          <div className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-            <div className="text-[10px] text-slate-400">Présents</div>
-            <div className="text-base font-bold text-emerald-400">{presentsCount}</div>
+          <div className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
+            <div className="text-[10px] text-slate-500">Présents</div>
+            <div className="text-base font-bold text-emerald-600">{presentsCount}</div>
           </div>
-          <div className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
-            <div className="text-[10px] text-slate-400">Retards</div>
-            <div className="text-base font-bold text-amber-400">{retardsCount}</div>
+          <div className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-center">
+            <div className="text-[10px] text-slate-500">Retards</div>
+            <div className="text-base font-bold text-amber-700">{retardsCount}</div>
           </div>
-          <div className="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-center">
-            <div className="text-[10px] text-slate-400">Absents</div>
-            <div className="text-base font-bold text-rose-400">{absentsCount}</div>
+          <div className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-center">
+            <div className="text-[10px] text-slate-500">Absents</div>
+            <div className="text-base font-bold text-rose-600">{absentsCount}</div>
           </div>
-          <div className="px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
-            <div className="text-[10px] text-slate-400">Assiduité</div>
-            <div className="text-base font-bold text-blue-400">{presenceRate}%</div>
+          <div className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-center">
+            <div className="text-[10px] text-slate-500">Assiduité</div>
+            <div className="text-base font-bold text-blue-600">{presenceRate}%</div>
           </div>
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 pb-1 border-b border-slate-800">
+      <div className="flex items-center gap-2 pb-1 border-b border-blue-100">
         <button
           onClick={() => setFilter('all')}
           className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-            filter === 'all' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'
+            filter === 'all' ? 'bg-slate-50 text-blue-950' : 'text-slate-500 hover:text-blue-950'
           }`}
         >
           Tous les élèves ({total})
@@ -134,7 +134,7 @@ export const TeacherAttendanceView: React.FC = () => {
         <button
           onClick={() => setFilter('present')}
           className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-            filter === 'present' ? 'bg-emerald-600/30 text-emerald-300' : 'text-slate-400 hover:text-white'
+            filter === 'present' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-500 hover:text-blue-950'
           }`}
         >
           Présents ({presentsCount})
@@ -142,7 +142,7 @@ export const TeacherAttendanceView: React.FC = () => {
         <button
           onClick={() => setFilter('retard')}
           className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-            filter === 'retard' ? 'bg-amber-600/30 text-amber-300' : 'text-slate-400 hover:text-white'
+            filter === 'retard' ? 'bg-amber-50 text-amber-700' : 'text-slate-500 hover:text-blue-950'
           }`}
         >
           Retards ({retardsCount})
@@ -150,7 +150,7 @@ export const TeacherAttendanceView: React.FC = () => {
         <button
           onClick={() => setFilter('absent')}
           className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-            filter === 'absent' ? 'bg-rose-600/30 text-rose-300' : 'text-slate-400 hover:text-white'
+            filter === 'absent' ? 'bg-rose-50 text-rose-700' : 'text-slate-500 hover:text-blue-950'
           }`}
         >
           Absents ({absentsCount})
@@ -162,15 +162,15 @@ export const TeacherAttendanceView: React.FC = () => {
         {filteredRecords.map(student => (
           <div 
             key={student.studentId}
-            className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors"
+            className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-white border border-blue-100 hover:border-slate-200 transition-colors"
           >
             {/* Student info */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold text-sm shrink-0">
+              <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
                 {student.fullName.charAt(0)}
               </div>
               <div>
-                <div className="font-bold text-sm text-white">{student.fullName}</div>
+                <div className="font-bold text-sm text-blue-950">{student.fullName}</div>
                 <div className="text-xs text-slate-500 font-mono">{student.matricule}</div>
               </div>
             </div>
@@ -182,7 +182,7 @@ export const TeacherAttendanceView: React.FC = () => {
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                   student.status === 'present'
                     ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
-                    : 'bg-slate-800 text-slate-400 hover:bg-emerald-500/10 hover:text-emerald-400'
+                    : 'bg-slate-50 text-slate-500 hover:bg-emerald-50 hover:text-emerald-600'
                 }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -194,7 +194,7 @@ export const TeacherAttendanceView: React.FC = () => {
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                   student.status === 'retard'
                     ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30'
-                    : 'bg-slate-800 text-slate-400 hover:bg-amber-500/10 hover:text-amber-400'
+                    : 'bg-slate-50 text-slate-500 hover:bg-amber-50 hover:text-amber-700'
                 }`}
               >
                 <Clock className="w-3.5 h-3.5" />
@@ -206,7 +206,7 @@ export const TeacherAttendanceView: React.FC = () => {
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                   student.status === 'absent'
                     ? 'bg-rose-600 text-white shadow-md shadow-rose-600/30'
-                    : 'bg-slate-800 text-slate-400 hover:bg-rose-500/10 hover:text-rose-400'
+                    : 'bg-slate-50 text-slate-500 hover:bg-rose-50 hover:text-rose-600'
                 }`}
               >
                 <XCircle className="w-3.5 h-3.5" />
@@ -218,7 +218,7 @@ export const TeacherAttendanceView: React.FC = () => {
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   student.status === 'justifie'
                     ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                    : 'bg-slate-50 text-slate-500 hover:bg-blue-100 hover:text-blue-950'
                 }`}
               >
                 <span>Justifié</span>
@@ -238,7 +238,7 @@ export const TeacherAttendanceView: React.FC = () => {
                     student.minutesLate, 
                     e.target.value
                   )}
-                  className="w-full px-2.5 py-1 text-xs rounded-lg bg-slate-800/80 border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                  className="w-full px-2.5 py-1 text-xs rounded-lg bg-blue-50/60 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500"
                 />
               </div>
             )}

@@ -40,13 +40,13 @@ export const ParentGradesReportCardView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
               Trimestre 1 · Validé par la Direction
             </span>
-            <span className="text-xs text-slate-400">Élève : {selectedChild.firstName} {selectedChild.lastName} ({selectedChild.className})</span>
+            <span className="text-xs text-slate-500">Élève : {selectedChild.firstName} {selectedChild.lastName} ({selectedChild.className})</span>
           </div>
-          <h1 className="text-xl md:text-2xl font-black text-white mt-1">Relevé de Notes & Bulletin Scolaire</h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <h1 className="text-xl md:text-2xl font-black text-blue-950 mt-1">Relevé de Notes & Bulletin Scolaire</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
             Détail des notes par matière, pondération par coefficient, appréciation des professeurs et aperçu d'impression.
           </p>
         </div>
@@ -62,37 +62,37 @@ export const ParentGradesReportCardView: React.FC = () => {
 
       {/* Summary KPI Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] text-slate-400 font-semibold">Moyenne Générale</div>
-          <div className="text-2xl font-black text-emerald-400 mt-1">{calculatedGeneralAverage} / 20</div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Félicitations du Conseil</div>
+        <div className="p-4 rounded-xl bg-white border border-blue-100">
+          <div className="text-[11px] text-slate-500 font-semibold">Moyenne Générale</div>
+          <div className="text-2xl font-black text-emerald-600 mt-1">{calculatedGeneralAverage} / 20</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Félicitations du Conseil</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] text-slate-400 font-semibold">Rang dans la Classe</div>
-          <div className="text-2xl font-black text-white mt-1">{selectedChild.classRank}ème</div>
-          <div className="text-[10px] text-slate-400 mt-0.5">sur {selectedChild.totalStudents} élèves</div>
+        <div className="p-4 rounded-xl bg-white border border-blue-100">
+          <div className="text-[11px] text-slate-500 font-semibold">Rang dans la Classe</div>
+          <div className="text-2xl font-black text-blue-950 mt-1">{selectedChild.classRank}ème</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">sur {selectedChild.totalStudents} élèves</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] text-slate-400 font-semibold">Total Coefficients</div>
-          <div className="text-2xl font-black text-blue-400 mt-1">{totalCoefficients}</div>
-          <div className="text-[10px] text-slate-400 mt-0.5">9 disciplines notées</div>
+        <div className="p-4 rounded-xl bg-white border border-blue-100">
+          <div className="text-[11px] text-slate-500 font-semibold">Total Coefficients</div>
+          <div className="text-2xl font-black text-blue-600 mt-1">{totalCoefficients}</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">9 disciplines notées</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] text-slate-400 font-semibold">Assiduité Trimestrielle</div>
-          <div className="text-2xl font-black text-cyan-400 mt-1">100%</div>
-          <div className="text-[10px] text-emerald-400 mt-0.5">Zéro absence injustifiée</div>
+        <div className="p-4 rounded-xl bg-white border border-blue-100">
+          <div className="text-[11px] text-slate-500 font-semibold">Assiduité Trimestrielle</div>
+          <div className="text-2xl font-black text-cyan-600 mt-1">100%</div>
+          <div className="text-[10px] text-emerald-600 mt-0.5">Zéro absence injustifiée</div>
         </div>
       </div>
 
       {/* Grades Table */}
-      <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+      <div className="rounded-2xl bg-white border border-blue-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
             <thead>
-              <tr className="border-b border-slate-800 text-[11px] text-slate-400 uppercase font-semibold bg-slate-800/40">
+              <tr className="border-b border-blue-100 text-[11px] text-slate-500 uppercase font-semibold bg-blue-50/60">
                 <th className="py-3 px-4">Discipline</th>
                 <th className="py-3 px-4 text-center">Coef</th>
                 <th className="py-3 px-4 text-center">Interro /20</th>
@@ -103,17 +103,17 @@ export const ParentGradesReportCardView: React.FC = () => {
                 <th className="py-3 px-4">Appréciation de l'Enseignant</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-blue-100">
               {subjectsData.map((sub, idx) => (
-                <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
-                  <td className="py-3 px-4 font-bold text-white text-xs">{sub.name}</td>
-                  <td className="py-3 px-4 text-center font-mono text-slate-300 font-bold">{sub.coef}</td>
-                  <td className="py-3 px-4 text-center font-mono text-slate-300">{sub.interro.toFixed(1)}</td>
-                  <td className="py-3 px-4 text-center font-mono text-slate-300">{sub.devoir.toFixed(1)}</td>
-                  <td className="py-3 px-4 text-center font-mono text-slate-300">{sub.compo.toFixed(1)}</td>
-                  <td className="py-3 px-4 text-center font-mono font-bold text-emerald-400">{sub.average.toFixed(2)}</td>
-                  <td className="py-3 px-4 text-center font-semibold text-slate-300">{sub.rank}er</td>
-                  <td className="py-3 px-4 text-slate-300 italic text-[11px] max-w-xs">{sub.appreciation}</td>
+                <tr key={idx} className="hover:bg-blue-50 transition-colors">
+                  <td className="py-3 px-4 font-bold text-blue-950 text-xs">{sub.name}</td>
+                  <td className="py-3 px-4 text-center font-mono text-slate-700 font-bold">{sub.coef}</td>
+                  <td className="py-3 px-4 text-center font-mono text-slate-700">{sub.interro.toFixed(1)}</td>
+                  <td className="py-3 px-4 text-center font-mono text-slate-700">{sub.devoir.toFixed(1)}</td>
+                  <td className="py-3 px-4 text-center font-mono text-slate-700">{sub.compo.toFixed(1)}</td>
+                  <td className="py-3 px-4 text-center font-mono font-bold text-emerald-600">{sub.average.toFixed(2)}</td>
+                  <td className="py-3 px-4 text-center font-semibold text-slate-700">{sub.rank}er</td>
+                  <td className="py-3 px-4 text-slate-700 italic text-[11px] max-w-xs">{sub.appreciation}</td>
                 </tr>
               ))}
             </tbody>
@@ -123,12 +123,12 @@ export const ParentGradesReportCardView: React.FC = () => {
 
       {/* Official Printable Report Card Modal (Bulletin Officiel MEPU-A) */}
       {printModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
-          <div className="w-full max-w-4xl rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl flex flex-col max-h-[92vh]">
-            <div className="p-4 border-b border-slate-800 flex items-center justify-between shrink-0">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="w-full max-w-4xl rounded-2xl bg-white border border-slate-200 shadow-2xl flex flex-col max-h-[92vh]">
+            <div className="p-4 border-b border-blue-100 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
-                <FileCheck2 className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-sm font-bold text-white">Aperçu du Bulletin Trimestriel Officiel</h3>
+                <FileCheck2 className="w-5 h-5 text-emerald-600" />
+                <h3 className="text-sm font-bold text-blue-950">Aperçu du Bulletin Trimestriel Officiel</h3>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -138,7 +138,7 @@ export const ParentGradesReportCardView: React.FC = () => {
                       exportPrintableDocument(`Bulletin_${selectedChild.lastName}_T1`, el.innerHTML);
                     }
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 text-xs font-bold cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 text-xs font-bold cursor-pointer"
                   title="Télécharger une version imprimable propre"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -153,7 +153,7 @@ export const ParentGradesReportCardView: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setPrintModalOpen(false)}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold"
+                  className="px-3 py-1.5 rounded-lg bg-slate-50 text-slate-700 hover:text-blue-950 text-xs font-semibold"
                 >
                   Fermer
                 </button>
@@ -209,28 +209,30 @@ export const ParentGradesReportCardView: React.FC = () => {
               </div>
 
               {/* Table */}
-              <table className="w-full text-xs font-sans border-collapse border border-slate-300">
-                <thead>
-                  <tr className="bg-slate-100 text-[10px] uppercase font-bold text-slate-700">
-                    <th className="border border-slate-300 p-1.5 text-left">Matières</th>
-                    <th className="border border-slate-300 p-1.5 text-center">Coef</th>
-                    <th className="border border-slate-300 p-1.5 text-center">Moyenne</th>
-                    <th className="border border-slate-300 p-1.5 text-center">Rang</th>
-                    <th className="border border-slate-300 p-1.5 text-left">Appréciation</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subjectsData.map((sub, i) => (
-                    <tr key={i} className="border-b border-slate-200">
-                      <td className="border border-slate-300 p-1.5 font-bold">{sub.name}</td>
-                      <td className="border border-slate-300 p-1.5 text-center font-bold">{sub.coef}</td>
-                      <td className="border border-slate-300 p-1.5 text-center font-bold text-blue-900">{sub.average.toFixed(2)}</td>
-                      <td className="border border-slate-300 p-1.5 text-center">{sub.rank}er</td>
-                      <td className="border border-slate-300 p-1.5 italic text-[11px]">{sub.appreciation}</td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs font-sans border-collapse border border-slate-300">
+                  <thead>
+                    <tr className="bg-slate-100 text-[10px] uppercase font-bold text-slate-700">
+                      <th className="border border-slate-300 p-1.5 text-left">Matières</th>
+                      <th className="border border-slate-300 p-1.5 text-center">Coef</th>
+                      <th className="border border-slate-300 p-1.5 text-center">Moyenne</th>
+                      <th className="border border-slate-300 p-1.5 text-center">Rang</th>
+                      <th className="border border-slate-300 p-1.5 text-left">Appréciation</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {subjectsData.map((sub, i) => (
+                      <tr key={i} className="border-b border-slate-200">
+                        <td className="border border-slate-300 p-1.5 font-bold">{sub.name}</td>
+                        <td className="border border-slate-300 p-1.5 text-center font-bold">{sub.coef}</td>
+                        <td className="border border-slate-300 p-1.5 text-center font-bold text-blue-900">{sub.average.toFixed(2)}</td>
+                        <td className="border border-slate-300 p-1.5 text-center">{sub.rank}er</td>
+                        <td className="border border-slate-300 p-1.5 italic text-[11px]">{sub.appreciation}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
               {/* Decision & Signatures */}
               <div className="grid grid-cols-3 gap-3 text-xs font-sans pt-3 border-t-2 border-slate-900">

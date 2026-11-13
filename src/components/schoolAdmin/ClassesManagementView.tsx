@@ -118,12 +118,12 @@ export const ClassesManagementView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-blue-950">
             Gestion des Classes & Sections ({classes.length})
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Définition des divisions pédagogiques, capacités d'accueil, salles associées et professeurs principaux
           </p>
         </div>
@@ -140,20 +140,20 @@ export const ClassesManagementView: React.FC = () => {
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Rechercher par nom de classe, section ou salle..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-white border border-slate-200 text-blue-950 placeholder-slate-400 focus:outline-none focus:border-blue-500"
           />
         </div>
 
         <select
           value={filterLevel}
           onChange={e => setFilterLevel(e.target.value)}
-          className="px-3 py-2 text-xs rounded-lg bg-slate-900 border border-slate-700 text-slate-200 focus:outline-none focus:border-blue-500"
+          className="px-3 py-2 text-xs rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500"
         >
           <option value="all">Tous les cycles d'études</option>
           <option value="Lycée">Lycée</option>
@@ -171,24 +171,24 @@ export const ClassesManagementView: React.FC = () => {
               key={cls.id}
               className={`p-5 rounded-xl border flex flex-col justify-between transition-all ${
                 cls.archived 
-                  ? 'bg-slate-900/40 border-slate-800 opacity-60' 
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-white/90 border-blue-100 opacity-60' 
+                  : 'bg-white border-blue-100 hover:border-slate-200'
               }`}
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-blue-400">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-blue-600">
                       {cls.level}
                     </span>
-                    <h3 className="text-base font-bold text-white mt-0.5">
+                    <h3 className="text-base font-bold text-blue-950 mt-0.5">
                       {cls.name}
                     </h3>
-                    <div className="text-xs text-slate-400">{cls.section}</div>
+                    <div className="text-xs text-slate-500">{cls.section}</div>
                   </div>
 
                   <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${
-                    cls.archived ? 'bg-slate-800 text-slate-400' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                    cls.archived ? 'bg-slate-50 text-slate-500' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
                   }`}>
                     {cls.archived ? 'Archivée' : 'Ouverte'}
                   </span>
@@ -196,16 +196,16 @@ export const ClassesManagementView: React.FC = () => {
 
                 {/* Quotas & Occupancy */}
                 <div className="mt-4 space-y-2 text-xs">
-                  <div className="flex justify-between text-slate-300">
-                    <span className="flex items-center gap-1.5 text-slate-400">
-                      <Users className="w-3.5 h-3.5 text-blue-400" />
+                  <div className="flex justify-between text-slate-700">
+                    <span className="flex items-center gap-1.5 text-slate-500">
+                      <Users className="w-3.5 h-3.5 text-blue-600" />
                       Effectif Élèves :
                     </span>
-                    <span className="font-mono font-bold text-white">
+                    <span className="font-mono font-bold text-blue-950">
                       {cls.studentsCount} / {cls.capacity} places ({occupancyRate}%)
                     </span>
                   </div>
-                  <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                  <div className="w-full h-1.5 rounded-full bg-blue-100/70 overflow-hidden">
                     <div 
                       className="h-full bg-blue-500 rounded-full" 
                       style={{ width: `${Math.min(100, occupancyRate)}%` }}
@@ -213,26 +213,26 @@ export const ClassesManagementView: React.FC = () => {
                   </div>
 
                   {/* Room */}
-                  <div className="flex items-center gap-2 pt-2 text-slate-300">
-                    <DoorOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    <span className="truncate">Salle : <strong className="text-white">{cls.mainRoomName}</strong></span>
+                  <div className="flex items-center gap-2 pt-2 text-slate-700">
+                    <DoorOpen className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                    <span className="truncate">Salle : <strong className="text-blue-950">{cls.mainRoomName}</strong></span>
                   </div>
 
                   {/* Principal Teacher */}
-                  <div className="flex items-center gap-2 text-slate-300">
-                    <UserCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <div className="flex items-center gap-2 text-slate-700">
+                    <UserCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                     <span className="truncate">
-                      Prof. Principal : <strong className="text-white">{cls.principalTeacherName || 'Non assigné'}</strong>
+                      Prof. Principal : <strong className="text-blue-950">{cls.principalTeacherName || 'Non assigné'}</strong>
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* Actions Footer */}
-              <div className="mt-5 pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+              <div className="mt-5 pt-3 border-t border-blue-100 flex items-center justify-between text-xs">
                 <button
                   onClick={() => archiveClass(cls.id)}
-                  className="text-slate-400 hover:text-slate-200 flex items-center gap-1 text-[11px]"
+                  className="text-slate-500 hover:text-slate-900 flex items-center gap-1 text-[11px]"
                 >
                   <Archive className="w-3 h-3" />
                   <span>{cls.archived ? 'Désarchiver' : 'Archiver'}</span>
@@ -241,7 +241,7 @@ export const ClassesManagementView: React.FC = () => {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => handleOpenEdit(cls)}
-                    className="p-1.5 text-slate-400 hover:text-white rounded bg-slate-800"
+                    className="p-1.5 text-slate-500 hover:text-blue-950 rounded bg-slate-50"
                     title="Modifier"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
@@ -249,7 +249,7 @@ export const ClassesManagementView: React.FC = () => {
 
                   <button
                     onClick={() => deleteClass(cls.id)}
-                    className="p-1.5 text-slate-400 hover:text-rose-400 rounded bg-slate-800"
+                    className="p-1.5 text-slate-500 hover:text-rose-600 rounded bg-slate-50"
                     title="Supprimer (Code PIN requis)"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -263,37 +263,37 @@ export const ClassesManagementView: React.FC = () => {
 
       {/* Modal Form */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
-          <div className="relative w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-white text-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="relative w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <h3 className="font-bold text-blue-950 text-sm">
                 {classToEdit ? "Modifier la Classe" : "Créer une Nouvelle Classe"}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-blue-950">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="mt-4 space-y-3.5 text-xs">
               <div className="space-y-1">
-                <label className="text-slate-300 font-medium">Nom officiel de la classe *</label>
+                <label className="text-slate-700 font-medium">Nom officiel de la classe *</label>
                 <input
                   type="text"
                   required
                   placeholder="Ex: Terminale SM 1, 10ème A..."
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-medium">Niveau d'études *</label>
+                  <label className="text-slate-700 font-medium">Niveau d'études *</label>
                   <select
                     value={level}
                     onChange={e => setLevel(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                   >
                     <option value="Lycée (Terminale)">Lycée (Terminale)</option>
                     <option value="Lycée (1ère Année)">Lycée (1ère Année)</option>
@@ -304,7 +304,7 @@ export const ClassesManagementView: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-medium">Capacité max *</label>
+                  <label className="text-slate-700 font-medium">Capacité max *</label>
                   <input
                     type="number"
                     required
@@ -312,28 +312,28 @@ export const ClassesManagementView: React.FC = () => {
                     max={100}
                     value={capacity}
                     onChange={e => setCapacity(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white font-mono"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-300 font-medium">Section / Filière</label>
+                <label className="text-slate-700 font-medium">Section / Filière</label>
                 <input
                   type="text"
                   placeholder="Sciences Mathématiques, Littéraire..."
                   value={section}
                   onChange={e => setSection(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-300 font-medium">Salle principale de cours</label>
+                <label className="text-slate-700 font-medium">Salle principale de cours</label>
                 <select
                   value={mainRoomId}
                   onChange={e => setMainRoomId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 >
                   {rooms.map(r => (
                     <option key={r.id} value={r.id}>{r.name} ({r.capacity} pl.)</option>
@@ -342,11 +342,11 @@ export const ClassesManagementView: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-300 font-medium">Professeur Principal assigné</label>
+                <label className="text-slate-700 font-medium">Professeur Principal assigné</label>
                 <select
                   value={principalTeacherId}
                   onChange={e => setPrincipalTeacherId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 >
                   <option value="">Sélectionner plus tard</option>
                   {teachers.map(t => (
@@ -355,11 +355,11 @@ export const ClassesManagementView: React.FC = () => {
                 </select>
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+              <div className="pt-3 border-t border-blue-100 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-slate-400 hover:text-white rounded-lg bg-slate-800"
+                  className="px-4 py-2 text-slate-500 hover:text-blue-950 rounded-lg bg-slate-50"
                 >
                   Annuler
                 </button>

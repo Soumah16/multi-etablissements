@@ -71,11 +71,11 @@ export const SupervisorPatrolsView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-            <ShieldCheck className="w-6 h-6 text-blue-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2.5">
+            <ShieldCheck className="w-6 h-6 text-blue-600" />
             <span>Rondes de Surveillance & Objets Confisqués</span>
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Contrôle des zones sensibles (portails, cour, couloirs) et registre sécurisé des objets consignés
           </p>
         </div>
@@ -102,32 +102,32 @@ export const SupervisorPatrolsView: React.FC = () => {
         {/* Left Column: Rondes de Surveillance */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-blue-400" />
+            <h3 className="font-bold text-sm text-blue-950 flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-blue-600" />
               <span>Registre des Rondes de Surveillance ({patrols.length})</span>
             </h3>
-            <span className="text-[11px] text-slate-400 font-mono">Quotidien</span>
+            <span className="text-[11px] text-slate-500 font-mono">Quotidien</span>
           </div>
 
           <div className="space-y-3">
             {patrols.map(p => (
               <div 
                 key={p.id}
-                className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-xs hover:border-slate-700 transition-all shadow-md"
+                className="p-4 rounded-xl bg-white border border-blue-100 space-y-2 text-xs hover:border-slate-200 transition-all shadow-md"
               >
                 <div className="flex items-center justify-between">
-                  <div className="font-bold text-white text-sm flex items-center gap-2">
+                  <div className="font-bold text-blue-950 text-sm flex items-center gap-2">
                     <span>{p.zone}</span>
                     {p.incidentDetected && (
-                      <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                      <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
                         Incident signalé
                       </span>
                     )}
                   </div>
-                  <span className="font-mono text-slate-400">{p.date} · {p.time}</span>
+                  <span className="font-mono text-slate-500">{p.date} · {p.time}</span>
                 </div>
 
-                <p className="text-slate-300 leading-relaxed bg-slate-950/40 p-2.5 rounded-lg border border-slate-800">
+                <p className="text-slate-700 leading-relaxed bg-blue-50/70 p-2.5 rounded-lg border border-blue-100">
                   {p.observations}
                 </p>
 
@@ -142,41 +142,41 @@ export const SupervisorPatrolsView: React.FC = () => {
         {/* Right Column: Registre des Objets Confisqués */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <Package className="w-4 h-4 text-amber-400" />
+            <h3 className="font-bold text-sm text-blue-950 flex items-center gap-2">
+              <Package className="w-4 h-4 text-amber-700" />
               <span>Objets Confisqués en Consigne ({confiscatedItems.length})</span>
             </h3>
-            <span className="text-[11px] text-amber-400 font-mono">Armoire Sécurisée</span>
+            <span className="text-[11px] text-amber-700 font-mono">Armoire Sécurisée</span>
           </div>
 
           <div className="space-y-3">
             {confiscatedItems.map(item => (
               <div 
                 key={item.id}
-                className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3 text-xs hover:border-slate-700 transition-all shadow-md"
+                className="p-4 rounded-xl bg-white border border-blue-100 space-y-3 text-xs hover:border-slate-200 transition-all shadow-md"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-white text-sm">{item.itemName}</span>
+                  <span className="font-bold text-blue-950 text-sm">{item.itemName}</span>
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                     item.status === 'consigne' 
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
-                      : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      ? 'bg-amber-50 text-amber-700 border border-amber-200' 
+                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                   }`}>
                     {item.status === 'consigne' ? 'En consigne' : 'Restitué au parent'}
                   </span>
                 </div>
 
-                <div className="space-y-1 text-slate-300">
-                  <div>Élève : <strong className="text-white">{item.studentName}</strong> ({item.className})</div>
-                  <div className="text-[11px] text-slate-400">Emplacement : {item.location}</div>
+                <div className="space-y-1 text-slate-700">
+                  <div>Élève : <strong className="text-blue-950">{item.studentName}</strong> ({item.className})</div>
+                  <div className="text-[11px] text-slate-500">Emplacement : {item.location}</div>
                   <div className="text-[10px] text-slate-500 font-mono">Confisqué le {item.confiscatedDate}</div>
                 </div>
 
                 {item.status === 'consigne' && (
-                  <div className="pt-2 border-t border-slate-800 flex justify-end">
+                  <div className="pt-2 border-t border-blue-100 flex justify-end">
                     <button
                       onClick={() => returnConfiscatedItem(item.id)}
-                      className="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 font-bold text-xs transition-colors flex items-center gap-1.5"
+                      className="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs transition-colors flex items-center gap-1.5"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>Restituer au Parent (Décharge signée)</span>
@@ -191,20 +191,20 @@ export const SupervisorPatrolsView: React.FC = () => {
 
       {/* Modal: New Patrol */}
       {patrolModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-base text-white">Inscrire une Ronde de Surveillance</h3>
-              <button onClick={() => setPatrolModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-white border border-blue-100 p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <h3 className="font-bold text-base text-blue-950">Inscrire une Ronde de Surveillance</h3>
+              <button onClick={() => setPatrolModalOpen(false)} className="text-slate-500 hover:text-blue-950">✕</button>
             </div>
 
             <form onSubmit={handleCreatePatrol} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Zone inspectée *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Zone inspectée *</label>
                 <select 
                   value={zone}
                   onChange={e => setZone(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 >
                   <option value="Portail Principal">Portail Principal</option>
                   <option value="Cour Centrale">Cour Centrale & Terrains</option>
@@ -215,24 +215,24 @@ export const SupervisorPatrolsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Plage horaire *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Plage horaire *</label>
                 <input 
                   type="text" 
                   value={patrolTime}
                   onChange={e => setPatrolTime(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Observations & Faits constatés *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Observations & Faits constatés *</label>
                 <textarea 
                   rows={3}
                   required
                   placeholder="Décrivez l'ambiance, les éventuels rassemblements suspects, l'état des lieux..."
                   value={observations}
                   onChange={e => setObservations(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -244,16 +244,16 @@ export const SupervisorPatrolsView: React.FC = () => {
                   onChange={e => setIncidentDetected(e.target.checked)}
                   className="w-4 h-4 rounded text-rose-600 focus:ring-0"
                 />
-                <label htmlFor="inc" className="text-slate-300 font-semibold cursor-pointer">
+                <label htmlFor="inc" className="text-slate-700 font-semibold cursor-pointer">
                   Incident disciplinaire détecté durant la ronde
                 </label>
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-blue-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setPatrolModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-blue-950 bg-slate-50 text-xs font-semibold"
                 >
                   Annuler
                 </button>
@@ -271,63 +271,63 @@ export const SupervisorPatrolsView: React.FC = () => {
 
       {/* Modal: Consign Item */}
       {confiscateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-base text-white">Consigner un Objet Interdit</h3>
-              <button onClick={() => setConfiscateModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-white border border-blue-100 p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <h3 className="font-bold text-base text-blue-950">Consigner un Objet Interdit</h3>
+              <button onClick={() => setConfiscateModalOpen(false)} className="text-slate-500 hover:text-blue-950">✕</button>
             </div>
 
             <form onSubmit={handleCreateConfiscate} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Élève *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Élève *</label>
                 <input 
                   type="text" 
                   required
                   placeholder="Ex: Ousmane Barry"
                   value={studentName}
                   onChange={e => setStudentName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Classe *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Classe *</label>
                 <input 
                   type="text" 
                   value={className}
                   onChange={e => setClassName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Description de l'objet confisqué *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Description de l'objet confisqué *</label>
                 <input 
                   type="text" 
                   required
                   placeholder="Ex: Smartphone iPhone 11 Noir avec écouteurs"
                   value={itemName}
                   onChange={e => setItemName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Lieu de stockage sous clé *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Lieu de stockage sous clé *</label>
                 <input 
                   type="text" 
                   value={location}
                   onChange={e => setLocation(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-blue-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setConfiscateModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-blue-950 bg-slate-50 text-xs font-semibold"
                 >
                   Annuler
                 </button>

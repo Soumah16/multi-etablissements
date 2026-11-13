@@ -71,12 +71,12 @@ export const GlobalSettingsView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-blue-950">
             {t.nav.settings}
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Contrôle global de l'infrastructure, marque blanche, passerelles SMS/Email et internationalisation
           </p>
         </div>
@@ -84,23 +84,23 @@ export const GlobalSettingsView: React.FC = () => {
 
       <form onSubmit={handleSaveSettings} className="space-y-6">
         {/* Section 1: Platform Branding */}
-        <div className="p-5 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-700/60">
-            <Palette className="w-5 h-5 text-blue-400" />
-            <h2 className="text-sm font-bold text-white">
+        <div className="p-5 rounded-xl bg-blue-50/60 border border-slate-200 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-200">
+            <Palette className="w-5 h-5 text-blue-600" />
+            <h2 className="text-sm font-bold text-blue-950">
               Identité & Marque Blanche Plateforme
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Nom public de la plateforme *</label>
+              <label className="text-slate-700 font-medium">Nom public de la plateforme *</label>
               <input
                 type="text"
                 required
                 value={platformName}
                 onChange={e => setPlatformName(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -116,123 +116,123 @@ export const GlobalSettingsView: React.FC = () => {
 
           <div className="flex items-center gap-4 pt-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-300">Couleur d'accentuation principale :</span>
+              <span className="text-xs text-slate-700">Couleur d'accentuation principale :</span>
               <input
                 type="color"
                 value={primaryColor}
                 onChange={e => setPrimaryColor(e.target.value)}
-                className="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                className="w-8 h-8 rounded border border-slate-200 bg-transparent cursor-pointer"
               />
-              <span className="text-xs font-mono text-slate-400">{primaryColor}</span>
+              <span className="text-xs font-mono text-slate-500">{primaryColor}</span>
             </div>
 
             <div className="flex items-center gap-3 ml-auto">
-              <span className="text-xs text-slate-300">Délai d'inactivité avant déconnexion :</span>
+              <span className="text-xs text-slate-700">Délai d'inactivité avant déconnexion :</span>
               <input
                 type="number"
                 value={sessionTimeoutMinutes}
                 onChange={e => setSessionTimeoutMinutes(Number(e.target.value))}
-                className="w-20 px-2 py-1 text-xs rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                className="w-20 px-2 py-1 text-xs rounded bg-white border border-slate-200 text-blue-950 font-mono"
               />
-              <span className="text-xs text-slate-400">minutes</span>
+              <span className="text-xs text-slate-500">minutes</span>
             </div>
           </div>
         </div>
 
         {/* Section 2: Gateways & Notifications */}
-        <div className="p-5 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-700/60">
-            <Mail className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-sm font-bold text-white">
+        <div className="p-5 rounded-xl bg-blue-50/60 border border-slate-200 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-200">
+            <Mail className="w-5 h-5 text-emerald-600" />
+            <h2 className="text-sm font-bold text-blue-950">
               Passerelles de Notification & Envois de Messages
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Email expéditeur système (SMTP)</label>
+              <label className="text-slate-700 font-medium">Email expéditeur système (SMTP)</label>
               <input
                 type="email"
                 value={systemEmail}
                 onChange={e => setSystemEmail(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono"
+                className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950 font-mono"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Serveur SMTP Hôte</label>
+              <label className="text-slate-700 font-medium">Serveur SMTP Hôte</label>
               <input
                 type="text"
                 value={smtpHost}
                 onChange={e => setSmtpHost(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono"
+                className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950 font-mono"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Port SMTP</label>
+              <label className="text-slate-700 font-medium">Port SMTP</label>
               <input
                 type="number"
                 value={smtpPort}
                 onChange={e => setSmtpPort(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono"
+                className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950 font-mono"
               />
             </div>
           </div>
 
           {/* Toggles for SMS & WhatsApp */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 text-xs">
-            <div className="p-3.5 rounded-lg bg-slate-900 border border-slate-700/80 flex items-center justify-between">
+            <div className="p-3.5 rounded-lg bg-white border border-slate-200 flex items-center justify-between">
               <div>
-                <div className="font-semibold text-white">Passerelle SMS Guinée</div>
-                <div className="text-[10px] text-slate-400 mt-0.5">{smsProvider}</div>
+                <div className="font-semibold text-blue-950">Passerelle SMS Guinée</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">{smsProvider}</div>
               </div>
               <input
                 type="checkbox"
                 checked={smsGatewayEnabled}
                 onChange={e => setSmsGatewayEnabled(e.target.checked)}
-                className="w-4 h-4 rounded text-blue-600 bg-slate-800"
+                className="w-4 h-4 rounded text-blue-600 bg-slate-50"
               />
             </div>
 
-            <div className="p-3.5 rounded-lg bg-slate-900 border border-slate-700/80 flex items-center justify-between">
+            <div className="p-3.5 rounded-lg bg-white border border-slate-200 flex items-center justify-between">
               <div>
-                <div className="font-semibold text-white">WhatsApp Business API</div>
-                <div className="text-[10px] text-slate-400 mt-0.5">Envoi automatique de notifications de présence</div>
+                <div className="font-semibold text-blue-950">WhatsApp Business API</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">Envoi automatique de notifications de présence</div>
               </div>
               <input
                 type="checkbox"
                 checked={whatsAppEnabled}
                 onChange={e => setWhatsAppEnabled(e.target.checked)}
-                className="w-4 h-4 rounded text-green-600 bg-slate-800"
+                className="w-4 h-4 rounded text-green-600 bg-slate-50"
               />
             </div>
 
-            <div className="p-3.5 rounded-lg bg-slate-900 border border-slate-700/80 flex items-center justify-between">
+            <div className="p-3.5 rounded-lg bg-white border border-slate-200 flex items-center justify-between">
               <div>
-                <div className="font-semibold text-white">Notifications Push Web/Mobile</div>
-                <div className="text-[10px] text-slate-400 mt-0.5">Alertes instantanées sur smartphones</div>
+                <div className="font-semibold text-blue-950">Notifications Push Web/Mobile</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">Alertes instantanées sur smartphones</div>
               </div>
               <input
                 type="checkbox"
                 checked={pushNotificationsEnabled}
                 onChange={e => setPushNotificationsEnabled(e.target.checked)}
-                className="w-4 h-4 rounded text-blue-600 bg-slate-800"
+                className="w-4 h-4 rounded text-blue-600 bg-slate-50"
               />
             </div>
           </div>
         </div>
 
         {/* Section 3: Multi-Language Configuration */}
-        <div className="p-5 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-700/60">
-            <Globe className="w-5 h-5 text-indigo-400" />
-            <h2 className="text-sm font-bold text-white">
+        <div className="p-5 rounded-xl bg-blue-50/60 border border-slate-200 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-200">
+            <Globe className="w-5 h-5 text-indigo-600" />
+            <h2 className="text-sm font-bold text-blue-950">
               Gestion des Langues Internationales & Support Arabe RTL
             </h2>
           </div>
 
-          <p className="text-xs text-slate-300">
+          <p className="text-xs text-slate-700">
             Le Super Admin peut activer ou désactiver chaque dictionnaire de traduction pour adapter la plateforme aux régions bilingues (Franco-Arabe, etc.) :
           </p>
 
@@ -246,22 +246,22 @@ export const GlobalSettingsView: React.FC = () => {
             ].map(l => (
               <div 
                 key={l.code}
-                className="p-3 rounded-lg bg-slate-900 border border-slate-700/80 flex flex-col justify-between"
+                className="p-3 rounded-lg bg-white border border-slate-200 flex flex-col justify-between"
               >
                 <div>
-                  <div className="text-sm font-bold text-white">{l.flag}</div>
-                  <div className="text-[11px] text-slate-300 mt-1 font-medium">{l.label}</div>
+                  <div className="text-sm font-bold text-blue-950">{l.flag}</div>
+                  <div className="text-[11px] text-slate-700 mt-1 font-medium">{l.label}</div>
                 </div>
 
-                <div className="mt-3 pt-2 border-t border-slate-800 flex items-center justify-between">
-                  <span className={`text-[10px] font-semibold ${enabledLanguages[l.code] ? 'text-emerald-400' : 'text-slate-500'}`}>
+                <div className="mt-3 pt-2 border-t border-blue-100 flex items-center justify-between">
+                  <span className={`text-[10px] font-semibold ${enabledLanguages[l.code] ? 'text-emerald-600' : 'text-slate-500'}`}>
                     {enabledLanguages[l.code] ? 'Actif' : 'Désactivé'}
                   </span>
                   <button
                     type="button"
                     onClick={() => toggleLanguageStatus(l.code)}
                     disabled={l.code === 'fr'}
-                    className="text-[10px] text-slate-400 hover:text-white underline disabled:opacity-40"
+                    className="text-[10px] text-slate-500 hover:text-blue-950 underline disabled:opacity-40"
                   >
                     Basculer
                   </button>
@@ -272,14 +272,14 @@ export const GlobalSettingsView: React.FC = () => {
         </div>
 
         {/* Section 4: Maintenance Mode */}
-        <div className="p-5 rounded-xl bg-rose-950/20 border border-rose-500/30 flex items-center justify-between text-xs">
+        <div className="p-5 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between text-xs">
           <div className="flex items-start gap-3">
-            <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+            <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
             <div>
-              <div className="font-bold text-white text-sm">
+              <div className="font-bold text-blue-950 text-sm">
                 Mode Maintenance Plateforme
               </div>
-              <p className="text-slate-300 mt-0.5">
+              <p className="text-slate-700 mt-0.5">
                 Lorsqu'il est activé, tous les élèves, enseignants et parents voient une page d'information. Seul le Super Admin conserve l'accès.
               </p>
             </div>
@@ -295,7 +295,7 @@ export const GlobalSettingsView: React.FC = () => {
             className={`px-4 py-2 rounded-lg font-bold transition-colors ${
               maintenanceMode 
                 ? 'bg-rose-600 text-white' 
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                : 'bg-slate-50 hover:bg-blue-100 text-slate-700'
             }`}
           >
             {maintenanceMode ? 'Mode Maintenance Actif' : 'Activer Maintenance'}

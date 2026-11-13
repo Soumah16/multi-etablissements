@@ -72,11 +72,11 @@ export const ExpensesView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-            <ArrowDownRight className="w-6 h-6 text-rose-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2.5">
+            <ArrowDownRight className="w-6 h-6 text-rose-600" />
             <span>Gestion des Dépenses & Charges Opérationnelles</span>
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Suivi des factures d'énergie, fournitures, maintenance, internet et pièces justificatives
           </p>
         </div>
@@ -93,13 +93,13 @@ export const ExpensesView: React.FC = () => {
       </div>
 
       {/* Summary Card */}
-      <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-5 rounded-2xl bg-white border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs uppercase font-bold text-slate-400">Total des Dépenses Exécutées</span>
-          <div className="text-2xl md:text-3xl font-black font-mono text-rose-400 mt-1">
+          <span className="text-xs uppercase font-bold text-slate-500">Total des Dépenses Exécutées</span>
+          <div className="text-2xl md:text-3xl font-black font-mono text-rose-600 mt-1">
             {formatGnf(totalExpenses)}
           </div>
-          <div className="text-xs text-slate-400 mt-0.5">Toutes catégories confondues pour l'exercice en cours</div>
+          <div className="text-xs text-slate-500 mt-0.5">Toutes catégories confondues pour l'exercice en cours</div>
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
@@ -117,7 +117,7 @@ export const ExpensesView: React.FC = () => {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
                 categoryFilter === c.id
                   ? 'bg-rose-600 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+                  : 'bg-slate-50 text-slate-500 hover:text-blue-950'
               }`}
             >
               {c.label}
@@ -127,9 +127,9 @@ export const ExpensesView: React.FC = () => {
       </div>
 
       {/* Expenses Table */}
-      <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900 shadow-xl">
-        <table className="w-full text-left text-xs text-slate-300">
-          <thead className="bg-slate-950/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-800">
+      <div className="overflow-x-auto rounded-2xl border border-blue-100 bg-white shadow-xl">
+        <table className="w-full text-left text-xs text-slate-700">
+          <thead className="bg-blue-50/70 text-[10px] uppercase font-bold text-slate-500 border-b border-blue-100">
             <tr>
               <th className="py-3 px-4">Réf. / Date</th>
               <th className="py-3 px-4">Libellé & Catégorie</th>
@@ -140,31 +140,31 @@ export const ExpensesView: React.FC = () => {
               <th className="py-3 px-4 text-center">Statut</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60 font-medium">
+          <tbody className="divide-y divide-blue-100 font-medium">
             {filteredExpenses.map(expense => (
-              <tr key={expense.id} className="hover:bg-slate-800/40 transition-colors">
+              <tr key={expense.id} className="hover:bg-blue-50 transition-colors">
                 <td className="py-3 px-4">
-                  <div className="font-mono text-rose-400 font-bold">{expense.reference}</div>
+                  <div className="font-mono text-rose-600 font-bold">{expense.reference}</div>
                   <div className="text-[10px] text-slate-500 font-mono">{expense.date}</div>
                 </td>
 
                 <td className="py-3 px-4">
-                  <div className="font-bold text-white text-xs">{expense.title}</div>
-                  <span className="text-[9px] uppercase font-semibold px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">
+                  <div className="font-bold text-blue-950 text-xs">{expense.title}</div>
+                  <span className="text-[9px] uppercase font-semibold px-1.5 py-0.2 rounded bg-slate-50 text-slate-500">
                     {expense.category}
                   </span>
                 </td>
 
-                <td className="py-3 px-3 text-slate-300 font-semibold">
+                <td className="py-3 px-3 text-slate-700 font-semibold">
                   {expense.beneficiary}
                 </td>
 
-                <td className="py-3 px-3 text-right font-mono font-bold text-rose-400 text-sm">
+                <td className="py-3 px-3 text-right font-mono font-bold text-rose-600 text-sm">
                   {formatGnf(expense.amountGnf)}
                 </td>
 
                 <td className="py-3 px-3">
-                  <span className="text-[10px] font-mono uppercase text-slate-300">
+                  <span className="text-[10px] font-mono uppercase text-slate-700">
                     {expense.paymentMethod.replace('_', ' ')}
                   </span>
                 </td>
@@ -175,7 +175,7 @@ export const ExpensesView: React.FC = () => {
                       href={expense.proofDocumentUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 underline font-semibold"
+                      className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 underline font-semibold"
                     >
                       <span>Facture</span>
                       <ExternalLink className="w-3 h-3" />
@@ -186,7 +186,7 @@ export const ExpensesView: React.FC = () => {
                 </td>
 
                 <td className="py-3 px-4 text-center">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                     Payé ✓
                   </span>
                 </td>
@@ -198,38 +198,38 @@ export const ExpensesView: React.FC = () => {
 
       {/* Modal: Add Expense */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-lg max-h-[90vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-lg max-h-[90vh] flex flex-col rounded-2xl bg-white border border-blue-100 shadow-2xl overflow-hidden">
             {/* Pinned Modal Header */}
-            <div className="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900">
-              <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                <ArrowDownRight className="w-4 h-4 text-rose-400" />
+            <div className="px-5 py-3.5 border-b border-blue-100 flex items-center justify-between shrink-0 bg-white">
+              <h3 className="font-bold text-sm text-blue-950 flex items-center gap-2">
+                <ArrowDownRight className="w-4 h-4 text-rose-600" />
                 <span>Enregistrer une nouvelle dépense</span>
               </h3>
-              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white p-1">✕</button>
+              <button onClick={() => setModalOpen(false)} className="text-slate-500 hover:text-blue-950 p-1">✕</button>
             </div>
 
             <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 text-xs">
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3.5">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Libellé / Titre de la dépense *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Libellé / Titre de la dépense *</label>
                 <input 
                   type="text" 
                   required
                   placeholder="Ex: Facture d'électricité EDG Campus Kipé - Octobre"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-rose-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-rose-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Catégorie *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Catégorie *</label>
                   <select 
                     value={category}
                     onChange={e => setCategory(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   >
                     <option value="electricite">Électricité (EDG)</option>
                     <option value="internet">Internet & Télécoms</option>
@@ -243,7 +243,7 @@ export const ExpensesView: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Montant en GNF *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Montant en GNF *</label>
                   <input 
                     type="number" 
                     required
@@ -251,41 +251,41 @@ export const ExpensesView: React.FC = () => {
                     step="50000"
                     value={amountGnf}
                     onChange={e => setAmountGnf(parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-mono focus:outline-none focus:border-rose-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 font-mono focus:outline-none focus:border-rose-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Bénéficiaire / Fournisseur *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Bénéficiaire / Fournisseur *</label>
                   <input 
                     type="text" 
                     required
                     placeholder="Ex: EDG, Orange, Station Total..."
                     value={beneficiary}
                     onChange={e => setBeneficiary(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-rose-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-rose-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Date d'engagement *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Date d'engagement *</label>
                   <input 
                     type="date" 
                     required
                     value={date}
                     onChange={e => setDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-rose-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-rose-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Mode de règlement *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Mode de règlement *</label>
                 <select 
                   value={paymentMethod}
                   onChange={e => setPaymentMethod(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 >
                   <option value="especes">Espèces</option>
                   <option value="virement">Virement bancaire</option>
@@ -304,23 +304,23 @@ export const ExpensesView: React.FC = () => {
               />
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Description & Justification</label>
+                <label className="block text-slate-700 font-semibold mb-1">Description & Justification</label>
                 <textarea 
                   rows={2}
                   placeholder="Détails complémentaires sur la prestation ou les fournitures achetées..."
                   value={description}
                   onChange={e => setDescription(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-rose-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-rose-500"
                 />
               </div>
               </div>
 
               {/* Pinned Modal Footer */}
-              <div className="px-5 py-3 border-t border-slate-800 bg-slate-900/95 flex items-center justify-end gap-2.5 shrink-0">
+              <div className="px-5 py-3 border-t border-blue-100 bg-white flex items-center justify-end gap-2.5 shrink-0">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-blue-950 bg-slate-50 text-xs font-semibold"
                 >
                   Annuler
                 </button>

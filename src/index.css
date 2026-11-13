@@ -2,8 +2,17 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
+  html, body {
+    background-color: #F0F5FA;
+    color: #0f172a;
+    overflow-x: hidden;
+    max-width: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
   }
   
   [dir="rtl"] {
@@ -12,6 +21,30 @@
 
   code, pre, .font-mono {
     font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Smooth touch scrollbars matching light-blue theme */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #bfdbfe transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #bfdbfe;
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #93c5fd;
   }
 }
 

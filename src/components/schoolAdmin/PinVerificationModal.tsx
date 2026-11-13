@@ -46,8 +46,8 @@ export const PinVerificationModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
-      <div className="relative w-full max-w-sm rounded-2xl bg-slate-900 border border-amber-500/50 shadow-2xl p-6 text-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+      <div className="relative w-full max-w-sm rounded-2xl bg-white border border-amber-200 shadow-2xl p-6 text-center max-h-[92vh] overflow-y-auto">
         {/* Header */}
         <button
           onClick={() => {
@@ -55,25 +55,25 @@ export const PinVerificationModal: React.FC = () => {
             setPin('');
             setErrorMsg(null);
           }}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white"
+          className="absolute top-4 right-4 text-slate-500 hover:text-blue-950"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 mx-auto flex items-center justify-center mb-3">
+        <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 text-amber-700 mx-auto flex items-center justify-center mb-3">
           <KeyRound className="w-6 h-6" />
         </div>
 
-        <h3 className="text-base font-bold text-white">
+        <h3 className="text-base font-bold text-blue-950">
           Code PIN Administrateur Requis
         </h3>
 
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-slate-500 mt-1">
           {pendingPinAction?.description || "Cette opération est hautement sensible et nécessite une confirmation de sécurité."}
         </p>
 
         {isTemporarilyBlocked ? (
-          <div className="mt-4 p-3 rounded-lg bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+          <div className="mt-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 shrink-0" />
             <span>Compte temporairement bloqué suite à 5 tentatives erronées. Réessayez dans 5 minutes.</span>
           </div>
@@ -86,8 +86,8 @@ export const PinVerificationModal: React.FC = () => {
                   key={index}
                   className={`w-9 h-11 rounded-lg border flex items-center justify-center text-lg font-mono font-bold transition-all ${
                     pin.length > index
-                      ? 'border-amber-400 bg-amber-500/10 text-amber-300'
-                      : 'border-slate-700 bg-slate-800 text-slate-500'
+                      ? 'border-amber-400 bg-amber-50 text-amber-700'
+                      : 'border-slate-200 bg-slate-50 text-slate-500'
                   }`}
                 >
                   {pin.length > index ? '•' : ''}
@@ -96,7 +96,7 @@ export const PinVerificationModal: React.FC = () => {
             </div>
 
             {errorMsg && (
-              <p className="text-xs text-rose-400 font-medium animate-in fade-in">
+              <p className="text-xs text-rose-600 font-medium animate-in fade-in">
                 {errorMsg}
               </p>
             )}
@@ -112,7 +112,7 @@ export const PinVerificationModal: React.FC = () => {
                     else if (btn === '⌫') handleBackspace();
                     else handleDigitClick(btn);
                   }}
-                  className="h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-mono text-sm font-semibold active:scale-95 transition-transform"
+                  className="h-10 rounded-lg bg-slate-50 hover:bg-blue-100 border border-slate-200 text-blue-950 font-mono text-sm font-semibold active:scale-95 transition-transform"
                 >
                   {btn}
                 </button>
@@ -120,7 +120,7 @@ export const PinVerificationModal: React.FC = () => {
             </div>
 
             <div className="text-[11px] text-slate-500 font-mono pt-1">
-              Code PIN par défaut : <span className="text-amber-400">123456</span>
+              Code PIN par défaut : <span className="text-amber-700">123456</span>
             </div>
 
             <button

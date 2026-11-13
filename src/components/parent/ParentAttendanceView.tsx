@@ -59,13 +59,13 @@ export const ParentAttendanceView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200">
               Vie Scolaire & Présences
             </span>
-            <span className="text-xs text-slate-400">Élève : {selectedChild.firstName} {selectedChild.lastName} ({selectedChild.className})</span>
+            <span className="text-xs text-slate-500">Élève : {selectedChild.firstName} {selectedChild.lastName} ({selectedChild.className})</span>
           </div>
-          <h1 className="text-xl md:text-2xl font-black text-white mt-1">Relevé des Absences & des Retards</h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <h1 className="text-xl md:text-2xl font-black text-blue-950 mt-1">Relevé des Absences & des Retards</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
             Historique officiel enregistré par les surveillants et transmission en ligne des justificatifs d'absence.
           </p>
         </div>
@@ -81,21 +81,21 @@ export const ParentAttendanceView: React.FC = () => {
 
       {/* Summary KPI Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-center">
-          <div className="text-[11px] text-slate-400 font-semibold">Total Heures d'Absence</div>
-          <div className="text-2xl font-black text-white mt-1">{selectedChild.absencesCount}h</div>
-          <div className="text-[10px] text-emerald-400 mt-0.5">100% justifiées</div>
+        <div className="p-4 rounded-xl bg-white border border-blue-100 text-center">
+          <div className="text-[11px] text-slate-500 font-semibold">Total Heures d'Absence</div>
+          <div className="text-2xl font-black text-blue-950 mt-1">{selectedChild.absencesCount}h</div>
+          <div className="text-[10px] text-emerald-600 mt-0.5">100% justifiées</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-center">
-          <div className="text-[11px] text-slate-400 font-semibold">Retards Enregistrés</div>
-          <div className="text-2xl font-black text-amber-400 mt-1">{selectedChild.delaysCount}</div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Moyenne trimestrielle basse</div>
+        <div className="p-4 rounded-xl bg-white border border-blue-100 text-center">
+          <div className="text-[11px] text-slate-500 font-semibold">Retards Enregistrés</div>
+          <div className="text-2xl font-black text-amber-700 mt-1">{selectedChild.delaysCount}</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Moyenne trimestrielle basse</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-center">
-          <div className="text-[11px] text-slate-400 font-semibold">Statut Discipline</div>
-          <div className="text-lg font-bold text-emerald-400 mt-2 flex items-center justify-center gap-1.5">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 text-center">
+          <div className="text-[11px] text-slate-500 font-semibold">Statut Discipline</div>
+          <div className="text-lg font-bold text-emerald-600 mt-2 flex items-center justify-center gap-1.5">
             <ShieldCheck className="w-5 h-5" />
             <span>Exemplaire</span>
           </div>
@@ -103,11 +103,11 @@ export const ParentAttendanceView: React.FC = () => {
       </div>
 
       {/* Attendance Table */}
-      <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+      <div className="rounded-2xl bg-white border border-blue-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
             <thead>
-              <tr className="border-b border-slate-800 text-[11px] text-slate-400 uppercase font-semibold bg-slate-800/40">
+              <tr className="border-b border-blue-100 text-[11px] text-slate-500 uppercase font-semibold bg-blue-50/60">
                 <th className="py-3 px-4">Date & Créneau</th>
                 <th className="py-3 px-4">Matière Concernée</th>
                 <th className="py-3 px-4">Type</th>
@@ -115,30 +115,30 @@ export const ParentAttendanceView: React.FC = () => {
                 <th className="py-3 px-4">Motif & Justification</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-blue-100">
               {attendanceLogs.map(log => (
-                <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
+                <tr key={log.id} className="hover:bg-blue-50 transition-colors">
                   <td className="py-3 px-4">
-                    <div className="font-bold text-white text-xs">{log.date}</div>
-                    <div className="text-[11px] text-slate-400 font-mono mt-0.5">{log.period}</div>
+                    <div className="font-bold text-blue-950 text-xs">{log.date}</div>
+                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">{log.period}</div>
                   </td>
-                  <td className="py-3 px-4 text-slate-200 font-medium">{log.subject}</td>
+                  <td className="py-3 px-4 text-slate-900 font-medium">{log.subject}</td>
                   <td className="py-3 px-4">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                       log.type === 'Absence' 
-                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' 
-                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        ? 'bg-rose-50 text-rose-700 border border-rose-200' 
+                        : 'bg-amber-50 text-amber-700 border border-amber-200'
                     }`}>
                       {log.type}
                     </span>
                   </td>
                   <td className="py-3 px-4">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 w-max">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1 w-max">
                       <CheckCircle2 className="w-3 h-3" />
                       <span>Justifiée</span>
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-slate-300 text-[11px] leading-relaxed max-w-md">
+                  <td className="py-3 px-4 text-slate-700 text-[11px] leading-relaxed max-w-md">
                     {log.reason}
                   </td>
                 </tr>
@@ -150,46 +150,46 @@ export const ParentAttendanceView: React.FC = () => {
 
       {/* Justify Absence Modal */}
       {justifyModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 space-y-4">
-            <h3 className="text-base font-bold text-white">Transmettre un motif d'absence</h3>
-            <p className="text-xs text-slate-400">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-4 max-h-[92vh] overflow-y-auto">
+            <h3 className="text-base font-bold text-blue-950">Transmettre un motif d'absence</h3>
+            <p className="text-xs text-slate-500">
               Envoyez un justificatif directement au Surveillant Général et à la Direction des Études.
             </p>
 
             <form onSubmit={handleJustifySubmit} className="space-y-3">
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-300">Date concernée</label>
+                <label className="text-[11px] font-semibold text-slate-700">Date concernée</label>
                 <input
                   type="date"
                   required
                   value={selectedAbsenceDate}
                   onChange={(e) => setSelectedAbsenceDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-300">Motif de l'absence / retard *</label>
+                <label className="text-[11px] font-semibold text-slate-700">Motif de l'absence / retard *</label>
                 <textarea
                   rows={3}
                   required
                   value={justificationReason}
                   onChange={(e) => setJustificationReason(e.target.value)}
                   placeholder="ex: Maladie (paludisme), rendez-vous médical ou cas de force majeure familiale..."
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                 />
               </div>
 
-              <div className="p-3 rounded-lg border-2 border-dashed border-slate-700 bg-slate-800/40 text-center text-xs text-slate-400">
-                Pièce jointe (Certificat médical ou ordonnance) : <strong className="text-blue-400">Optionnelle</strong>
+              <div className="p-3 rounded-lg border-2 border-dashed border-slate-200 bg-blue-50/60 text-center text-xs text-slate-500">
+                Pièce jointe (Certificat médical ou ordonnance) : <strong className="text-blue-600">Optionnelle</strong>
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-blue-100">
                 <button
                   type="button"
                   onClick={() => setJustifyModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white"
+                  className="px-4 py-2 rounded-lg text-xs text-slate-500 hover:text-blue-950"
                 >
                   Annuler
                 </button>

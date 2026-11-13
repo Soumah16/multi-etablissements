@@ -45,59 +45,59 @@ export const AnalyticsAiView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-blue-950">
             {t.nav.analytics}
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Indicateurs d'engagement en temps réel, prévisions de trésorerie en GNF et alertes d'attrition
           </p>
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-mono">
-          <Sparkles className="w-4 h-4 text-indigo-400" />
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-mono">
+          <Sparkles className="w-4 h-4 text-indigo-600" />
           <span>Moteur Prédictif SmartSchool AI v2.8</span>
         </div>
       </div>
 
       {/* Revenue Projections Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
-          <div className="flex items-center justify-between text-xs text-slate-400">
+        <div className="p-4 rounded-xl bg-blue-50/60 border border-slate-200">
+          <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Projection à 3 Mois</span>
-            <span className="text-emerald-400 font-mono font-semibold">+12% estimé</span>
+            <span className="text-emerald-600 font-mono font-semibold">+12% estimé</span>
           </div>
-          <div className="text-xl font-bold text-white mt-2 font-mono tabular-nums">
+          <div className="text-xl font-bold text-blue-950 mt-2 font-mono tabular-nums">
             {formatGnf(forecast3Months)}
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">
+          <div className="text-[11px] text-slate-500 mt-1">
             Basé sur 2 nouvelles souscriptions prévues
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
-          <div className="flex items-center justify-between text-xs text-slate-400">
+        <div className="p-4 rounded-xl bg-blue-50/60 border border-slate-200">
+          <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Projection à 6 Mois</span>
-            <span className="text-emerald-400 font-mono font-semibold">+25% estimé</span>
+            <span className="text-emerald-600 font-mono font-semibold">+25% estimé</span>
           </div>
-          <div className="text-xl font-bold text-emerald-400 mt-2 font-mono tabular-nums">
+          <div className="text-xl font-bold text-emerald-600 mt-2 font-mono tabular-nums">
             {formatGnf(forecast6Months)}
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">
+          <div className="text-[11px] text-slate-500 mt-1">
             Rentabilité opérationnelle consolidée
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
-          <div className="flex items-center justify-between text-xs text-slate-400">
+        <div className="p-4 rounded-xl bg-blue-50/60 border border-slate-200">
+          <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Projection Annuelle (12 Mois)</span>
-            <span className="text-blue-400 font-mono font-semibold">+45% expansion</span>
+            <span className="text-blue-600 font-mono font-semibold">+45% expansion</span>
           </div>
-          <div className="text-xl font-bold text-blue-400 mt-2 font-mono tabular-nums">
+          <div className="text-xl font-bold text-blue-600 mt-2 font-mono tabular-nums">
             {formatGnf(forecast12Months)}
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">
+          <div className="text-[11px] text-slate-500 mt-1">
             Hypothèse 15 écoles rattachées
           </div>
         </div>
@@ -106,33 +106,33 @@ export const AnalyticsAiView: React.FC = () => {
       {/* 2-Column Grid: Active Schools Ranking & Module Utilization */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Most Active Schools Ranking */}
-        <div className="lg:col-span-7 p-5 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
+        <div className="lg:col-span-7 p-5 rounded-xl bg-blue-50/60 border border-slate-200 flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-3 border-b border-slate-700/60">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
               <div className="flex items-center gap-2">
-                <Award className="w-5 h-5 text-amber-400" />
-                <h2 className="text-sm font-bold text-white">
+                <Award className="w-5 h-5 text-amber-700" />
+                <h2 className="text-sm font-bold text-blue-950">
                   Classement des Écoles les Plus Actives
                 </h2>
               </div>
-              <span className="text-xs text-slate-400 font-mono">Score d'activité /100</span>
+              <span className="text-xs text-slate-500 font-mono">Score d'activité /100</span>
             </div>
 
             <div className="mt-4 space-y-3">
               {sortedSchools.map((s, index) => (
-                <div key={s.id} className="p-3 rounded-lg bg-slate-900 border border-slate-700/70 flex items-center justify-between gap-3 text-xs">
+                <div key={s.id} className="p-3 rounded-lg bg-white border border-slate-200 flex items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-3">
                     <span className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
-                      index === 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
-                      index === 1 ? 'bg-slate-300/20 text-slate-200 border border-slate-400/40' :
-                      index === 2 ? 'bg-amber-700/20 text-amber-600 border border-amber-700/40' :
-                      'bg-slate-800 text-slate-500'
+                      index === 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                      index === 1 ? 'bg-slate-300/20 text-slate-900 border border-slate-400/40' :
+                      index === 2 ? 'bg-amber-700/20 text-amber-600 border border-amber-200' :
+                      'bg-slate-50 text-slate-500'
                     }`}>
                       {index + 1}
                     </span>
                     <div>
-                      <div className="font-bold text-white text-xs">{s.name}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">
+                      <div className="font-bold text-blue-950 text-xs">{s.name}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
                         {s.stats.studentsCount.toLocaleString('fr-FR')} élèves · {s.city} ({s.type})
                       </div>
                     </div>
@@ -140,7 +140,7 @@ export const AnalyticsAiView: React.FC = () => {
 
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <div className="font-mono font-bold text-sm text-emerald-400">
+                      <div className="font-mono font-bold text-sm text-emerald-600">
                         {s.stats.activityScore}%
                       </div>
                       <div className="text-[10px] text-slate-500">
@@ -155,26 +155,26 @@ export const AnalyticsAiView: React.FC = () => {
         </div>
 
         {/* Feature & Module Utilization Rate */}
-        <div className="lg:col-span-5 p-5 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
+        <div className="lg:col-span-5 p-5 rounded-xl bg-blue-50/60 border border-slate-200 flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-3 border-b border-slate-700/60">
-              <h2 className="text-sm font-bold text-white">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <h2 className="text-sm font-bold text-blue-950">
                 Taux d'Adoption des Modules
               </h2>
-              <span className="text-xs text-slate-400 font-mono">Sur 100% des écoles</span>
+              <span className="text-xs text-slate-500 font-mono">Sur 100% des écoles</span>
             </div>
 
             <div className="mt-4 space-y-4 text-xs">
               {moduleUsage.map((mod) => (
                 <div key={mod.name} className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-300 font-medium">{mod.name}</span>
+                    <span className="text-slate-700 font-medium">{mod.name}</span>
                     <div className="flex items-center gap-1.5 font-mono">
-                      <span className="text-white font-bold">{mod.usage}%</span>
-                      <span className="text-emerald-400 text-[10px]">{mod.trend}</span>
+                      <span className="text-blue-950 font-bold">{mod.usage}%</span>
+                      <span className="text-emerald-600 text-[10px]">{mod.trend}</span>
                     </div>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
+                  <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
                     <div 
                       className="h-full bg-blue-500 rounded-full transition-all duration-500" 
                       style={{ width: `${mod.usage}%` }}
@@ -186,12 +186,12 @@ export const AnalyticsAiView: React.FC = () => {
           </div>
 
           {/* AI Churn Risk Alert */}
-          <div className="mt-6 p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs space-y-1">
-            <div className="flex items-center gap-1.5 font-bold text-amber-300">
+          <div className="mt-6 p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-xs space-y-1">
+            <div className="flex items-center gap-1.5 font-bold text-amber-700">
               <AlertTriangle className="w-4 h-4" />
               <span>Alerte IA : Risque d'Attrition Détecté (1 Établissement)</span>
             </div>
-            <p className="text-slate-300 text-[11px] leading-relaxed">
+            <p className="text-slate-700 text-[11px] leading-relaxed">
               Le « Centre de Formation Professionnelle en Forêt » présente un score d'activité de seulement 22% et un abonnement expiré. Une relance commerciale automatique est recommandée.
             </p>
           </div>

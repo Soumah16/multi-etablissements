@@ -107,11 +107,11 @@ export const TeacherHomeworkView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-            <FileText className="w-6 h-6 text-amber-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2.5">
+            <FileText className="w-6 h-6 text-amber-700" />
             <span>Devoirs de Maison, Projets & Remise des Copies</span>
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Diffusion des travaux personnels, réception des copies d'élèves, correction et retour annoté
           </p>
         </div>
@@ -132,46 +132,46 @@ export const TeacherHomeworkView: React.FC = () => {
           return (
             <div 
               key={hw.id}
-              className="rounded-2xl bg-slate-900 border border-slate-800 p-5 flex flex-col justify-between hover:border-slate-700 transition-all shadow-lg space-y-4"
+              className="rounded-2xl bg-white border border-blue-100 p-5 flex flex-col justify-between hover:border-slate-200 transition-all shadow-lg space-y-4"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] font-bold">
+                  <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold">
                     {hw.className}
                   </span>
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                     hw.status === 'en_cours' 
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
-                      : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      ? 'bg-amber-50 text-amber-700 border border-amber-200' 
+                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                   }`}>
                     {hw.status === 'en_cours' ? 'En cours' : 'Clôturé'}
                   </span>
                 </div>
 
                 <div>
-                  <h3 className="text-base font-bold text-white tracking-tight">{hw.title}</h3>
-                  <div className="text-[11px] text-amber-400 font-medium mt-0.5">
+                  <h3 className="text-base font-bold text-blue-950 tracking-tight">{hw.title}</h3>
+                  <div className="text-[11px] text-amber-700 font-medium mt-0.5">
                     Matière : {hw.subject} · Barème : sur {hw.maxScore || 20} pts
                   </div>
                 </div>
 
-                <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/40 p-3 rounded-xl border border-slate-800/80">
+                <p className="text-xs text-slate-700 leading-relaxed bg-blue-50/70 p-3 rounded-xl border border-blue-100">
                   {hw.description}
                 </p>
 
-                <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+                <div className="flex items-center justify-between text-xs text-slate-500 font-mono">
                   <span>Donné le : {hw.givenDate}</span>
-                  <span className="text-amber-400 font-bold">À rendre : {hw.dueDate}</span>
+                  <span className="text-amber-700 font-bold">À rendre : {hw.dueDate}</span>
                 </div>
               </div>
 
               {/* Progress of submissions */}
-              <div className="space-y-2 pt-3 border-t border-slate-800 text-xs">
-                <div className="flex items-center justify-between text-slate-400">
+              <div className="space-y-2 pt-3 border-t border-blue-100 text-xs">
+                <div className="flex items-center justify-between text-slate-500">
                   <span>Remises reçues :</span>
-                  <span className="font-bold text-white">{hw.totalSubmissions} / {hw.totalStudents} ({submissionPercent}%)</span>
+                  <span className="font-bold text-blue-950">{hw.totalSubmissions} / {hw.totalStudents} ({submissionPercent}%)</span>
                 </div>
-                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div className="w-full bg-blue-100/70 h-2 rounded-full overflow-hidden">
                   <div 
                     className="bg-amber-500 h-full rounded-full transition-all duration-300" 
                     style={{ width: `${submissionPercent}%` }}
@@ -179,14 +179,14 @@ export const TeacherHomeworkView: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
                   <span>Copies corrigées : {hw.evaluatedCount}</span>
-                  <span className="text-emerald-400">Reste à noter : {hw.totalSubmissions - hw.evaluatedCount}</span>
+                  <span className="text-emerald-600">Reste à noter : {hw.totalSubmissions - hw.evaluatedCount}</span>
                 </div>
 
                 <button
                   onClick={() => handleOpenGrading(hw)}
-                  className="w-full mt-2 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition-colors flex items-center justify-center gap-2 border border-slate-700"
+                  className="w-full mt-2 py-2 rounded-xl bg-slate-50 hover:bg-blue-100 text-xs font-bold text-slate-900 transition-colors flex items-center justify-center gap-2 border border-slate-200"
                 >
-                  <Eye className="w-3.5 h-3.5 text-amber-400" />
+                  <Eye className="w-3.5 h-3.5 text-amber-700" />
                   <span>Consulter & Corriger les Copies ({hw.submissions ? hw.submissions.length : 0})</span>
                 </button>
               </div>
@@ -197,23 +197,23 @@ export const TeacherHomeworkView: React.FC = () => {
 
       {/* Drawer / Modal: Grading and Submissions */}
       {gradingDrawerOpen && selectedHomework && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white border border-blue-100 p-6 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
               <div>
-                <span className="text-[10px] font-bold uppercase text-amber-400 tracking-wider">
+                <span className="text-[10px] font-bold uppercase text-amber-700 tracking-wider">
                   Espace Correction & Notation
                 </span>
-                <h3 className="font-bold text-lg text-white">{selectedHomework.title}</h3>
-                <div className="text-xs text-slate-400">{selectedHomework.className} · Barème : sur {selectedHomework.maxScore} pts</div>
+                <h3 className="font-bold text-lg text-blue-950">{selectedHomework.title}</h3>
+                <div className="text-xs text-slate-500">{selectedHomework.className} · Barème : sur {selectedHomework.maxScore} pts</div>
               </div>
-              <button onClick={() => setGradingDrawerOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+              <button onClick={() => setGradingDrawerOpen(false)} className="text-slate-500 hover:text-blue-950">✕</button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Left Column: Submissions List */}
               <div className="space-y-3">
-                <div className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
                   <span>Copies Soumises ({selectedHomework.submissions?.length || 0})</span>
                 </div>
 
@@ -231,19 +231,19 @@ export const TeacherHomeworkView: React.FC = () => {
                           }}
                           className={`p-3 rounded-xl border cursor-pointer transition-all text-xs ${
                             isSelected 
-                              ? 'bg-amber-500/20 border-amber-500 text-white' 
-                              : 'bg-slate-800/40 border-slate-700/60 hover:bg-slate-800 text-slate-300'
+                              ? 'bg-amber-50 border-amber-500 text-blue-950' 
+                              : 'bg-blue-50/60 border-slate-200 hover:bg-blue-50 text-slate-700'
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-bold truncate">{sub.studentName}</span>
                             {sub.grade !== undefined ? (
-                              <span className="font-mono text-emerald-400 font-bold">{sub.grade}/{sub.maxScore}</span>
+                              <span className="font-mono text-emerald-600 font-bold">{sub.grade}/{sub.maxScore}</span>
                             ) : (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">À noter</span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">À noter</span>
                             )}
                           </div>
-                          <div className="text-[10px] text-slate-400 mt-0.5 truncate">
+                          <div className="text-[10px] text-slate-500 mt-0.5 truncate">
                             {sub.fileName}
                           </div>
                           <div className="text-[9px] text-slate-500 mt-1">
@@ -253,7 +253,7 @@ export const TeacherHomeworkView: React.FC = () => {
                       );
                     })
                   ) : (
-                    <div className="p-4 rounded-xl bg-slate-800/30 text-xs text-slate-400 text-center">
+                    <div className="p-4 rounded-xl bg-blue-50/60 text-xs text-slate-500 text-center">
                       Aucune copie soumise en ligne pour le moment.
                     </div>
                   )}
@@ -263,11 +263,11 @@ export const TeacherHomeworkView: React.FC = () => {
               {/* Right Column: Active Submission Grading Form */}
               <div className="md:col-span-2 space-y-4">
                 {selectedSubmission ? (
-                  <div className="p-5 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-4">
+                  <div className="p-5 rounded-xl bg-blue-50/60 border border-slate-200 space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-sm font-bold text-white">{selectedSubmission.studentName}</div>
-                        <div className="text-xs text-slate-400 font-mono">Matricule : {selectedSubmission.studentMatricule}</div>
+                        <div className="text-sm font-bold text-blue-950">{selectedSubmission.studentName}</div>
+                        <div className="text-xs text-slate-500 font-mono">Matricule : {selectedSubmission.studentMatricule}</div>
                       </div>
 
                       <button
@@ -281,7 +281,7 @@ export const TeacherHomeworkView: React.FC = () => {
 
                     <form onSubmit={handleSaveGrading} className="space-y-4 text-xs">
                       <div>
-                        <label className="block text-slate-300 font-semibold mb-1">
+                        <label className="block text-slate-700 font-semibold mb-1">
                           Note attribuée (Barème sur {selectedSubmission.maxScore}) *
                         </label>
                         <div className="flex items-center gap-2">
@@ -293,14 +293,14 @@ export const TeacherHomeworkView: React.FC = () => {
                             required
                             value={gradingScore}
                             onChange={e => setGradingScore(Number(e.target.value))}
-                            className="w-32 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-lg font-bold text-amber-400 focus:outline-none focus:border-amber-500"
+                            className="w-32 px-3 py-2 rounded-xl bg-white border border-slate-200 text-lg font-bold text-amber-700 focus:outline-none focus:border-amber-500"
                           />
-                          <span className="text-slate-400 text-base font-bold">/ {selectedSubmission.maxScore}</span>
+                          <span className="text-slate-500 text-base font-bold">/ {selectedSubmission.maxScore}</span>
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-slate-300 font-semibold mb-1">
+                        <label className="block text-slate-700 font-semibold mb-1">
                           Commentaires & Annotations pédagogiques *
                         </label>
                         <textarea 
@@ -309,12 +309,12 @@ export const TeacherHomeworkView: React.FC = () => {
                           placeholder="Indiquez les points forts, erreurs récurrentes et conseils pour progresser..."
                           value={gradingComment}
                           onChange={e => setGradingComment(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-blue-950 focus:outline-none focus:border-amber-500"
                         />
                       </div>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-700">
-                        <span className="text-[11px] text-slate-400">
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+                        <span className="text-[11px] text-slate-500">
                           {selectedSubmission.status === 'corrige' ? '✅ Copie déjà corrigée' : '⏳ En attente de notation'}
                         </span>
                         <button
@@ -328,7 +328,7 @@ export const TeacherHomeworkView: React.FC = () => {
                     </form>
                   </div>
                 ) : (
-                  <div className="p-8 rounded-xl bg-slate-800/20 border border-slate-800 text-center text-slate-400 text-xs">
+                  <div className="p-8 rounded-xl bg-blue-50/60 border border-blue-100 text-center text-slate-500 text-xs">
                     Sélectionnez une copie dans la liste de gauche pour la noter et annoter les retours.
                   </div>
                 )}
@@ -340,20 +340,20 @@ export const TeacherHomeworkView: React.FC = () => {
 
       {/* Modal: New Homework */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-base text-white">Créer un Devoir de Maison</h3>
-              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-white border border-blue-100 p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <h3 className="font-bold text-base text-blue-950">Créer un Devoir de Maison</h3>
+              <button onClick={() => setModalOpen(false)} className="text-slate-500 hover:text-blue-950">✕</button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Classe ciblée *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Classe ciblée *</label>
                 <select 
                   value={formClassId}
                   onChange={e => setFormClassId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 >
                   {classes.map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
@@ -362,11 +362,11 @@ export const TeacherHomeworkView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Matière *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Matière *</label>
                 <select 
                   value={formSubject}
                   onChange={e => setFormSubject(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 >
                   <option value="Mathématiques">Mathématiques</option>
                   <option value="Sciences Physiques">Sciences Physiques</option>
@@ -374,30 +374,30 @@ export const TeacherHomeworkView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Titre du devoir *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Titre du devoir *</label>
                 <input 
                   type="text" 
                   required
                   placeholder="Ex: DM N°3 : Dérivation et optimisation économique"
                   value={formTitle}
                   onChange={e => setFormTitle(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Date limite de rendu *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Date limite de rendu *</label>
                   <input 
                     type="date" 
                     required
                     value={formDueDate}
                     onChange={e => setFormDueDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Barème (sur combien) *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Barème (sur combien) *</label>
                   <input 
                     type="number" 
                     min="10"
@@ -405,28 +405,28 @@ export const TeacherHomeworkView: React.FC = () => {
                     required
                     value={formMaxScore}
                     onChange={e => setFormMaxScore(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Consignes et énoncé *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Consignes et énoncé *</label>
                 <textarea 
                   rows={4}
                   required
                   placeholder="Détaillez les exercices à faire, le barème indicatif et les consignes de rédaction..."
                   value={formDesc}
                   onChange={e => setFormDesc(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-blue-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-blue-950 bg-slate-50 text-xs font-semibold"
                 >
                   Annuler
                 </button>

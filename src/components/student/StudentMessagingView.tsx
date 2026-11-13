@@ -34,22 +34,22 @@ export const StudentMessagingView: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl md:text-2xl font-black text-white">Messagerie Pédagogique</h1>
-        <p className="text-xs text-slate-400 mt-0.5">
+        <h1 className="text-xl md:text-2xl font-black text-blue-950">Messagerie Pédagogique</h1>
+        <p className="text-xs text-slate-500 mt-0.5">
           Posez vos questions de cours, demandez des éclaircissements sur un exercice ou échangez avec vos professeurs.
         </p>
       </div>
 
-      <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex flex-col h-[650px]">
+      <div className="rounded-2xl bg-white border border-blue-100 overflow-hidden flex flex-col h-[650px]">
         {/* Recipient Selector Topbar */}
-        <div className="p-4 bg-slate-850 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="p-4 bg-slate-50 border-b border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center font-bold">
               {selectedRecipient.charAt(3)}
             </div>
             <div>
-              <div className="font-bold text-sm text-white">{selectedRecipient}</div>
-              <div className="text-[10px] text-emerald-400 flex items-center gap-1">
+              <div className="font-bold text-sm text-blue-950">{selectedRecipient}</div>
+              <div className="text-[10px] text-emerald-600 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Disponible pour les questions académiques</span>
               </div>
@@ -57,11 +57,11 @@ export const StudentMessagingView: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400 font-semibold hidden md:inline">Changer d'enseignant :</span>
+            <span className="text-xs text-slate-500 font-semibold hidden md:inline">Changer d'enseignant :</span>
             <select
               value={selectedRecipient}
               onChange={(e) => setSelectedRecipient(e.target.value)}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+              className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
             >
               {teachersList.map(t => (
                 <option key={t} value={t}>{t}</option>
@@ -71,7 +71,7 @@ export const StudentMessagingView: React.FC = () => {
         </div>
 
         {/* Chat Thread */}
-        <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 bg-slate-950/40">
+        <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 bg-blue-50/70">
           {messages.map(msg => {
             const isMe = msg.isStudent;
             return (
@@ -80,21 +80,21 @@ export const StudentMessagingView: React.FC = () => {
                 className={`flex gap-3 max-w-xl ${isMe ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                  isMe ? 'bg-blue-600 text-white' : 'bg-slate-800 text-amber-300 border border-amber-500/30'
+                  isMe ? 'bg-blue-600 text-white' : 'bg-slate-50 text-amber-700 border border-amber-200'
                 }`}>
                   {isMe ? profile.firstName.charAt(0) : 'P'}
                 </div>
 
                 <div className="space-y-1">
                   <div className={`flex items-center gap-2 text-[10px] ${isMe ? 'justify-end' : 'justify-start'}`}>
-                    <span className="text-slate-400 font-medium">{msg.sender}</span>
+                    <span className="text-slate-500 font-medium">{msg.sender}</span>
                     <span className="text-slate-500">{msg.time}</span>
                   </div>
 
                   <div className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
                     isMe 
                       ? 'bg-blue-600 text-white rounded-tr-xs shadow-md' 
-                      : 'bg-slate-800/90 text-slate-200 border border-slate-700/80 rounded-tl-xs'
+                      : 'bg-blue-50/60 text-slate-900 border border-slate-200 rounded-tl-xs'
                   }`}>
                     {msg.text}
                   </div>
@@ -105,13 +105,13 @@ export const StudentMessagingView: React.FC = () => {
         </div>
 
         {/* Chat Input Bar */}
-        <form onSubmit={handleSend} className="p-3 bg-slate-900 border-t border-slate-800 flex items-center gap-2">
+        <form onSubmit={handleSend} className="p-3 bg-white border-t border-blue-100 flex items-center gap-2">
           <input
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder={`Écrire un message à ${selectedRecipient}...`}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-blue-500"
+            className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-blue-950 placeholder-slate-400 focus:outline-hidden focus:border-blue-500"
           />
 
           <button

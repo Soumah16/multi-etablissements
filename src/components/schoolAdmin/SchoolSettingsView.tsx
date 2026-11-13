@@ -40,43 +40,43 @@ export const SchoolSettingsView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-blue-950">
             Paramètres de l'Établissement ({currentSchool.name})
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Configuration institutionnelle, coordonnées de contact, langue, devise légale et fuseau horaire
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-6 text-xs max-w-4xl">
+      <form onSubmit={handleSave} className="p-6 rounded-2xl bg-white border border-blue-100 space-y-6 text-xs max-w-4xl">
         {/* Identité */}
         <div className="space-y-4">
-          <h3 className="font-bold text-white text-xs uppercase tracking-wider text-blue-400 border-b border-slate-800 pb-2">
+          <h3 className="font-bold text-blue-950 text-xs uppercase tracking-wider text-blue-600 border-b border-blue-100 pb-2">
             1. Identité Officielle de l'Établissement
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Nom de l'école *</label>
+              <label className="text-slate-700 font-medium">Nom de l'école *</label>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Code Unique de l'Établissement</label>
+              <label className="text-slate-700 font-medium">Code Unique de l'Établissement</label>
               <input
                 type="text"
                 readOnly
                 value={currentSchool.code}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700 text-slate-500 font-mono cursor-not-allowed"
+                className="w-full px-3 py-2 rounded-lg bg-blue-50/60 border border-slate-200 text-slate-500 font-mono cursor-not-allowed"
               />
             </div>
           </div>
@@ -104,48 +104,48 @@ export const SchoolSettingsView: React.FC = () => {
 
         {/* Contacts */}
         <div className="space-y-4 pt-2">
-          <h3 className="font-bold text-white text-xs uppercase tracking-wider text-blue-400 border-b border-slate-800 pb-2">
+          <h3 className="font-bold text-blue-950 text-xs uppercase tracking-wider text-blue-600 border-b border-blue-100 pb-2">
             2. Coordonnées & Localisation
           </h3>
 
           <div className="space-y-1">
-            <label className="text-slate-300 font-medium">Adresse physique complète</label>
+            <label className="text-slate-700 font-medium">Adresse physique complète</label>
             <input
               type="text"
               value={address}
               onChange={e => setAddress(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Téléphone standard</label>
+              <label className="text-slate-700 font-medium">Téléphone standard</label>
               <input
                 type="text"
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Email institutionnel</label>
+              <label className="text-slate-700 font-medium">Email institutionnel</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Site Web officiel</label>
+              <label className="text-slate-700 font-medium">Site Web officiel</label>
               <input
                 type="text"
                 value={website}
                 onChange={e => setWebsite(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
@@ -153,17 +153,17 @@ export const SchoolSettingsView: React.FC = () => {
 
         {/* Régionalisation */}
         <div className="space-y-4 pt-2">
-          <h3 className="font-bold text-white text-xs uppercase tracking-wider text-blue-400 border-b border-slate-800 pb-2">
+          <h3 className="font-bold text-blue-950 text-xs uppercase tracking-wider text-blue-600 border-b border-blue-100 pb-2">
             3. Paramètres Régionaux (Par Défaut)
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Langue principale</label>
+              <label className="text-slate-700 font-medium">Langue principale</label>
               <select
                 value={language}
                 onChange={e => setLanguage(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               >
                 <option value="fr">Français (Par défaut)</option>
                 <option value="en">English</option>
@@ -172,28 +172,28 @@ export const SchoolSettingsView: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Devise de l'école</label>
+              <label className="text-slate-700 font-medium">Devise de l'école</label>
               <input
                 type="text"
                 readOnly
                 value="GNF (Franc Guinéen)"
-                className="w-full px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700 text-emerald-400 font-mono font-bold cursor-not-allowed"
+                className="w-full px-3 py-2 rounded-lg bg-blue-50/60 border border-slate-200 text-emerald-600 font-mono font-bold cursor-not-allowed"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Fuseau horaire</label>
+              <label className="text-slate-700 font-medium">Fuseau horaire</label>
               <input
                 type="text"
                 readOnly
                 value="Africa/Conakry (GMT)"
-                className="w-full px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700 text-blue-300 font-mono cursor-not-allowed"
+                className="w-full px-3 py-2 rounded-lg bg-blue-50/60 border border-slate-200 text-blue-700 font-mono cursor-not-allowed"
               />
             </div>
           </div>
         </div>
 
-        <div className="p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center gap-2.5">
+        <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 flex items-center gap-2.5">
           <KeyRound className="w-4 h-4 shrink-0" />
           <span>Sécurité : La modification des paramètres de l'école exige la saisie de votre code PIN Administrateur à 6 chiffres.</span>
         </div>

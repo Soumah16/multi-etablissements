@@ -81,11 +81,11 @@ export const SupervisorAdmissionSlipsView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-            <FileCheck className="w-6 h-6 text-red-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2.5">
+            <FileCheck className="w-6 h-6 text-red-600" />
             <span>Billets de Rentrée en Classe (Visa Vie Scolaire)</span>
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Délivrance officielle obligatoire pour autoriser l'accès en cours après retard ou absence
           </p>
         </div>
@@ -100,18 +100,18 @@ export const SupervisorAdmissionSlipsView: React.FC = () => {
       </div>
 
       {/* Filter and Search */}
-      <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4">
+      <div className="p-4 rounded-2xl bg-white border border-blue-100 flex items-center justify-between gap-4">
         <div className="relative w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input 
             type="text"
             placeholder="Rechercher par numéro de billet, élève..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
+            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-blue-950 placeholder-slate-400 focus:outline-none focus:border-red-500"
           />
         </div>
-        <div className="text-xs text-slate-400">
+        <div className="text-xs text-slate-500">
           {filteredSlips.length} billets émis
         </div>
       </div>
@@ -121,48 +121,48 @@ export const SupervisorAdmissionSlipsView: React.FC = () => {
         {filteredSlips.map(slip => (
           <div 
             key={slip.id}
-            className="rounded-2xl bg-slate-900 border border-slate-800 p-5 flex flex-col justify-between hover:border-slate-700 transition-all shadow-xl space-y-4"
+            className="rounded-2xl bg-white border border-blue-100 p-5 flex flex-col justify-between hover:border-slate-200 transition-all shadow-xl space-y-4"
           >
             <div className="space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="font-mono text-xs font-bold text-red-400">
+              <div className="flex items-center justify-between border-b border-blue-100 pb-2">
+                <span className="font-mono text-xs font-bold text-red-600">
                   {slip.slipNumber}
                 </span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                   Admis en classe
                 </span>
               </div>
 
               <div>
-                <h3 className="font-bold text-base text-white">{slip.studentName}</h3>
-                <div className="text-xs text-slate-400 font-mono mt-0.5">
+                <h3 className="font-bold text-base text-blue-950">{slip.studentName}</h3>
+                <div className="text-xs text-slate-500 font-mono mt-0.5">
                   {slip.className} · {slip.studentMatricule}
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-800/40 border border-slate-700/60 text-xs space-y-1.5">
-                <div className="text-slate-400">
-                  Motif : <strong className="text-slate-200">{getReasonLabel(slip.reason)}</strong>
+              <div className="p-3 rounded-xl bg-blue-50/60 border border-slate-200 text-xs space-y-1.5">
+                <div className="text-slate-500">
+                  Motif : <strong className="text-slate-900">{getReasonLabel(slip.reason)}</strong>
                 </div>
-                <p className="text-slate-300 leading-relaxed italic text-[11px]">
+                <p className="text-slate-700 leading-relaxed italic text-[11px]">
                   "{slip.comments}"
                 </p>
               </div>
 
-              <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono">
                 <span>Délivré le {slip.issuedDate} à {slip.issuedTime}</span>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+            <div className="pt-3 border-t border-blue-100 flex items-center justify-between text-xs">
               <span className="text-[11px] text-slate-500">
                 Signé : {slip.supervisorName}
               </span>
               <button
                 onClick={() => setPrintSlip(slip)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 transition-colors font-semibold text-xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-900 border border-slate-200 transition-colors font-semibold text-xs"
               >
-                <Printer className="w-3.5 h-3.5 text-red-400" />
+                <Printer className="w-3.5 h-3.5 text-red-600" />
                 <span>Imprimer Billet</span>
               </button>
             </div>
@@ -172,8 +172,8 @@ export const SupervisorAdmissionSlipsView: React.FC = () => {
 
       {/* Printable Billet Modal */}
       {printSlip && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in">
-          <div id="admission-slip-printable-paper" className="w-full max-w-md bg-white text-slate-900 rounded-2xl p-6 shadow-2xl space-y-4 font-sans">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div id="admission-slip-printable-paper" className="w-full max-w-md bg-white text-slate-900 rounded-2xl p-6 shadow-2xl space-y-4 font-sans max-h-[92vh] overflow-y-auto">
             {/* Header official */}
             <div className="text-center border-b-2 border-slate-900 pb-3 space-y-1">
               <div className="text-[10px] uppercase font-bold tracking-wider text-slate-700">
@@ -247,44 +247,44 @@ export const SupervisorAdmissionSlipsView: React.FC = () => {
 
       {/* Modal: Issue Admission Slip */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-base text-white">Émettre un Billet de Rentrée</h3>
-              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-lg rounded-2xl bg-white border border-blue-100 p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <h3 className="font-bold text-base text-blue-950">Émettre un Billet de Rentrée</h3>
+              <button onClick={() => setModalOpen(false)} className="text-slate-500 hover:text-blue-950">✕</button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Nom et Prénom de l'élève *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Nom et Prénom de l'élève *</label>
                 <input 
                   type="text" 
                   required
                   placeholder="Ex: Ibrahima Sory Bangoura"
                   value={studentName}
                   onChange={e => setStudentName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-red-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-red-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Matricule de l'élève *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Matricule de l'élève *</label>
                   <input 
                     type="text" 
                     required
                     placeholder="Ex: LEC-2026-003"
                     value={studentMatricule}
                     onChange={e => setStudentMatricule(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Classe *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Classe *</label>
                   <select 
                     value={className}
                     onChange={e => setClassName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   >
                     <option value="Terminale Sciences Mathématiques (TSM)">Terminale SM (TSM)</option>
                     <option value="1ère Sciences Expérimentales (1SE)">1ère Sci. Exp. (1SE)</option>
@@ -294,11 +294,11 @@ export const SupervisorAdmissionSlipsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Motif formel *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Motif formel *</label>
                 <select 
                   value={reason}
                   onChange={e => setReason(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 >
                   <option value="retard_justifie">Retard justifié au portail</option>
                   <option value="retour_maladie">Retour après maladie avec certificat</option>
@@ -309,18 +309,18 @@ export const SupervisorAdmissionSlipsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Observations / Justifications</label>
+                <label className="block text-slate-700 font-semibold mb-1">Observations / Justifications</label>
                 <textarea 
                   rows={2}
                   placeholder="Ex: Arrivée à 08h12 pour cause de circulation bloquée. Admis en cours."
                   value={comments}
                   onChange={e => setComments(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">
+                <label className="block text-slate-700 font-semibold mb-1">
                   Code PIN de signature numérique (4 chiffres) *
                 </label>
                 <input 
@@ -330,15 +330,15 @@ export const SupervisorAdmissionSlipsView: React.FC = () => {
                   placeholder="Code confidentiel surveillant"
                   value={pinInput}
                   onChange={e => setPinInput(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-mono tracking-widest text-center focus:outline-none focus:border-red-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 font-mono tracking-widest text-center focus:outline-none focus:border-red-500"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-blue-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-blue-950 bg-slate-50 text-xs font-semibold"
                 >
                   Annuler
                 </button>

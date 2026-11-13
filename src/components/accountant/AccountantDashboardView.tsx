@@ -79,17 +79,17 @@ export const AccountantDashboardView: React.FC = () => {
       )}
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 border border-emerald-800/40 p-6 md:p-8 shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950 via-blue-50/40 to-blue-50/80 border border-emerald-800/40 p-6 md:p-8 shadow-xl">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Devise Officielle : Franc Guinéen (GNF) · Trésorerie Ouverte</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-black text-blue-950 tracking-tight">
               Tableau de Bord Financier & Trésorerie
             </h1>
-            <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
+            <p className="text-sm text-slate-700 max-w-2xl leading-relaxed">
               Supervision des encaissements, facturations, relances d'impayés, dépenses opérationnelles et paie du personnel en temps réel.
             </p>
           </div>
@@ -104,174 +104,174 @@ export const AccountantDashboardView: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveAccountantTab('expenses')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-xs font-bold transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-50/60 hover:bg-blue-100 border border-slate-200 text-slate-900 text-xs font-bold transition-colors"
             >
-              <ArrowDownRight className="w-4 h-4 text-rose-400" />
+              <ArrowDownRight className="w-4 h-4 text-rose-600" />
               <span>Saisir une dépense</span>
             </button>
           </div>
         </div>
 
         {/* Ambient glow */}
-        <div className="absolute -right-10 -bottom-10 w-60 h-60 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -right-10 -bottom-10 w-60 h-60 bg-emerald-50 rounded-full blur-3xl pointer-events-none" />
       </div>
 
       {/* KPI Tiles (10 required indicators) */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {/* Total Collected */}
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 hover:border-slate-200 transition-colors">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-xs font-medium">Total Encaissé</span>
-            <Wallet className="w-4 h-4 text-emerald-400" />
+            <Wallet className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-xl md:text-2xl font-black text-emerald-400 truncate font-mono">
+          <div className="text-xl md:text-2xl font-black text-emerald-600 truncate font-mono">
             {formatGnf(totalCollectedGnf)}
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">Année scolaire 2026-2027</div>
+          <div className="text-[11px] text-slate-500 mt-1">Année scolaire 2026-2027</div>
         </div>
 
         {/* Today Collected */}
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 hover:border-slate-200 transition-colors">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-xs font-medium">Recette du Jour</span>
-            <ArrowUpRight className="w-4 h-4 text-emerald-400" />
+            <ArrowUpRight className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-xl md:text-2xl font-black text-white truncate font-mono">
+          <div className="text-xl md:text-2xl font-black text-blue-950 truncate font-mono">
             {formatGnf(todayCollectedGnf)}
           </div>
-          <div className="text-[11px] text-emerald-400 mt-1">Aujourd'hui (03 nov.)</div>
+          <div className="text-[11px] text-emerald-600 mt-1">Aujourd'hui (03 nov.)</div>
         </div>
 
         {/* Month Collected */}
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 hover:border-slate-200 transition-colors">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-xs font-medium">Recette du Mois</span>
-            <Calendar className="w-4 h-4 text-blue-400" />
+            <Calendar className="w-4 h-4 text-blue-600" />
           </div>
-          <div className="text-xl md:text-2xl font-black text-white truncate font-mono">
+          <div className="text-xl md:text-2xl font-black text-blue-950 truncate font-mono">
             {formatGnf(monthCollectedGnf)}
           </div>
-          <div className="text-[11px] text-blue-400 mt-1">Novembre 2026</div>
+          <div className="text-[11px] text-blue-600 mt-1">Novembre 2026</div>
         </div>
 
         {/* Available Balance */}
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 hover:border-slate-200 transition-colors">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-xs font-medium">Solde Disponible</span>
-            <Coins className="w-4 h-4 text-amber-400" />
+            <Coins className="w-4 h-4 text-amber-700" />
           </div>
-          <div className="text-xl md:text-2xl font-black text-amber-300 truncate font-mono">
+          <div className="text-xl md:text-2xl font-black text-amber-700 truncate font-mono">
             {formatGnf(availableCashGnf)}
           </div>
-          <div className="text-[11px] text-amber-400 mt-1">Caisse & Comptes</div>
+          <div className="text-[11px] text-amber-700 mt-1">Caisse & Comptes</div>
         </div>
 
         {/* Debtors Amount */}
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 hover:border-slate-200 transition-colors">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-xs font-medium">Impayés Débiteurs</span>
-            <AlertTriangle className="w-4 h-4 text-rose-400" />
+            <AlertTriangle className="w-4 h-4 text-rose-600" />
           </div>
-          <div className="text-xl md:text-2xl font-black text-rose-400 truncate font-mono">
+          <div className="text-xl md:text-2xl font-black text-rose-600 truncate font-mono">
             {formatGnf(totalDebtorsRemainingGnf)}
           </div>
-          <div className="text-[11px] text-rose-400 mt-1">{debtors.length} élèves en retard</div>
+          <div className="text-[11px] text-rose-600 mt-1">{debtors.length} élèves en retard</div>
         </div>
 
         {/* Month Expenses */}
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 hover:border-slate-200 transition-colors">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-xs font-medium">Dépenses du Mois</span>
-            <ArrowDownRight className="w-4 h-4 text-rose-400" />
+            <ArrowDownRight className="w-4 h-4 text-rose-600" />
           </div>
-          <div className="text-xl font-bold text-white truncate font-mono">
+          <div className="text-xl font-bold text-blue-950 truncate font-mono">
             {formatGnf(totalExpensesMonthGnf)}
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">Énergie, internet, maintenance</div>
+          <div className="text-[11px] text-slate-500 mt-1">Énergie, internet, maintenance</div>
         </div>
 
         {/* Salaries Paid */}
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 hover:border-slate-200 transition-colors">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-xs font-medium">Salaires Versés</span>
-            <Users className="w-4 h-4 text-indigo-400" />
+            <Users className="w-4 h-4 text-indigo-600" />
           </div>
-          <div className="text-xl font-bold text-white truncate font-mono">
+          <div className="text-xl font-bold text-blue-950 truncate font-mono">
             {formatGnf(totalSalariesMonthGnf)}
           </div>
-          <div className="text-[11px] text-indigo-400 mt-1">{salaries.length} employés payés</div>
+          <div className="text-[11px] text-indigo-600 mt-1">{salaries.length} employés payés</div>
         </div>
 
         {/* Payments Count */}
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 hover:border-slate-200 transition-colors">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-xs font-medium">Paiements Effectués</span>
-            <CreditCard className="w-4 h-4 text-teal-400" />
+            <CreditCard className="w-4 h-4 text-teal-600" />
           </div>
-          <div className="text-xl font-bold text-white">{payments.length}</div>
-          <div className="text-[11px] text-teal-400 mt-1">Transactions validées</div>
+          <div className="text-xl font-bold text-blue-950">{payments.length}</div>
+          <div className="text-[11px] text-teal-600 mt-1">Transactions validées</div>
         </div>
 
         {/* Receipts Generated */}
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 hover:border-slate-200 transition-colors">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-xs font-medium">Reçus Générés</span>
-            <Receipt className="w-4 h-4 text-purple-400" />
+            <Receipt className="w-4 h-4 text-purple-600" />
           </div>
-          <div className="text-xl font-bold text-white">{payments.length}</div>
-          <div className="text-[11px] text-purple-400 mt-1">Avec QR Code unique</div>
+          <div className="text-xl font-bold text-blue-950">{payments.length}</div>
+          <div className="text-[11px] text-purple-600 mt-1">Avec QR Code unique</div>
         </div>
 
         {/* Debtors Count */}
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 hover:border-slate-200 transition-colors">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-xs font-medium">Élèves Débiteurs</span>
-            <Users className="w-4 h-4 text-amber-400" />
+            <Users className="w-4 h-4 text-amber-700" />
           </div>
-          <div className="text-xl font-bold text-amber-400">{debtors.length}</div>
-          <div className="text-[11px] text-amber-400 mt-1">Relances en cours</div>
+          <div className="text-xl font-bold text-amber-700">{debtors.length}</div>
+          <div className="text-[11px] text-amber-700 mt-1">Relances en cours</div>
         </div>
       </div>
 
       {/* Payment Channels Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-xs shrink-0">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-xs shrink-0">
             OM
           </div>
           <div className="min-w-0">
-            <div className="text-[11px] text-slate-400 font-semibold">Orange Money Guinée</div>
-            <div className="text-sm font-bold text-white font-mono truncate">{formatGnf(orangeMoneyTotal)}</div>
+            <div className="text-[11px] text-slate-500 font-semibold">Orange Money Guinée</div>
+            <div className="text-sm font-bold text-blue-950 font-mono truncate">{formatGnf(orangeMoneyTotal)}</div>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-yellow-500/20 text-yellow-400 flex items-center justify-center font-bold text-xs shrink-0">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0">
             MTN
           </div>
           <div className="min-w-0">
-            <div className="text-[11px] text-slate-400 font-semibold">MTN Mobile Money</div>
-            <div className="text-sm font-bold text-white font-mono truncate">{formatGnf(mtnMomoTotal)}</div>
+            <div className="text-[11px] text-slate-500 font-semibold">MTN Mobile Money</div>
+            <div className="text-sm font-bold text-blue-950 font-mono truncate">{formatGnf(mtnMomoTotal)}</div>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0">
             GNF
           </div>
           <div className="min-w-0">
-            <div className="text-[11px] text-slate-400 font-semibold">Espèces au Guichet</div>
-            <div className="text-sm font-bold text-white font-mono truncate">{formatGnf(cashTotal)}</div>
+            <div className="text-[11px] text-slate-500 font-semibold">Espèces au Guichet</div>
+            <div className="text-sm font-bold text-blue-950 font-mono truncate">{formatGnf(cashTotal)}</div>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs shrink-0">
+        <div className="p-4 rounded-xl bg-white border border-blue-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0">
             <Landmark className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <div className="text-[11px] text-slate-400 font-semibold">Virements & Chèques</div>
-            <div className="text-sm font-bold text-white font-mono truncate">{formatGnf(bankTotal)}</div>
+            <div className="text-[11px] text-slate-500 font-semibold">Virements & Chèques</div>
+            <div className="text-sm font-bold text-blue-950 font-mono truncate">{formatGnf(bankTotal)}</div>
           </div>
         </div>
       </div>
@@ -280,18 +280,18 @@ export const AccountantDashboardView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Recent Payments (2 cols) */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4">
+          <div className="rounded-2xl bg-white border border-blue-100 p-5 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-bold text-white flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-emerald-400" />
+                <h2 className="text-base font-bold text-blue-950 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-emerald-600" />
                   <span>Derniers Encaissements Réalisés</span>
                 </h2>
-                <p className="text-xs text-slate-400">Transactions validées avec délivrance de quittance officielle</p>
+                <p className="text-xs text-slate-500">Transactions validées avec délivrance de quittance officielle</p>
               </div>
               <button
                 onClick={() => setActiveAccountantTab('payments')}
-                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
+                className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
               >
                 <span>Voir tout ({payments.length})</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -299,8 +299,8 @@ export const AccountantDashboardView: React.FC = () => {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-800">
+              <table className="w-full text-left text-xs text-slate-700">
+                <thead className="bg-blue-50/70 text-[10px] uppercase font-bold text-slate-500 border-b border-blue-100">
                   <tr>
                     <th className="py-2.5 px-3">Réf Reçu</th>
                     <th className="py-2.5 px-3">Élève & Classe</th>
@@ -310,33 +310,33 @@ export const AccountantDashboardView: React.FC = () => {
                     <th className="py-2.5 px-3 text-center">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-medium">
+                <tbody className="divide-y divide-blue-100 font-medium">
                   {payments.slice(0, 5).map(pay => (
-                    <tr key={pay.id} className="hover:bg-slate-800/40 transition-colors">
+                    <tr key={pay.id} className="hover:bg-blue-50 transition-colors">
                       <td className="py-3 px-3">
-                        <span className="font-mono text-emerald-400 font-bold">{pay.reference}</span>
+                        <span className="font-mono text-emerald-600 font-bold">{pay.reference}</span>
                         <div className="text-[10px] text-slate-500 font-mono">{pay.date} · {pay.time}</div>
                       </td>
 
                       <td className="py-3 px-3">
-                        <div className="font-bold text-white truncate max-w-[150px]">{pay.studentName}</div>
-                        <div className="text-[10px] text-slate-400 truncate">{pay.className}</div>
+                        <div className="font-bold text-blue-950 truncate max-w-[150px]">{pay.studentName}</div>
+                        <div className="text-[10px] text-slate-500 truncate">{pay.className}</div>
                       </td>
 
                       <td className="py-3 px-3">
-                        <div className="truncate max-w-[140px] text-slate-200">{pay.feeType}</div>
-                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 uppercase">
+                        <div className="truncate max-w-[140px] text-slate-900">{pay.feeType}</div>
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-50 text-slate-700 uppercase">
                           {pay.method.replace('_', ' ')}
                         </span>
                       </td>
 
-                      <td className="py-3 px-3 text-right font-mono font-bold text-emerald-400">
+                      <td className="py-3 px-3 text-right font-mono font-bold text-emerald-600">
                         {formatGnf(pay.amountPaidGnf)}
                       </td>
 
                       <td className="py-3 px-3 text-right font-mono">
                         {pay.balanceRemainingGnf > 0 ? (
-                          <span className="text-rose-400 font-semibold">{formatGnf(pay.balanceRemainingGnf)}</span>
+                          <span className="text-rose-600 font-semibold">{formatGnf(pay.balanceRemainingGnf)}</span>
                         ) : (
                           <span className="text-emerald-500 font-bold">Soldé (0 GNF)</span>
                         )}
@@ -345,7 +345,7 @@ export const AccountantDashboardView: React.FC = () => {
                       <td className="py-3 px-3 text-center">
                         <button
                           onClick={() => setSelectedReceiptPayment(pay)}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-[11px] font-semibold transition-colors"
+                          className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold transition-colors"
                         >
                           Reçu →
                         </button>
@@ -361,13 +361,13 @@ export const AccountantDashboardView: React.FC = () => {
         {/* Right Column: Debtors Alert & Recent Expenses */}
         <div className="space-y-6">
           {/* Debtors Alert Card */}
-          <div className="rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4">
+          <div className="rounded-2xl bg-white border border-blue-100 p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-rose-400" />
+              <h3 className="font-bold text-sm text-blue-950 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-600" />
                 <span>Alertes Impayés & Retards</span>
               </h3>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 font-mono">
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 font-mono">
                 {debtors.length} dossiers
               </span>
             </div>
@@ -376,15 +376,15 @@ export const AccountantDashboardView: React.FC = () => {
               {debtors.map(debtor => (
                 <div 
                   key={debtor.studentId}
-                  className="p-3 rounded-xl bg-slate-800/40 border border-rose-500/20 space-y-2 text-xs"
+                  className="p-3 rounded-xl bg-blue-50/60 border border-rose-200 space-y-2 text-xs"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-white">{debtor.studentName}</span>
-                    <span className="text-rose-400 font-mono font-bold">{formatGnf(debtor.balanceRemainingGnf)}</span>
+                    <span className="font-bold text-blue-950">{debtor.studentName}</span>
+                    <span className="text-rose-600 font-mono font-bold">{formatGnf(debtor.balanceRemainingGnf)}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-400">
+                  <div className="flex items-center justify-between text-[11px] text-slate-500">
                     <span>{debtor.className}</span>
-                    <span className="text-amber-400 font-mono">+{debtor.overdueDays} jours retard</span>
+                    <span className="text-amber-700 font-mono">+{debtor.overdueDays} jours retard</span>
                   </div>
                 </div>
               ))}
@@ -392,7 +392,7 @@ export const AccountantDashboardView: React.FC = () => {
 
             <button
               onClick={() => setActiveAccountantTab('debtors')}
-              className="w-full py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+              className="w-full py-2 rounded-xl bg-rose-50 hover:bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
             >
               <span>Gérer les relances débiteurs</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -400,15 +400,15 @@ export const AccountantDashboardView: React.FC = () => {
           </div>
 
           {/* Recent Expenses summary */}
-          <div className="rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4">
+          <div className="rounded-2xl bg-white border border-blue-100 p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                <ArrowDownRight className="w-4 h-4 text-rose-400" />
+              <h3 className="font-bold text-sm text-blue-950 flex items-center gap-2">
+                <ArrowDownRight className="w-4 h-4 text-rose-600" />
                 <span>Dernières Dépenses Enregistrées</span>
               </h3>
               <button
                 onClick={() => setActiveAccountantTab('expenses')}
-                className="text-xs font-semibold text-slate-400 hover:text-white"
+                className="text-xs font-semibold text-slate-500 hover:text-blue-950"
               >
                 Voir tout →
               </button>
@@ -416,12 +416,12 @@ export const AccountantDashboardView: React.FC = () => {
 
             <div className="space-y-2.5">
               {expenses.slice(0, 3).map(exp => (
-                <div key={exp.id} className="p-3 rounded-xl bg-slate-800/40 border border-slate-700/50 space-y-1 text-xs">
+                <div key={exp.id} className="p-3 rounded-xl bg-blue-50/60 border border-slate-200 space-y-1 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-200 truncate max-w-[170px]">{exp.title}</span>
-                    <span className="font-mono font-bold text-rose-400">{formatGnf(exp.amountGnf)}</span>
+                    <span className="font-bold text-slate-900 truncate max-w-[170px]">{exp.title}</span>
+                    <span className="font-mono font-bold text-rose-600">{formatGnf(exp.amountGnf)}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[10px] text-slate-400">
+                  <div className="flex items-center justify-between text-[10px] text-slate-500">
                     <span>{exp.beneficiary}</span>
                     <span className="font-mono">{exp.date}</span>
                   </div>

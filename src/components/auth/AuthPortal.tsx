@@ -158,7 +158,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F0F5FA] via-[#E8F1FB] to-[#DFEDFA] text-slate-800 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-[#F0F5FA] via-[#E8F1FB] to-[#DFEDFA] text-slate-800 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
       {/* Republic of Guinea Official Tricolor Banner */}
       <div className="h-1.5 w-full grid grid-cols-3 shrink-0 shadow-sm">
         <div className="bg-[#CE1126]" title="Rouge: Le sang des martyrs / Travail" />
@@ -167,74 +167,75 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
       </div>
 
       {/* Modern, Clean Light Top Header */}
-      <header className="border-b border-blue-100 bg-white/90 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-40 transition-all shadow-xs">
+      <header className="border-b border-blue-100 bg-white/95 backdrop-blur-md px-3 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-2 sticky top-0 z-40 transition-all shadow-xs">
         {/* Brand Zone */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-500 text-white flex items-center justify-center font-black text-xl shadow-md shadow-blue-500/25 ring-2 ring-blue-100">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-500 text-white flex items-center justify-center font-black text-lg sm:text-xl shadow-md shadow-blue-500/25 ring-2 ring-blue-100 shrink-0">
             S
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-base font-black tracking-tight text-blue-950">SmartSchool ERP</span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold hidden sm:inline-flex items-center gap-1">
+              <span className="text-sm sm:text-base font-black tracking-tight text-blue-950 truncate">SmartSchool ERP</span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold hidden sm:inline-flex items-center gap-1 shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
                 RÉPUBLIQUE DE GUINÉE
               </span>
             </div>
-            <div className="text-[11px] text-slate-500 font-medium hidden md:block">
+            <div className="text-[11px] text-slate-500 font-medium hidden md:block truncate">
               Ministère de l'Enseignement Pré-Universitaire et de l'Alphabétisation (MEPU-A)
             </div>
           </div>
         </div>
 
         {/* Right Header Navigation */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={scrollToLogin}
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 flex items-center gap-2 transition-all cursor-pointer"
+            className="px-3 sm:px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer"
           >
             <Lock className="w-3.5 h-3.5" />
-            <span>Connexion Espace</span>
+            <span className="hidden xs:inline sm:inline">Connexion</span>
+            <span className="hidden sm:inline">Espace</span>
           </button>
         </div>
       </header>
 
       {/* Main Content Area with Light Blue Canvas */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-8 sm:space-y-12 min-w-0">
         {/* =========================================================================
             SECTION 1: HERO AVEC IMAGE SOUVERAINE GUINÉENNE & FOND BLEU CLAIR
         ========================================================================= */}
-        <section className="relative rounded-3xl overflow-hidden bg-white/95 border border-blue-100 p-6 sm:p-10 lg:p-12 shadow-xl shadow-blue-900/5">
+        <section className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-white/95 border border-blue-100 p-4 sm:p-8 lg:p-12 shadow-xl shadow-blue-900/5">
           {/* Subtle Ambient Pastel Blue Glows */}
           <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-200/40 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-100/50 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-center">
             {/* Left Column: Inspiring Presentation */}
-            <div className="lg:col-span-7 space-y-6 text-left">
+            <div className="lg:col-span-7 space-y-5 sm:space-y-6 text-left min-w-0">
               {/* Sovereign National Tag */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-xs text-blue-900 font-semibold">
-                <span className="flex h-2 w-2 rounded-full bg-blue-600" />
-                <span>Plateforme Nationale MEPU-A · Système Prêt pour Production</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-[11px] sm:text-xs text-blue-900 font-semibold max-w-full">
+                <span className="flex h-2 w-2 rounded-full bg-blue-600 shrink-0" />
+                <span className="truncate">Plateforme Nationale MEPU-A · Production</span>
               </div>
 
               {/* Main Headline */}
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-blue-950 tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-blue-950 tracking-tight leading-tight">
                 L'école moderne & connectée au service de la Guinée
               </h1>
 
               {/* Subtitle */}
-              <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal max-w-2xl">
+              <p className="text-xs sm:text-base text-slate-600 leading-relaxed font-normal max-w-2xl">
                 Gestion académique centralisée pour les établissements scolaires guinéens : cartes d'identité scolaires PVC sécurisées, bulletins officiels infalsifiables, suivi continu des cours et comptabilité en Franc Guinéen (GNF).
               </p>
 
               {/* Primary Call to Action */}
-              <div className="flex flex-wrap items-center gap-3 pt-2">
+              <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 pt-1">
                 <button
                   type="button"
                   onClick={scrollToLogin}
-                  className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-600/25 flex items-center gap-2 transition-all cursor-pointer group"
+                  className="px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer group"
                 >
                   <Lock className="w-4 h-4 text-blue-100" />
                   <span>Accéder à mon Espace</span>
@@ -244,7 +245,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
                 <button
                   type="button"
                   onClick={() => setShowAccountIssuanceModal(true)}
-                  className="px-5 py-3.5 rounded-xl bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer"
+                  className="px-5 py-3 sm:py-3.5 rounded-xl bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   <ShieldCheck className="w-4 h-4 text-blue-600" />
                   <span>Attribution des Comptes</span>
@@ -252,34 +253,34 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
               </div>
 
               {/* Trust Indicators */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-blue-100">
-                <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-100">
-                  <div className="text-lg font-black text-blue-900 font-mono">Multi-Écoles</div>
-                  <div className="text-[11px] text-slate-500">Isolation stricte</div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 pt-4 border-t border-blue-100">
+                <div className="p-2.5 sm:p-3 rounded-2xl bg-blue-50/70 border border-blue-100">
+                  <div className="text-sm sm:text-lg font-black text-blue-900 font-mono">Multi-Écoles</div>
+                  <div className="text-[10px] sm:text-[11px] text-slate-500">Isolation stricte</div>
                 </div>
-                <div className="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-100">
-                  <div className="text-lg font-black text-emerald-800 font-mono">Cartes PVC</div>
-                  <div className="text-[11px] text-slate-500">Norme ISO 300 DPI</div>
+                <div className="p-2.5 sm:p-3 rounded-2xl bg-emerald-50/70 border border-emerald-100">
+                  <div className="text-sm sm:text-lg font-black text-emerald-800 font-mono">Cartes PVC</div>
+                  <div className="text-[10px] sm:text-[11px] text-slate-500">Norme ISO 300 DPI</div>
                 </div>
-                <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-100">
-                  <div className="text-lg font-black text-amber-800 font-mono">GNF</div>
-                  <div className="text-[11px] text-slate-500">Franc Guinéen natif</div>
+                <div className="p-2.5 sm:p-3 rounded-2xl bg-amber-50/70 border border-amber-100">
+                  <div className="text-sm sm:text-lg font-black text-amber-800 font-mono">GNF</div>
+                  <div className="text-[10px] sm:text-[11px] text-slate-500">Franc Guinéen natif</div>
                 </div>
-                <div className="p-3 rounded-2xl bg-purple-50/70 border border-purple-100">
-                  <div className="text-lg font-black text-purple-800 font-mono">10 Rôles</div>
-                  <div className="text-[11px] text-slate-500">Gouvernance RBAC</div>
+                <div className="p-2.5 sm:p-3 rounded-2xl bg-purple-50/70 border border-purple-100">
+                  <div className="text-sm sm:text-lg font-black text-purple-800 font-mono">10 Rôles</div>
+                  <div className="text-[10px] sm:text-[11px] text-slate-500">Gouvernance RBAC</div>
                 </div>
               </div>
             </div>
 
             {/* Right Column: Hero High-Fidelity Photograph */}
-            <div className="lg:col-span-5 relative">
-              <div className="relative rounded-3xl overflow-hidden border-4 border-white shadow-2xl shadow-blue-900/10 group">
+            <div className="lg:col-span-5 relative min-w-0">
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border-4 border-white shadow-2xl shadow-blue-900/10 group">
                 <img
                   src={IMAGES.hero}
                   alt="Élèves guinéens au Lycée d'Excellence de Conakry"
                   referrerPolicy="no-referrer"
-                  className="w-full h-80 sm:h-96 object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                  className="w-full h-60 sm:h-80 lg:h-96 object-cover object-center group-hover:scale-105 transition-transform duration-700"
                   onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-transparent pointer-events-none" />
@@ -694,7 +695,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
                   type="password"
                   required
                   value={confirmPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Répétez le mot de passe..."
                   className="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-hidden focus:border-blue-600 focus:bg-white"
                 />

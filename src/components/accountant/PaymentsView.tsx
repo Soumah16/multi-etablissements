@@ -116,11 +116,11 @@ export const PaymentsView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-            <CreditCard className="w-6 h-6 text-emerald-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2.5">
+            <CreditCard className="w-6 h-6 text-emerald-600" />
             <span>Gestion des Encaissements & Règlements</span>
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Enregistrement des paiements complets, partiels ou échelonnés avec calcul automatique du solde
           </p>
         </div>
@@ -139,13 +139,13 @@ export const PaymentsView: React.FC = () => {
       {/* Filters & Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input 
             type="text"
             placeholder="Rechercher par élève, parent, reçu..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+            className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-blue-100 text-xs text-blue-950 placeholder-slate-400 focus:outline-none focus:border-emerald-500"
           />
         </div>
 
@@ -163,7 +163,7 @@ export const PaymentsView: React.FC = () => {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
                 methodFilter === m.id
                   ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-400 bg-slate-900 border border-slate-800 hover:text-white'
+                  : 'text-slate-500 bg-white border border-blue-100 hover:text-blue-950'
               }`}
             >
               {m.label}
@@ -173,9 +173,9 @@ export const PaymentsView: React.FC = () => {
       </div>
 
       {/* Payments Table */}
-      <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900 shadow-xl">
-        <table className="w-full text-left text-xs text-slate-300">
-          <thead className="bg-slate-950/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-800">
+      <div className="overflow-x-auto rounded-2xl border border-blue-100 bg-white shadow-xl">
+        <table className="w-full text-left text-xs text-slate-700">
+          <thead className="bg-blue-50/70 text-[10px] uppercase font-bold text-slate-500 border-b border-blue-100">
             <tr>
               <th className="py-3 px-4">Réf. Reçu</th>
               <th className="py-3 px-4">Élève & Classe</th>
@@ -187,38 +187,38 @@ export const PaymentsView: React.FC = () => {
               <th className="py-3 px-4 text-center">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60 font-medium">
+          <tbody className="divide-y divide-blue-100 font-medium">
             {filteredPayments.map(payment => (
-              <tr key={payment.id} className="hover:bg-slate-800/40 transition-colors">
+              <tr key={payment.id} className="hover:bg-blue-50 transition-colors">
                 <td className="py-3 px-4">
-                  <div className="font-mono text-emerald-400 font-bold">{payment.reference}</div>
+                  <div className="font-mono text-emerald-600 font-bold">{payment.reference}</div>
                   <div className="text-[10px] text-slate-500 font-mono">{payment.date} à {payment.time}</div>
                 </td>
 
                 <td className="py-3 px-4">
-                  <div className="font-bold text-white text-xs">{payment.studentName}</div>
-                  <div className="text-[10px] text-slate-400 font-mono">{payment.studentMatricule} · {payment.className}</div>
+                  <div className="font-bold text-blue-950 text-xs">{payment.studentName}</div>
+                  <div className="text-[10px] text-slate-500 font-mono">{payment.studentMatricule} · {payment.className}</div>
                 </td>
 
                 <td className="py-3 px-3">
-                  <div className="text-slate-200">{payment.parentName}</div>
+                  <div className="text-slate-900">{payment.parentName}</div>
                   <div className="text-[10px] text-slate-500 font-mono">{payment.parentPhone}</div>
                 </td>
 
                 <td className="py-3 px-3">
-                  <div className="text-slate-300 truncate max-w-[150px]">{payment.feeType}</div>
-                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 uppercase">
+                  <div className="text-slate-700 truncate max-w-[150px]">{payment.feeType}</div>
+                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-50 text-slate-700 uppercase">
                     {payment.method.replace('_', ' ')}
                   </span>
                 </td>
 
-                <td className="py-3 px-3 text-right font-mono font-bold text-emerald-400">
+                <td className="py-3 px-3 text-right font-mono font-bold text-emerald-600">
                   {formatGnf(payment.amountPaidGnf)}
                 </td>
 
                 <td className="py-3 px-3 text-right font-mono">
                   {payment.balanceRemainingGnf > 0 ? (
-                    <span className="text-rose-400 font-semibold">{formatGnf(payment.balanceRemainingGnf)}</span>
+                    <span className="text-rose-600 font-semibold">{formatGnf(payment.balanceRemainingGnf)}</span>
                   ) : (
                     <span className="text-emerald-500 font-bold">Soldé (0 GNF)</span>
                   )}
@@ -226,11 +226,11 @@ export const PaymentsView: React.FC = () => {
 
                 <td className="py-3 px-3 text-center">
                   {payment.status === 'valide' ? (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       Validé
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
                       Annulé
                     </span>
                   )}
@@ -240,7 +240,7 @@ export const PaymentsView: React.FC = () => {
                   <div className="flex items-center justify-center gap-2">
                     <button
                       onClick={() => setSelectedReceipt(payment)}
-                      className="px-2.5 py-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-semibold transition-colors flex items-center gap-1"
+                      className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold transition-colors flex items-center gap-1"
                       title="Voir le reçu officiel imprimable"
                     >
                       <Receipt className="w-3.5 h-3.5" />
@@ -250,7 +250,7 @@ export const PaymentsView: React.FC = () => {
                     {payment.status === 'valide' && (
                       <button
                         onClick={() => handleRequestCancel(payment)}
-                        className="px-2 py-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 text-xs font-semibold transition-colors"
+                        className="px-2 py-1 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 text-xs font-semibold transition-colors"
                         title="Annuler ce paiement (Code PIN 6 chiffres requis)"
                       >
                         Annuler
@@ -266,15 +266,15 @@ export const PaymentsView: React.FC = () => {
 
       {/* Modal: Record New Payment */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-xl max-h-[90vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-xl max-h-[90vh] flex flex-col rounded-2xl bg-white border border-blue-100 shadow-2xl overflow-hidden">
             {/* Pinned Modal Header */}
-            <div className="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900">
-              <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-emerald-400" />
+            <div className="px-5 py-3.5 border-b border-blue-100 flex items-center justify-between shrink-0 bg-white">
+              <h3 className="font-bold text-sm text-blue-950 flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-emerald-600" />
                 <span>Encaisser un paiement & Délivrer un reçu</span>
               </h3>
-              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white p-1">✕</button>
+              <button onClick={() => setModalOpen(false)} className="text-slate-500 hover:text-blue-950 p-1">✕</button>
             </div>
 
             <form onSubmit={handleRecordPayment} className="flex-1 flex flex-col min-h-0 text-xs">
@@ -282,44 +282,44 @@ export const PaymentsView: React.FC = () => {
               {/* Student info */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Nom complet de l'élève *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Nom complet de l'élève *</label>
                   <input 
                     type="text" 
                     required
                     value={studentName}
                     onChange={e => setStudentName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Matricule élève *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Matricule élève *</label>
                   <input 
                     type="text" 
                     required
                     value={studentMatricule}
                     onChange={e => setStudentMatricule(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 font-mono focus:outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Classe *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Classe *</label>
                   <input 
                     type="text" 
                     required
                     value={className}
                     onChange={e => setClassName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Mode de règlement *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Mode de règlement *</label>
                   <select 
                     value={method}
                     onChange={e => setMethod(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   >
                     <option value="orange_money">Orange Money Guinée</option>
                     <option value="mtn_momo">MTN Mobile Money</option>
@@ -334,34 +334,34 @@ export const PaymentsView: React.FC = () => {
               {/* Parent info */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Nom du Parent / Payeur *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Nom du Parent / Payeur *</label>
                   <input 
                     type="text" 
                     required
                     value={parentName}
                     onChange={e => setParentName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Téléphone du Parent *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Téléphone du Parent *</label>
                   <input 
                     type="text" 
                     required
                     value={parentPhone}
                     onChange={e => setParentPhone(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
 
               {/* Fee and Amount selection */}
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Rubrique / Frais scolaire concerné *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Rubrique / Frais scolaire concerné *</label>
                 <select 
                   value={selectedFeeId}
                   onChange={e => handleFeeChange(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 >
                   {fees.map(f => (
                     <option key={f.id} value={f.id}>
@@ -372,64 +372,64 @@ export const PaymentsView: React.FC = () => {
               </div>
 
               {/* Amounts and Live Calculation */}
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
+              <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-100 space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-slate-400 font-medium mb-1">Montant Total du Frais (GNF)</label>
+                    <label className="block text-slate-500 font-medium mb-1">Montant Total du Frais (GNF)</label>
                     <input 
                       type="number" 
                       value={customTotalFeeGnf}
                       onChange={e => setCustomTotalFeeGnf(parseInt(e.target.value) || 0)}
-                      className="w-full px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white font-mono focus:outline-none"
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-emerald-400 font-bold mb-1">Montant Versé Aujourd'hui (GNF) *</label>
+                    <label className="block text-emerald-600 font-bold mb-1">Montant Versé Aujourd'hui (GNF) *</label>
                     <input 
                       type="number" 
                       required
                       min="1000"
                       value={amountPaidGnf}
                       onChange={e => setAmountPaidGnf(parseInt(e.target.value) || 0)}
-                      className="w-full px-3 py-1.5 rounded-lg bg-slate-800 border border-emerald-500/60 text-white font-mono font-bold text-sm focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-emerald-500/60 text-blue-950 font-mono font-bold text-sm focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                 </div>
 
                 {/* Calculation breakdown */}
-                <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
+                <div className="pt-2 border-t border-blue-100 flex items-center justify-between text-xs">
                   <div>
-                    <span className="text-slate-400">Solde Restant Dû : </span>
-                    <strong className={remaining > 0 ? 'text-rose-400 font-mono' : 'text-emerald-400 font-mono'}>
+                    <span className="text-slate-500">Solde Restant Dû : </span>
+                    <strong className={remaining > 0 ? 'text-rose-600 font-mono' : 'text-emerald-600 font-mono'}>
                       {formatGnf(remaining)}
                     </strong>
                   </div>
                   <div>
-                    <span className="text-slate-400">Pourcentage payé : </span>
-                    <strong className="text-white font-mono">{percent}%</strong>
+                    <span className="text-slate-500">Pourcentage payé : </span>
+                    <strong className="text-blue-950 font-mono">{percent}%</strong>
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Observations / Référence transaction</label>
+                <label className="block text-slate-700 font-semibold mb-1">Observations / Référence transaction</label>
                 <input 
                   type="text" 
                   placeholder="Ex: N° Transaction Orange Money OM-98214..."
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
               </div>
 
               {/* Pinned Modal Footer */}
-              <div className="px-5 py-3 border-t border-slate-800 bg-slate-900/95 flex items-center justify-end gap-2.5 shrink-0">
+              <div className="px-5 py-3 border-t border-blue-100 bg-white flex items-center justify-end gap-2.5 shrink-0">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-blue-950 bg-slate-50 text-xs font-semibold"
                 >
                   Annuler
                 </button>

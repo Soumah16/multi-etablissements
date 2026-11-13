@@ -371,21 +371,21 @@ networks:
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/30">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20 shrink-0">
               <BookOpen className="w-5 h-5" />
             </div>
-            <div>
-              <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-black tracking-tight text-blue-950 flex flex-wrap items-center gap-2">
                 <span>Architecture Système & Hub Open-Source</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 font-bold">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 font-bold">
                   SOUVERAINETÉ MEPU-A
                 </span>
               </h1>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Conçu et développé par <strong className="text-white">Saïd Soumah</strong> (<a href="mailto:saidsoumah23@gmail.com" className="text-blue-400 hover:underline">saidsoumah23@gmail.com</a>) · Spécifications techniques complètes et pack de déploiement autonome MEPU-A.
+              <p className="text-xs text-slate-500 mt-0.5">
+                Conçu et développé par <strong className="text-blue-950">Saïd Soumah</strong> (<a href="mailto:saidsoumah23@gmail.com" className="text-blue-600 hover:underline">saidsoumah23@gmail.com</a>) · Spécifications techniques complètes et pack de déploiement autonome MEPU-A.
               </p>
             </div>
           </div>
@@ -394,7 +394,7 @@ networks:
         <button
           type="button"
           onClick={() => handleDownloadFile('smartschool_mepu_full_bundle.zip', dockerComposeContent, 'application/zip')}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30 cursor-pointer"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/20 cursor-pointer shrink-0 self-start sm:self-auto"
         >
           <FolderDown className="w-4 h-4" />
           <span>Télécharger Pack Déploiement</span>
@@ -402,7 +402,7 @@ networks:
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-slate-800/80">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-blue-100">
         {[
           { id: 'cahier_charges', label: '1. Cahier des Charges MEPU-A', icon: FileText },
           { id: 'uml', label: '2. Architecture & UML', icon: Workflow },
@@ -423,7 +423,7 @@ networks:
               className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                 isActive
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  : 'text-slate-600 hover:text-blue-950 hover:bg-blue-50'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -436,28 +436,28 @@ networks:
       {/* Tab 1: Cahier des Charges MEPU-A */}
       {activeDocTab === 'cahier_charges' && (
         <div className="space-y-4">
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-blue-100 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-blue-100">
               <div>
-                <h2 className="text-base font-bold text-white">
+                <h2 className="text-base font-bold text-blue-950">
                   Cahier des Charges Technique & Fonctionnel · République de Guinée
                 </h2>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   Ministère de l'Enseignement Pré-Universitaire et de l'Alphabétisation (MEPU-A)
                 </p>
               </div>
-              <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold">
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-200 font-mono text-xs font-bold self-start sm:self-auto">
                 Version 3.2 Officielle
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-300">
-              <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-2">
-                <h3 className="font-bold text-blue-400 flex items-center gap-1.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-700">
+              <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-100 space-y-2">
+                <h3 className="font-bold text-blue-700 flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4" />
                   <span>1. Objectifs Stratégiques Nationaux</span>
                 </h3>
-                <ul className="space-y-1.5 list-disc pl-4 text-slate-300">
+                <ul className="space-y-1.5 list-disc pl-4 text-slate-700">
                   <li>Informatisation souveraine de tous les établissements primaires, collèges et lycées guinéens.</li>
                   <li>Gestion centralisée et décentralisée : gouvernance ministérielle (Super Admin) + autonomie des établissements (Admins École).</li>
                   <li>Élimination totale de la fraude aux examens grâce aux badges PVC à QR Code sécurisé et UID cryptographique.</li>
@@ -465,12 +465,12 @@ networks:
                 </ul>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-2">
-                <h3 className="font-bold text-emerald-400 flex items-center gap-1.5">
+              <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-100 space-y-2">
+                <h3 className="font-bold text-emerald-700 flex items-center gap-1.5">
                   <Cpu className="w-4 h-4" />
                   <span>2. Matrice RBAC à 11 Rôles Cloisonnés</span>
                 </h3>
-                <ul className="space-y-1.5 list-disc pl-4 text-slate-300">
+                <ul className="space-y-1.5 list-disc pl-4 text-slate-700">
                   <li><strong>SUPER_ADMIN_NATIONAL :</strong> Pilotage macroscopique, délivrance des écoles et licences.</li>
                   <li><strong>ADMIN_ECOLE :</strong> Gestionnaire souverain de l'école (Fondateur/Direction Générale).</li>
                   <li><strong>DIRECTEUR & CENSEUR :</strong> Pédagogie, examens, validation souveraine des bulletins et discipline.</li>
@@ -481,8 +481,8 @@ networks:
                 </ul>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-2">
-                <h3 className="font-bold text-amber-400 flex items-center gap-1.5">
+              <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-100 space-y-2">
+                <h3 className="font-bold text-amber-700 flex items-center gap-1.5">
                   <Lock className="w-4 h-4" />
                   <span>3. Cloisonnement Multi-Tenant Strict</span>
                 </h3>
@@ -491,8 +491,8 @@ networks:
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-2">
-                <h3 className="font-bold text-purple-400 flex items-center gap-1.5">
+              <div className="p-4 rounded-xl bg-purple-50/70 border border-purple-100 space-y-2">
+                <h3 className="font-bold text-purple-700 flex items-center gap-1.5">
                   <HardDrive className="w-4 h-4" />
                   <span>4. Indépendance & Exportabilité</span>
                 </h3>
@@ -508,14 +508,14 @@ networks:
       {/* Tab 2: Architecture & UML */}
       {activeDocTab === 'uml' && (
         <div className="space-y-4">
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Workflow className="w-5 h-5 text-indigo-400" />
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-blue-100 shadow-xs space-y-4">
+            <h2 className="text-base font-bold text-blue-950 flex items-center gap-2">
+              <Workflow className="w-5 h-5 text-indigo-600" />
               <span>Modélisation Système UML & Merise (MCD / MLD)</span>
             </h2>
 
-            {/* Architecture Schema Visual Box */}
-            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-slate-300 space-y-3 overflow-x-auto">
+            {/* Architecture Schema Visual Box (kept dark monospace terminal) */}
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 font-mono text-xs text-slate-300 space-y-3 overflow-x-auto">
               <div className="text-blue-400 font-bold">// 1. DIAGRAMME DE CAS D'UTILISATION (USE CASES)</div>
               <pre className="text-[11px] leading-relaxed text-slate-300">
 {`+-----------------------------------------------------------------------------------+
@@ -561,25 +561,25 @@ networks:
       {/* Tab 3: SQL Schemas */}
       {activeDocTab === 'sql' && (
         <div className="space-y-4">
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-blue-100 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-blue-100">
               <div>
-                <h2 className="text-base font-bold text-white flex items-center gap-2">
-                  <Database className="w-5 h-5 text-emerald-400" />
+                <h2 className="text-base font-bold text-blue-950 flex items-center gap-2">
+                  <Database className="w-5 h-5 text-emerald-600" />
                   <span>Script SQL Complet (PostgreSQL / MySQL / MariaDB)</span>
                 </h2>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   Clés primaires, contraintes d'intégrité, index de performance et Row Level Security (RLS)
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
                   onClick={() => handleCopy('sql', sqlPostgresScript)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-blue-50 text-blue-950 text-xs font-semibold border border-slate-200"
                 >
-                  {copiedKey === 'sql' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedKey === 'sql' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedKey === 'sql' ? 'Copié !' : 'Copier SQL'}</span>
                 </button>
 
@@ -594,7 +594,7 @@ networks:
               </div>
             </div>
 
-            <div className="rounded-xl bg-slate-950 p-4 border border-slate-800 max-h-[500px] overflow-y-auto font-mono text-xs text-slate-300">
+            <div className="rounded-xl bg-slate-900 p-4 border border-slate-800 max-h-[500px] overflow-auto font-mono text-xs text-slate-300">
               <pre>{sqlPostgresScript}</pre>
             </div>
           </div>
@@ -604,14 +604,14 @@ networks:
       {/* Tab 4: API REST & Swagger */}
       {activeDocTab === 'api' && (
         <div className="space-y-4">
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-blue-100 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-blue-100">
               <div>
-                <h2 className="text-base font-bold text-white flex items-center gap-2">
-                  <Code2 className="w-5 h-5 text-cyan-400" />
+                <h2 className="text-base font-bold text-blue-950 flex items-center gap-2">
+                  <Code2 className="w-5 h-5 text-cyan-600" />
                   <span>Spécification Swagger & OpenAPI 3.0</span>
                 </h2>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   Standard international d'intégration pour les applications mobiles et portails ministériels
                 </p>
               </div>
@@ -619,14 +619,14 @@ networks:
               <button
                 type="button"
                 onClick={() => handleDownloadFile('openapi_smartschool.json', openApiSpec, 'application/json')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold self-start sm:self-auto"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Télécharger OpenAPI JSON</span>
               </button>
             </div>
 
-            <div className="rounded-xl bg-slate-950 p-4 border border-slate-800 max-h-[500px] overflow-y-auto font-mono text-xs text-slate-300">
+            <div className="rounded-xl bg-slate-900 p-4 border border-slate-800 max-h-[500px] overflow-auto font-mono text-xs text-slate-300">
               <pre>{openApiSpec}</pre>
             </div>
           </div>
@@ -637,62 +637,62 @@ networks:
       {activeDocTab === 'manuals' && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 flex flex-col justify-between">
+            <div className="p-5 rounded-2xl bg-white border border-blue-100 shadow-xs space-y-3 flex flex-col justify-between">
               <div className="space-y-2">
-                <div className="w-8 h-8 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 border border-blue-200 flex items-center justify-center">
                   <UserCheck className="w-4 h-4" />
                 </div>
-                <h3 className="font-bold text-white text-sm">Manuel Utilisateur Officiel</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <h3 className="font-bold text-blue-950 text-sm">Manuel Utilisateur Officiel</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
                   Guide pratique illustré pour Enseignants, Parents, Élèves et Personnels administratifs. Prise en main pas-à-pas des formulaires, bulletins et devoirs.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => handleDownloadFile('Manuel_Utilisateur_SmartSchool_Guinee.txt', 'MANUEL UTILISATEUR SMARTSCHOOL ERP\n\n1. Connexion avec Identifiant MEPU-A\n2. Consultation et Dépôt des Devoirs\n3. Impression des Cartes PVC\n4. Reçus de Frais Scolaires')}
-                className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-slate-700"
+                className="w-full py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-950 text-xs font-semibold flex items-center justify-center gap-1.5 border border-blue-200"
               >
-                <Download className="w-3.5 h-3.5 text-blue-400" />
+                <Download className="w-3.5 h-3.5 text-blue-600" />
                 <span>Télécharger Guide Utilisateur</span>
               </button>
             </div>
 
-            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 flex flex-col justify-between">
+            <div className="p-5 rounded-2xl bg-white border border-blue-100 shadow-xs space-y-3 flex flex-col justify-between">
               <div className="space-y-2">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center justify-center">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
-                <h3 className="font-bold text-white text-sm">Manuel d'Administration</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <h3 className="font-bold text-blue-950 text-sm">Manuel d'Administration</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
                   Configuration des rentrées scolaires, attribution des classes, délivrance des identifiants (ENS-EXC-..., ADM-EXC-...), gestion des statuts de compte.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => handleDownloadFile('Manuel_Administration_SmartSchool_Guinee.txt', 'MANUEL ADMINISTRATEUR ECOLE ET SUPER ADMIN\n\n1. Création et délivrance des comptes\n2. Réinitialisation et verrouillage\n3. Clôture de l\'année scolaire')}
-                className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-slate-700"
+                className="w-full py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-xs font-semibold flex items-center justify-center gap-1.5 border border-emerald-200"
               >
-                <Download className="w-3.5 h-3.5 text-emerald-400" />
+                <Download className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Télécharger Guide Admin</span>
               </button>
             </div>
 
-            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 flex flex-col justify-between">
+            <div className="p-5 rounded-2xl bg-white border border-blue-100 shadow-xs space-y-3 flex flex-col justify-between">
               <div className="space-y-2">
-                <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 border border-purple-200 flex items-center justify-center">
                   <Lock className="w-4 h-4" />
                 </div>
-                <h3 className="font-bold text-white text-sm">Politique de Cybersécurité</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <h3 className="font-bold text-blue-950 text-sm">Politique de Cybersécurité</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
                   Durcissement des sessions, protection anti-bruteforce (blocage à 5 échecs), chiffrement des mots de passe, conformité protection des données des mineurs.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => handleDownloadFile('Directives_Cybersecurite_MEPUA.txt', 'DIRECTIVES CYBERSÉCURITÉ MEPU-A\n\n1. Règles de mots de passe complexes\n2. Cloisonnement strict des données scolaires\n3. Journalisation obligatoire des accès')}
-                className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-slate-700"
+                className="w-full py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-950 text-xs font-semibold flex items-center justify-center gap-1.5 border border-purple-200"
               >
-                <Download className="w-3.5 h-3.5 text-purple-400" />
+                <Download className="w-3.5 h-3.5 text-purple-600" />
                 <span>Télécharger Guide Sécurité</span>
               </button>
             </div>
@@ -703,14 +703,14 @@ networks:
       {/* Tab 6: Open-Source Pack & Deployment */}
       {activeDocTab === 'opensource_pack' && (
         <div className="space-y-4">
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-blue-100 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-blue-100">
               <div>
-                <h2 className="text-base font-bold text-white flex items-center gap-2">
-                  <Server className="w-5 h-5 text-indigo-400" />
+                <h2 className="text-base font-bold text-blue-950 flex items-center gap-2">
+                  <Server className="w-5 h-5 text-indigo-600" />
                   <span>Fichiers de Déploiement Universels (Indépendance Totale)</span>
                 </h2>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   Déployez SmartSchool ERP sur n'importe quel serveur en quelques minutes.
                 </p>
               </div>
@@ -719,21 +719,21 @@ networks:
                 <button
                   type="button"
                   onClick={() => handleDownloadFile('docker-compose.yml', dockerComposeContent, 'text/yaml')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-900 text-xs font-semibold border border-indigo-200"
                 >
-                  <Download className="w-3.5 h-3.5 text-indigo-400" />
+                  <Download className="w-3.5 h-3.5 text-indigo-600" />
                   <span>docker-compose.yml</span>
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-300">
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-700">
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-slate-200">
                 <h3 className="font-bold text-white flex items-center gap-2">
                   <Terminal className="w-4 h-4 text-emerald-400" />
                   <span>Option A : Déploiement VPS Ubuntu 22.04 / 24.04</span>
                 </h3>
-                <pre className="p-2.5 rounded bg-slate-900 text-[11px] font-mono text-emerald-300 overflow-x-auto">
+                <pre className="p-2.5 rounded bg-slate-950 text-[11px] font-mono text-emerald-300 overflow-x-auto">
 {`# 1. Cloner le dépôt souverain
 git clone https://github.com/mepu-guinee/smartschool-erp.git
 cd smartschool-erp
@@ -745,12 +745,12 @@ docker compose up -d
                 </pre>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                <h3 className="font-bold text-white flex items-center gap-2">
-                  <ExternalLink className="w-4 h-4 text-blue-400" />
+              <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-100 space-y-2">
+                <h3 className="font-bold text-blue-950 flex items-center gap-2">
+                  <ExternalLink className="w-4 h-4 text-blue-600" />
                   <span>Option B : Hébergements cPanel / Hostinger / Apache</span>
                 </h3>
-                <ul className="space-y-1 list-disc pl-4 text-slate-300 text-[11px]">
+                <ul className="space-y-1 list-disc pl-4 text-slate-700 text-[11px]">
                   <li>Créer une base MySQL via l'interface cPanel.</li>
                   <li>Importer le fichier <code>install.sql</code> via phpMyAdmin.</li>
                   <li>Déposer les fichiers du dossier <code>dist/</code> dans <code>public_html/</code>.</li>
@@ -765,19 +765,19 @@ docker compose up -d
       {/* Tab 7: Backup & Snapshot */}
       {activeDocTab === 'backup_export' && (
         <div className="space-y-4">
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <HardDrive className="w-5 h-5 text-emerald-400" />
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-blue-100 shadow-xs space-y-4">
+            <h2 className="text-base font-bold text-blue-950 flex items-center gap-2">
+              <HardDrive className="w-5 h-5 text-emerald-600" />
               <span>Gestionnaire Souverain de Sauvegarde & Export Intégral</span>
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-600">
               Exportez à tout moment l'ensemble des données de l'établissement sous forme de dump SQL ou d'archive JSON chiffrée.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-3">
-                <div className="font-bold text-white text-sm">Export SQL Complet (Dump Instantané)</div>
-                <p className="text-xs text-slate-400">
+              <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-100 space-y-3">
+                <div className="font-bold text-blue-950 text-sm">Export SQL Complet (Dump Instantané)</div>
+                <p className="text-xs text-slate-600">
                   Génère un fichier .sql contenant la structure complète, les tables d'élèves, de notes, de comptabilité et les utilisateurs.
                 </p>
                 <button
@@ -790,9 +790,9 @@ docker compose up -d
                 </button>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-3">
-                <div className="font-bold text-white text-sm">Export Snapshot JSON Chiffré</div>
-                <p className="text-xs text-slate-400">
+              <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-100 space-y-3">
+                <div className="font-bold text-blue-950 text-sm">Export Snapshot JSON Chiffré</div>
+                <p className="text-xs text-slate-600">
                   Snapshot portable pour restauration rapide ou migration vers une autre instance ministérielle.
                 </p>
                 <button
@@ -812,18 +812,18 @@ docker compose up -d
       {/* Tab 8: Génération APK & Mobile Android */}
       {activeDocTab === 'apk_mobile' && (
         <div className="space-y-4 text-left">
-          <div className="p-5 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div className="p-4 sm:p-6 rounded-2xl bg-white border border-blue-100 shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
               <div>
-                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[11px] font-bold border border-emerald-500/30 mb-1.5">
-                  <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono text-[11px] font-bold border border-emerald-200 mb-1.5">
+                  <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Package Android Natif .APK</span>
                 </div>
-                <h2 className="text-lg font-black text-white">
+                <h2 className="text-lg font-black text-blue-950">
                   Transformation en Application Mobile Android (.APK)
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Conçu et configuré pour SmartSchool ERP Guinée par <strong>Saïd Soumah</strong> (saidsoumah23@gmail.com).
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Conçu et configuré pour SmartSchool ERP Guinée par <strong className="text-blue-950">Saïd Soumah</strong> (saidsoumah23@gmail.com).
                 </p>
               </div>
 
@@ -842,7 +842,7 @@ npx cap sync android
 cd android && ./gradlew assembleDebug
 echo "APK prêt dans : android/app/build/outputs/apk/debug/app-debug.apk"
 `, 'text/x-sh')}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/30 cursor-pointer shrink-0"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/20 cursor-pointer shrink-0 self-start sm:self-auto"
               >
                 <Download className="w-4 h-4" />
                 <span>Télécharger build_apk.sh</span>
@@ -851,76 +851,76 @@ echo "APK prêt dans : android/app/build/outputs/apk/debug/app-debug.apk"
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Option 1: Capacitor */}
-              <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-3 flex flex-col justify-between">
+              <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-100 space-y-3 flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-emerald-400 text-sm">Méthode 1 : Capacitor (Recommandée)</span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">100% Hors-Ligne</span>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="font-bold text-emerald-700 text-sm">Méthode 1 : Capacitor (Recommandée)</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold shrink-0">100% Hors-Ligne</span>
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-xs text-slate-700 leading-relaxed">
                     Compile l'application en un fichier <code>app-debug.apk</code> autonome que vous pouvez installer directement sur n'importe quel téléphone Android sans passer par le Play Store.
                   </p>
                 </div>
-                <div className="space-y-1 text-[11px] text-slate-400 font-mono bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                <div className="space-y-1 text-[11px] text-slate-300 font-mono bg-slate-900 p-2.5 rounded-lg border border-slate-800">
                   <div className="text-emerald-400 font-bold"># En 1 seule commande :</div>
                   <div>bash build_apk.sh</div>
                 </div>
               </div>
 
               {/* Option 2: Bubblewrap Google TWA */}
-              <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-3 flex flex-col justify-between">
+              <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-100 space-y-3 flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-blue-400 text-sm">Méthode 2 : Bubblewrap (Google TWA)</span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold">Google Play Prêt</span>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="font-bold text-blue-700 text-sm">Méthode 2 : Bubblewrap (Google TWA)</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold shrink-0">Google Play Prêt</span>
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-xs text-slate-700 leading-relaxed">
                     L'outil officiel de Google génère un APK ultra-léger (&lt; 2 Mo) directement à partir de votre URL hébergée et du fichier <code>manifest.json</code> préconfiguré.
                   </p>
                 </div>
-                <div className="space-y-1 text-[11px] text-slate-400 font-mono bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                <div className="space-y-1 text-[11px] text-slate-300 font-mono bg-slate-900 p-2.5 rounded-lg border border-slate-800">
                   <div className="text-blue-400 font-bold"># Commande TWA :</div>
                   <div>npx @bubblewrap/cli build</div>
                 </div>
               </div>
 
               {/* Option 3: Instant PWA Install */}
-              <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-3 flex flex-col justify-between">
+              <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-100 space-y-3 flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-amber-400 text-sm">Méthode 3 : Installation PWA Directe</span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">Zéro Logiciel</span>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="font-bold text-amber-800 text-sm">Méthode 3 : Installation PWA Directe</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold shrink-0">Zéro Logiciel</span>
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-xs text-slate-700 leading-relaxed">
                     Les utilisateurs ouvrent le lien du site sur Chrome Android ou Safari iOS et cliquent sur <strong>« Ajouter à l'écran d'accueil »</strong>. L'app s'installe comme une appli native avec son icône.
                   </p>
                 </div>
-                <div className="text-[11px] text-amber-300 font-medium bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
+                <div className="text-[11px] text-amber-800 font-medium bg-amber-100/70 p-2.5 rounded-lg border border-amber-200">
                   Prêt à l'emploi grâce au fichier <code>manifest.json</code> intégré !
                 </div>
               </div>
             </div>
 
-            {/* Step by Step Details */}
-            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 font-mono text-xs">
-              <div className="text-slate-300 font-bold text-sm font-sans flex items-center justify-between">
+            {/* Step by Step Details (kept dark terminal block) */}
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3 font-mono text-xs overflow-x-auto">
+              <div className="text-white font-bold text-sm font-sans flex flex-wrap items-center justify-between gap-2">
                 <span>Guide pas-à-pas pour générer votre APK manuellement :</span>
                 <span className="text-xs text-slate-400 font-normal">Temps estimé : 2 minutes</span>
               </div>
 
               <div className="space-y-2 text-slate-300">
-                <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
+                <div className="p-2.5 rounded bg-slate-950 border border-slate-800">
                   <div className="text-emerald-400 font-bold mb-1">// Étape 1 : Compiler les fichiers de production</div>
                   <div className="text-white">npm run build</div>
                 </div>
 
-                <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
+                <div className="p-2.5 rounded bg-slate-950 border border-slate-800">
                   <div className="text-emerald-400 font-bold mb-1">// Étape 2 : Ajouter et synchroniser la plateforme Android</div>
                   <div className="text-white">npx cap add android</div>
                   <div className="text-white">npx cap copy android</div>
                 </div>
 
-                <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
+                <div className="p-2.5 rounded bg-slate-950 border border-slate-800">
                   <div className="text-emerald-400 font-bold mb-1">// Étape 3 : Compiler le fichier .APK final</div>
                   <div className="text-white">cd android && ./gradlew assembleDebug</div>
                   <div className="text-slate-400 text-[11px] mt-1"># Votre fichier APK sera généré dans : android/app/build/outputs/apk/debug/app-debug.apk</div>

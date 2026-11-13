@@ -90,11 +90,11 @@ export const SupervisorDisciplineView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-            <Gavel className="w-6 h-6 text-red-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2.5">
+            <Gavel className="w-6 h-6 text-red-600" />
             <span>Registre Officiel des Incidents & Sanctions Disciplinaires</span>
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Enregistrement circonstancié, échelle des sanctions MEPU-A et liaisons avec le Directeur
           </p>
         </div>
@@ -109,7 +109,7 @@ export const SupervisorDisciplineView: React.FC = () => {
           </button>
           <button
             onClick={() => triggerPrint('supervisor-discipline-printable-list', 'Registre_Incidents_Disciplinaires')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 hover:bg-blue-100 text-slate-900 text-xs font-semibold border border-slate-200 transition-colors cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Imprimer Registre</span>
@@ -118,23 +118,23 @@ export const SupervisorDisciplineView: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="p-4 rounded-2xl bg-white border border-blue-100 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input 
             type="text"
             placeholder="Rechercher par numéro, élève, infraction..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
+            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-blue-950 placeholder-slate-400 focus:outline-none focus:border-red-500"
           />
         </div>
 
-        <div className="flex items-center gap-1.5 p-1 bg-slate-800/80 rounded-xl border border-slate-700/60 overflow-x-auto w-full md:w-auto">
+        <div className="flex items-center gap-1.5 p-1 bg-blue-50/60 rounded-xl border border-slate-200 overflow-x-auto w-full md:w-auto">
           <button
             onClick={() => setSeverityFilter('all')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-              severityFilter === 'all' ? 'bg-slate-900 text-white' : 'text-slate-400 hover:text-white'
+              severityFilter === 'all' ? 'bg-white text-blue-950' : 'text-slate-500 hover:text-blue-950'
             }`}
           >
             Tous ({incidents.length})
@@ -142,7 +142,7 @@ export const SupervisorDisciplineView: React.FC = () => {
           <button
             onClick={() => setSeverityFilter('mineure')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-              severityFilter === 'mineure' ? 'bg-slate-900 text-amber-300' : 'text-slate-400 hover:text-white'
+              severityFilter === 'mineure' ? 'bg-white text-amber-700' : 'text-slate-500 hover:text-blue-950'
             }`}
           >
             Mineurs
@@ -150,7 +150,7 @@ export const SupervisorDisciplineView: React.FC = () => {
           <button
             onClick={() => setSeverityFilter('moyenne')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-              severityFilter === 'moyenne' ? 'bg-slate-900 text-orange-300' : 'text-slate-400 hover:text-white'
+              severityFilter === 'moyenne' ? 'bg-white text-orange-700' : 'text-slate-500 hover:text-blue-950'
             }`}
           >
             Moyens
@@ -158,7 +158,7 @@ export const SupervisorDisciplineView: React.FC = () => {
           <button
             onClick={() => setSeverityFilter('grave')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-              severityFilter === 'grave' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
+              severityFilter === 'grave' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-blue-950'
             }`}
           >
             Graves
@@ -171,41 +171,41 @@ export const SupervisorDisciplineView: React.FC = () => {
         {filteredIncidents.map(inc => (
           <div 
             key={inc.id}
-            className="rounded-2xl bg-slate-900 border border-slate-800 p-5 shadow-xl hover:border-slate-700 transition-all space-y-4"
+            className="rounded-2xl bg-white border border-blue-100 p-5 shadow-xl hover:border-slate-200 transition-all space-y-4"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-blue-100">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono text-xs font-bold text-red-400 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">
+                <span className="font-mono text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200">
                   {inc.incidentNumber}
                 </span>
-                <span className="font-bold text-white text-base">{inc.studentName}</span>
-                <span className="text-xs text-slate-400">({inc.className})</span>
+                <span className="font-bold text-blue-950 text-base">{inc.studentName}</span>
+                <span className="text-xs text-slate-500">({inc.className})</span>
                 <span className="text-[10px] font-mono text-slate-500">Matricule : {inc.studentMatricule}</span>
               </div>
 
               <div className="flex items-center gap-2">
                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                   inc.severity === 'grave'
-                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
                     : inc.severity === 'moyenne'
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                    : 'bg-slate-800 text-slate-300 border border-slate-700'
+                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                    : 'bg-slate-50 text-slate-700 border border-slate-200'
                 }`}>
                   Infraction {inc.severity}
                 </span>
 
                 {inc.status === 'transmis_direction' ? (
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
                     <Send className="w-3 h-3" />
                     <span>Transmis Direction</span>
                   </span>
                 ) : inc.status === 'resolu' ? (
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" />
                     <span>Résolu</span>
                   </span>
                 ) : (
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                     En cours de traitement
                   </span>
                 )}
@@ -214,30 +214,30 @@ export const SupervisorDisciplineView: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
               <div className="md:col-span-2 space-y-2">
-                <div className="font-bold text-white flex items-center gap-2">
-                  <span className="text-red-400">Nature :</span>
+                <div className="font-bold text-blue-950 flex items-center gap-2">
+                  <span className="text-red-600">Nature :</span>
                   <span>{inc.infractionType}</span>
                 </div>
-                <p className="text-slate-300 leading-relaxed bg-slate-950/50 p-3 rounded-xl border border-slate-800">
+                <p className="text-slate-700 leading-relaxed bg-blue-50/70 p-3 rounded-xl border border-blue-100">
                   {inc.reportDetails}
                 </p>
                 {inc.witnesses && (
-                  <div className="text-[11px] text-slate-400">
-                    Témoins constatés : <strong className="text-slate-300">{inc.witnesses}</strong>
+                  <div className="text-[11px] text-slate-500">
+                    Témoins constatés : <strong className="text-slate-700">{inc.witnesses}</strong>
                   </div>
                 )}
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-2.5 flex flex-col justify-between">
+              <div className="p-4 rounded-xl bg-blue-50/60 border border-slate-200 space-y-2.5 flex flex-col justify-between">
                 <div className="space-y-1.5 text-xs">
-                  <div className="text-slate-400">Sanction appliquée :</div>
-                  <div className="font-bold text-purple-300 text-sm">{inc.sanctionType || 'En attente de décision'}</div>
+                  <div className="text-slate-500">Sanction appliquée :</div>
+                  <div className="font-bold text-purple-700 text-sm">{inc.sanctionType || 'En attente de décision'}</div>
                   {inc.sanctionDuration && (
-                    <div className="text-[11px] text-slate-300 font-mono">{inc.sanctionDuration}</div>
+                    <div className="text-[11px] text-slate-700 font-mono">{inc.sanctionDuration}</div>
                   )}
                 </div>
 
-                <div className="pt-2 border-t border-slate-700 flex flex-col gap-1.5">
+                <div className="pt-2 border-t border-slate-200 flex flex-col gap-1.5">
                   {inc.status !== 'resolu' && (
                     <button
                       onClick={() => {
@@ -252,7 +252,7 @@ export const SupervisorDisciplineView: React.FC = () => {
                   {inc.status !== 'transmis_direction' && (
                     <button
                       onClick={() => reportIncidentToDirector(inc.id)}
-                      className="w-full py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 font-semibold text-xs transition-colors"
+                      className="w-full py-1.5 rounded-lg bg-purple-50 hover:bg-purple-50 text-purple-700 border border-purple-200 font-semibold text-xs transition-colors"
                     >
                       Signaler au Directeur
                     </button>
@@ -261,8 +261,8 @@ export const SupervisorDisciplineView: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-800">
-              <span>Lieu : <strong className="text-slate-300">{inc.location}</strong> · Le {inc.date} à {inc.time}</span>
+            <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-blue-100">
+              <span>Lieu : <strong className="text-slate-700">{inc.location}</strong> · Le {inc.date} à {inc.time}</span>
               <span>Rapporteur : {inc.reportedBy}</span>
             </div>
           </div>
@@ -271,43 +271,43 @@ export const SupervisorDisciplineView: React.FC = () => {
 
       {/* Modal: New Incident */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-base text-white">Enregistrer un Incident Disciplinaire</h3>
-              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white border border-blue-100 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <h3 className="font-bold text-base text-blue-950">Enregistrer un Incident Disciplinaire</h3>
+              <button onClick={() => setModalOpen(false)} className="text-slate-500 hover:text-blue-950">✕</button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Nom et Prénom de l'élève mis en cause *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Nom et Prénom de l'élève mis en cause *</label>
                 <input 
                   type="text" 
                   required
                   placeholder="Ex: Mohamed Lamine Camara"
                   value={studentName}
                   onChange={e => setStudentName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-red-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-red-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Matricule</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Matricule</label>
                   <input 
                     type="text" 
                     placeholder="Ex: LEC-2026-019"
                     value={studentMatricule}
                     onChange={e => setStudentMatricule(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Classe *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Classe *</label>
                   <select 
                     value={className}
                     onChange={e => setClassName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   >
                     <option value="Terminale Sciences Mathématiques (TSM)">Terminale SM (TSM)</option>
                     <option value="1ère Sciences Expérimentales (1SE)">1ère Sci. Exp. (1SE)</option>
@@ -318,11 +318,11 @@ export const SupervisorDisciplineView: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Lieu de l'incident *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Lieu de l'incident *</label>
                   <select 
                     value={location}
                     onChange={e => setLocation(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   >
                     <option value="Cour de récréation">Cour de récréation</option>
                     <option value="Salle de classe">Salle de classe</option>
@@ -333,11 +333,11 @@ export const SupervisorDisciplineView: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Degré de gravité *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Degré de gravité *</label>
                   <select 
                     value={severity}
                     onChange={e => setSeverity(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   >
                     <option value="mineure">Infraction Mineure</option>
                     <option value="moyenne">Infraction Moyenne</option>
@@ -347,11 +347,11 @@ export const SupervisorDisciplineView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Nature de l'infraction (Règlement MEPU-A) *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Nature de l'infraction (Règlement MEPU-A) *</label>
                 <select 
                   value={infractionType}
                   onChange={e => setInfractionType(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 >
                   <option value="Usage interdit du smartphone">Usage interdit du smartphone en classe</option>
                   <option value="Tenue non réglementaire (Uniforme)">Tenue non réglementaire / Manque d'écusson</option>
@@ -366,24 +366,24 @@ export const SupervisorDisciplineView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Rapport circonstancié des faits *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Rapport circonstancié des faits *</label>
                 <textarea 
                   rows={3}
                   required
                   placeholder="Décrivez précisément les faits, les propos tenus et les mesures d'urgence prises..."
                   value={reportDetails}
                   onChange={e => setReportDetails(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-red-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-red-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Sanction proposée</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Sanction proposée</label>
                   <select 
                     value={sanctionType}
                     onChange={e => setSanctionType(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   >
                     <option value="Rappel à l'ordre">Rappel à l'ordre</option>
                     <option value="Avertissement écrit">Avertissement écrit</option>
@@ -394,22 +394,22 @@ export const SupervisorDisciplineView: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Durée / Modalité</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Durée / Modalité</label>
                   <input 
                     type="text" 
                     placeholder="Ex: 2 heures le samedi"
                     value={sanctionDuration}
                     onChange={e => setSanctionDuration(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   />
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-blue-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-blue-950 bg-slate-50 text-xs font-semibold"
                 >
                   Annuler
                 </button>
@@ -427,24 +427,24 @@ export const SupervisorDisciplineView: React.FC = () => {
 
       {/* Modal: Resolve Incident */}
       {resolveModalIncident && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-base text-white">Clôturer l'Incident Disciplinaire</h3>
-              <button onClick={() => setResolveModalIncident(null)} className="text-slate-400 hover:text-white">✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-white border border-blue-100 p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <h3 className="font-bold text-base text-blue-950">Clôturer l'Incident Disciplinaire</h3>
+              <button onClick={() => setResolveModalIncident(null)} className="text-slate-500 hover:text-blue-950">✕</button>
             </div>
 
-            <p className="text-xs text-slate-300">
-              Élève concerné : <strong className="text-white">{resolveModalIncident.studentName}</strong> ({resolveModalIncident.className})
+            <p className="text-xs text-slate-700">
+              Élève concerné : <strong className="text-blue-950">{resolveModalIncident.studentName}</strong> ({resolveModalIncident.className})
             </p>
 
             <form onSubmit={handleResolve} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Sanction définitive appliquée</label>
+                <label className="block text-slate-700 font-semibold mb-1">Sanction définitive appliquée</label>
                 <select 
                   value={appliedSanction}
                   onChange={e => setAppliedSanction(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 >
                   <option value="Rappel à l'ordre">Rappel à l'ordre</option>
                   <option value="Avertissement écrit">Avertissement écrit</option>
@@ -455,11 +455,11 @@ export const SupervisorDisciplineView: React.FC = () => {
                 </select>
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-blue-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setResolveModalIncident(null)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-blue-950 bg-slate-50 text-xs font-semibold"
                 >
                   Annuler
                 </button>

@@ -64,11 +64,11 @@ export const TeacherMonitoringView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-            <AlertTriangle className="w-6 h-6 text-amber-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2.5">
+            <AlertTriangle className="w-6 h-6 text-amber-700" />
             <span>Suivi Pédagogique & Élèves en Difficulté</span>
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Détection automatique des seuils d'alerte (Moyenne &lt; 10, Assiduité &lt; 85%, Retards répétés) et remédiation
           </p>
         </div>
@@ -79,7 +79,7 @@ export const TeacherMonitoringView: React.FC = () => {
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
               filterMode === 'difficulty' 
                 ? 'bg-amber-500 text-slate-950 shadow-md' 
-                : 'bg-slate-800 text-slate-300 hover:text-white'
+                : 'bg-slate-50 text-slate-700 hover:text-blue-950'
             }`}
           >
             Élèves en Alerte uniquement
@@ -89,7 +89,7 @@ export const TeacherMonitoringView: React.FC = () => {
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
               filterMode === 'all' 
                 ? 'bg-blue-600 text-white shadow-md' 
-                : 'bg-slate-800 text-slate-300 hover:text-white'
+                : 'bg-slate-50 text-slate-700 hover:text-blue-950'
             }`}
           >
             Tous les profils
@@ -101,7 +101,7 @@ export const TeacherMonitoringView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Student Cards */}
         <div className="space-y-3">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
             Effectif sous surveillance ({displayedStudents.length})
           </div>
 
@@ -114,8 +114,8 @@ export const TeacherMonitoringView: React.FC = () => {
                   onClick={() => setSelectedStudent(std)}
                   className={`p-4 rounded-2xl border cursor-pointer transition-all space-y-2 ${
                     isSelected 
-                      ? 'bg-slate-800 border-amber-500/80 shadow-lg' 
-                      : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                      ? 'bg-slate-50 border-amber-500/80 shadow-lg' 
+                      : 'bg-white border-blue-100 hover:border-slate-200'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -123,37 +123,37 @@ export const TeacherMonitoringView: React.FC = () => {
                       <img 
                         src={std.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'} 
                         alt="" 
-                        className="w-9 h-9 rounded-full object-cover border border-slate-700" 
+                        className="w-9 h-9 rounded-full object-cover border border-slate-200" 
                       />
                       <div>
-                        <div className="font-bold text-sm text-white">{std.studentName}</div>
-                        <div className="text-[10px] text-slate-400 font-mono">{std.studentMatricule}</div>
+                        <div className="font-bold text-sm text-blue-950">{std.studentName}</div>
+                        <div className="text-[10px] text-slate-500 font-mono">{std.studentMatricule}</div>
                       </div>
                     </div>
 
                     {std.isDifficulty && (
-                      <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                         Alerte
                       </span>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 text-center text-[10px] pt-1 border-t border-slate-800/80">
-                    <div className="p-1.5 rounded bg-slate-950/60">
-                      <div className="text-slate-400">Moyenne</div>
-                      <div className={`font-bold font-mono ${std.average < 12 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                  <div className="grid grid-cols-3 gap-2 text-center text-[10px] pt-1 border-t border-blue-100">
+                    <div className="p-1.5 rounded bg-blue-50/70">
+                      <div className="text-slate-500">Moyenne</div>
+                      <div className={`font-bold font-mono ${std.average < 12 ? 'text-amber-700' : 'text-emerald-600'}`}>
                         {std.average}/20
                       </div>
                     </div>
-                    <div className="p-1.5 rounded bg-slate-950/60">
-                      <div className="text-slate-400">Assiduité</div>
-                      <div className={`font-bold font-mono ${std.attendanceRate < 85 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    <div className="p-1.5 rounded bg-blue-50/70">
+                      <div className="text-slate-500">Assiduité</div>
+                      <div className={`font-bold font-mono ${std.attendanceRate < 85 ? 'text-rose-600' : 'text-emerald-600'}`}>
                         {std.attendanceRate}%
                       </div>
                     </div>
-                    <div className="p-1.5 rounded bg-slate-950/60">
-                      <div className="text-slate-400">Retards</div>
-                      <div className="font-bold text-slate-200 font-mono">
+                    <div className="p-1.5 rounded bg-blue-50/70">
+                      <div className="text-slate-500">Retards</div>
+                      <div className="font-bold text-slate-900 font-mono">
                         {std.lateCount}
                       </div>
                     </div>
@@ -167,29 +167,29 @@ export const TeacherMonitoringView: React.FC = () => {
         {/* Right Column: Detailed Pedagogical Sheet */}
         <div className="lg:col-span-2 space-y-6">
           {selectedStudent ? (
-            <div className="rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-6">
+            <div className="rounded-2xl bg-white border border-blue-100 p-6 space-y-6">
               {/* Profile Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
                 <div className="flex items-center gap-4">
                   <img 
                     src={selectedStudent.photo} 
                     alt="" 
-                    className="w-14 h-14 rounded-2xl object-cover border-2 border-slate-700 shadow-md"
+                    className="w-14 h-14 rounded-2xl object-cover border-2 border-slate-200 shadow-md"
                   />
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-black text-white">{selectedStudent.studentName}</h2>
+                      <h2 className="text-lg font-black text-blue-950">{selectedStudent.studentName}</h2>
                       {selectedStudent.reportedToDirection && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
                           Signalé à la Direction
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-slate-400 mt-0.5">
-                      {selectedStudent.className} · Matricule : <span className="font-mono text-slate-300">{selectedStudent.studentMatricule}</span>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      {selectedStudent.className} · Matricule : <span className="font-mono text-slate-700">{selectedStudent.studentMatricule}</span>
                     </div>
-                    <div className="text-xs text-slate-400 flex items-center gap-2 mt-1">
-                      <Phone className="w-3.5 h-3.5 text-blue-400" />
+                    <div className="text-xs text-slate-500 flex items-center gap-2 mt-1">
+                      <Phone className="w-3.5 h-3.5 text-blue-600" />
                       <span>Tuteur : {selectedStudent.parentName} ({selectedStudent.parentPhone})</span>
                     </div>
                   </div>
@@ -197,7 +197,7 @@ export const TeacherMonitoringView: React.FC = () => {
 
                 <button
                   onClick={() => setSignalModalOpen(true)}
-                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 text-xs font-bold transition-colors"
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold transition-colors"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Signaler à la Direction</span>
@@ -206,12 +206,12 @@ export const TeacherMonitoringView: React.FC = () => {
 
               {/* Status Diagnostic Card */}
               {selectedStudent.difficultyReason && (
-                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-1.5">
-                  <div className="text-xs font-bold text-amber-300 flex items-center gap-2">
+                <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 space-y-1.5">
+                  <div className="text-xs font-bold text-amber-700 flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4" />
                     <span>Motif du diagnostic de difficulté</span>
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-xs text-slate-700 leading-relaxed">
                     {selectedStudent.difficultyReason}
                   </p>
                 </div>
@@ -219,14 +219,14 @@ export const TeacherMonitoringView: React.FC = () => {
 
               {/* Observations History */}
               <div className="space-y-3">
-                <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-blue-400" />
+                <h3 className="font-bold text-sm text-blue-950 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-blue-600" />
                   <span>Observations & Faits Pédagogiques Notés</span>
                 </h3>
 
                 <div className="space-y-2">
                   {selectedStudent.observations.map((obs, i) => (
-                    <div key={i} className="p-3 rounded-xl bg-slate-800/40 border border-slate-700/60 text-xs text-slate-300 leading-relaxed">
+                    <div key={i} className="p-3 rounded-xl bg-blue-50/60 border border-slate-200 text-xs text-slate-700 leading-relaxed">
                       • {obs}
                     </div>
                   ))}
@@ -235,15 +235,15 @@ export const TeacherMonitoringView: React.FC = () => {
 
               {/* Recommendations and Remediation */}
               <div className="space-y-3">
-                <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-emerald-400" />
+                <h3 className="font-bold text-sm text-blue-950 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
                   <span>Plan de Remédiation & Recommandations Proposées</span>
                 </h3>
 
                 <div className="space-y-2">
                   {selectedStudent.recommendations.map((rec, i) => (
-                    <div key={i} className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-200 leading-relaxed flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <div key={i} className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 leading-relaxed flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                       <span>{rec}</span>
                     </div>
                   ))}
@@ -251,32 +251,32 @@ export const TeacherMonitoringView: React.FC = () => {
               </div>
 
               {/* Add Observation & Recommendation Form */}
-              <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/60 space-y-3">
-                <h4 className="font-bold text-xs text-slate-200 uppercase tracking-wider">
+              <div className="p-4 rounded-xl bg-blue-50/60 border border-slate-200 space-y-3">
+                <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">
                   Ajouter une note de suivi pour {selectedStudent.studentName}
                 </h4>
 
                 <form onSubmit={handleAddObservation} className="space-y-3 text-xs">
                   <div>
-                    <label className="block text-slate-400 font-semibold mb-1">Constat pédagogique / observation</label>
+                    <label className="block text-slate-500 font-semibold mb-1">Constat pédagogique / observation</label>
                     <textarea 
                       rows={2}
                       required
                       placeholder="Ex: Amélioration notable sur le calcul des limites après la séance de tutorat..."
                       value={obsText}
                       onChange={e => setObsText(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-blue-950 focus:outline-none focus:border-amber-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-slate-400 font-semibold mb-1">Action corrective / recommandation</label>
+                    <label className="block text-slate-500 font-semibold mb-1">Action corrective / recommandation</label>
                     <input 
                       type="text"
                       placeholder="Ex: Donner 3 exercices d'entraînement ciblés pour vendredi..."
                       value={recomText}
                       onChange={e => setRecomText(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-blue-950 focus:outline-none focus:border-amber-500"
                     />
                   </div>
 
@@ -292,7 +292,7 @@ export const TeacherMonitoringView: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="p-12 text-center text-slate-400 bg-slate-900 rounded-2xl border border-slate-800 text-xs">
+            <div className="p-12 text-center text-slate-500 bg-white rounded-2xl border border-blue-100 text-xs">
               Sélectionnez un élève dans la liste pour consulter sa fiche de suivi individualisée.
             </div>
           )}
@@ -301,35 +301,35 @@ export const TeacherMonitoringView: React.FC = () => {
 
       {/* Modal: Report to Direction */}
       {signalModalOpen && selectedStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-base text-white">Signalement Officiel à la Direction</h3>
-              <button onClick={() => setSignalModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-white border border-blue-100 p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <h3 className="font-bold text-base text-blue-950">Signalement Officiel à la Direction</h3>
+              <button onClick={() => setSignalModalOpen(false)} className="text-slate-500 hover:text-blue-950">✕</button>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Vous signalez le dossier de <strong className="text-white">{selectedStudent.studentName}</strong> au Directeur des Études et au Conseiller Principal d'Éducation (CPE).
+            <p className="text-xs text-slate-700 leading-relaxed">
+              Vous signalez le dossier de <strong className="text-blue-950">{selectedStudent.studentName}</strong> au Directeur des Études et au Conseiller Principal d'Éducation (CPE).
             </p>
 
             <form onSubmit={handleSignalDirection} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Motif formel du signalement *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Motif formel du signalement *</label>
                 <textarea 
                   rows={4}
                   required
                   placeholder="Décrivez précisément les défaillances constatées (chute des résultats, absentéisme, attitude)..."
                   value={signalReason}
                   onChange={e => setSignalReason(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-rose-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-rose-500"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-blue-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setSignalModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-blue-950 bg-slate-50 text-xs font-semibold"
                 >
                   Annuler
                 </button>

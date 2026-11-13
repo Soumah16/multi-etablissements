@@ -53,44 +53,44 @@ export const ParentEventsView: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl md:text-2xl font-black text-white">Agenda & Événements de l'Établissement</h1>
-        <p className="text-xs text-slate-400 mt-0.5">
+        <h1 className="text-xl md:text-2xl font-black text-blue-950">Agenda & Événements de l'Établissement</h1>
+        <p className="text-xs text-slate-500 mt-0.5">
           Calendrier des rencontres pédagogiques, sessions d'examens blancs, congés et activités périscolaires.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {events.map(ev => (
-          <div key={ev.id} className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 flex flex-col justify-between">
+          <div key={ev.id} className="p-5 rounded-2xl bg-white border border-blue-100 space-y-3 flex flex-col justify-between">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold ${
-                  ev.type === 'Examen' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
-                  ev.type === 'Pédagogique' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
-                  ev.type === 'Vacances' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-purple-500/20 text-purple-300'
+                  ev.type === 'Examen' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                  ev.type === 'Pédagogique' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                  ev.type === 'Vacances' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-purple-50 text-purple-700'
                 }`}>
                   {ev.type}
                 </span>
-                <span className="text-xs text-slate-400 font-mono flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                <span className="text-xs text-slate-500 font-mono flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-blue-600" />
                   {ev.date}
                 </span>
               </div>
 
-              <h3 className="font-bold text-sm text-white">{ev.title}</h3>
+              <h3 className="font-bold text-sm text-blue-950">{ev.title}</h3>
 
-              <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400 pt-1">
-                <div className="flex items-center gap-1.5 text-slate-300">
+              <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-500 pt-1">
+                <div className="flex items-center gap-1.5 text-slate-700">
                   <Clock className="w-3.5 h-3.5 text-slate-500" />
                   <span>{ev.time}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-slate-300">
-                  <MapPin className="w-3.5 h-3.5 text-rose-400" />
+                <div className="flex items-center gap-1.5 text-slate-700">
+                  <MapPin className="w-3.5 h-3.5 text-rose-600" />
                   <span>{ev.location}</span>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-400 leading-relaxed pt-1">
+              <p className="text-xs text-slate-500 leading-relaxed pt-1">
                 {ev.description}
               </p>
             </div>

@@ -48,19 +48,19 @@ export const ExamValidationView: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900 border border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-blue-100">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
               Contrôle Académique & Délibérations
             </span>
-            <span className="text-xs text-slate-400">Sessions d'Évaluations Harmonnisées</span>
+            <span className="text-xs text-slate-500">Sessions d'Évaluations Harmonnisées</span>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <FileCheck2 className="w-6 h-6 text-purple-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2">
+            <FileCheck2 className="w-6 h-6 text-purple-600" />
             <span>Validation des Examens & Publication Officielle</span>
           </h1>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs text-slate-700 mt-1">
             Contrôle des taux d'admissibilité, validation des procès-verbaux et proclamation officielle par le Directeur des Études.
           </p>
         </div>
@@ -76,70 +76,70 @@ export const ExamValidationView: React.FC = () => {
           return (
             <div 
               key={exam.id}
-              className={`p-5 rounded-2xl bg-slate-900 border transition-all flex flex-col justify-between ${
-                isPublished ? 'border-emerald-500/40 shadow-lg shadow-emerald-500/5' :
-                isValidated ? 'border-blue-500/40' :
-                'border-amber-500/40'
+              className={`p-5 rounded-2xl bg-white border transition-all flex flex-col justify-between ${
+                isPublished ? 'border-emerald-200 shadow-lg shadow-emerald-500/5' :
+                isValidated ? 'border-blue-200' :
+                'border-amber-200'
               }`}
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
-                    isPublished ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
-                    isValidated ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :
-                    'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                    isPublished ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                    isValidated ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                    'bg-amber-50 text-amber-700 border-amber-200'
                   }`}>
                     {isPublished ? 'Proclamé & Publié' : isValidated ? 'Validé par Direction' : 'En attente de visa'}
                   </span>
-                  <span className="text-xs font-mono text-slate-400">{exam.session}</span>
+                  <span className="text-xs font-mono text-slate-500">{exam.session}</span>
                 </div>
 
                 <div>
-                  <h3 className="text-base font-bold text-white leading-snug">
+                  <h3 className="text-base font-bold text-blue-950 leading-snug">
                     {exam.title}
                   </h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Niveau : <span className="font-semibold text-slate-200">{exam.level}</span> · {exam.subjectsCount} épreuves
+                  <p className="text-xs text-slate-500 mt-1">
+                    Niveau : <span className="font-semibold text-slate-900">{exam.level}</span> · {exam.subjectsCount} épreuves
                   </p>
                 </div>
 
                 {/* Performance stats mini-cards */}
                 <div className="grid grid-cols-2 gap-2 pt-2">
-                  <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60">
-                    <span className="text-[10px] text-slate-400 block">Taux de Réussite</span>
-                    <span className="text-lg font-black text-emerald-400 font-mono">
+                  <div className="p-2.5 rounded-xl bg-blue-50/60 border border-slate-200">
+                    <span className="text-[10px] text-slate-500 block">Taux de Réussite</span>
+                    <span className="text-lg font-black text-emerald-600 font-mono">
                       {exam.successRate.toFixed(1)}%
                     </span>
-                    <span className="text-[10px] text-slate-400 block mt-0.5">
+                    <span className="text-[10px] text-slate-500 block mt-0.5">
                       {exam.passedCount} / {exam.presentCount} admis
                     </span>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60">
-                    <span className="text-[10px] text-slate-400 block">Moyenne Générale</span>
-                    <span className="text-lg font-black text-blue-400 font-mono">
+                  <div className="p-2.5 rounded-xl bg-blue-50/60 border border-slate-200">
+                    <span className="text-[10px] text-slate-500 block">Moyenne Générale</span>
+                    <span className="text-lg font-black text-blue-600 font-mono">
                       {exam.classAverage.toFixed(2)}/20
                     </span>
-                    <span className="text-[10px] text-slate-400 block mt-0.5">
+                    <span className="text-[10px] text-slate-500 block mt-0.5">
                       Max: {exam.highestAverage} · Min: {exam.lowestAverage}
                     </span>
                   </div>
                 </div>
 
                 {/* Classes included */}
-                <div className="text-xs text-slate-300">
-                  <span className="text-slate-400">Classes cibles : </span>
+                <div className="text-xs text-slate-700">
+                  <span className="text-slate-500">Classes cibles : </span>
                   <span className="font-semibold">{exam.targetClasses.join(', ')}</span>
                 </div>
 
                 {exam.directorNotes && (
-                  <div className="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700 text-[11px] text-slate-300 italic">
+                  <div className="p-2.5 rounded-lg bg-blue-50/60 border border-slate-200 text-[11px] text-slate-700 italic">
                     "{exam.directorNotes}"
                   </div>
                 )}
 
                 {isPublished && (
-                  <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300 space-y-0.5 font-mono">
+                  <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-[10px] text-emerald-700 space-y-0.5 font-mono">
                     <div>Proclamé le : {exam.publishedAt}</div>
                     <div>Signataire : {exam.publishedBy}</div>
                     <div className="text-[9px] text-emerald-400/80">{exam.signatureHash}</div>
@@ -148,22 +148,22 @@ export const ExamValidationView: React.FC = () => {
               </div>
 
               {/* Actions */}
-              <div className="pt-4 mt-4 border-t border-slate-800 space-y-2">
+              <div className="pt-4 mt-4 border-t border-blue-100 space-y-2">
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setPalmaresModalExam(exam)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold text-slate-900 bg-slate-50 hover:bg-blue-100 transition-colors"
                   >
-                    <Award className="w-3.5 h-3.5 text-amber-400" />
+                    <Award className="w-3.5 h-3.5 text-amber-700" />
                     <span>Palmarès des Lauréats</span>
                   </button>
 
                   <button
                     onClick={() => setSelectedExam(exam)}
-                    className="p-2 rounded-lg text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 transition-colors"
+                    className="p-2 rounded-lg text-slate-700 hover:text-blue-950 bg-slate-50 hover:bg-blue-100 transition-colors"
                     title="Détails complets de la session"
                   >
-                    <Eye className="w-4 h-4 text-blue-400" />
+                    <Eye className="w-4 h-4 text-blue-600" />
                   </button>
                 </div>
 
@@ -205,26 +205,26 @@ export const ExamValidationView: React.FC = () => {
 
       {/* Palmarès Modal */}
       {palmaresModalExam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-slate-900 border border-amber-500/30 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-amber-200 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
               <div className="flex items-center gap-2">
-                <Award className="w-6 h-6 text-amber-400" />
+                <Award className="w-6 h-6 text-amber-700" />
                 <div>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-blue-950">
                     Palmarès Officiel des Lauréats · Top 8
                   </h3>
-                  <p className="text-xs text-slate-400">{palmaresModalExam.title}</p>
+                  <p className="text-xs text-slate-500">{palmaresModalExam.title}</p>
                 </div>
               </div>
-              <button onClick={() => setPalmaresModalExam(null)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setPalmaresModalExam(null)} className="text-slate-500 hover:text-blue-950">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-slate-800">
+            <div className="overflow-x-auto rounded-xl border border-blue-100">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-800 text-slate-400 uppercase text-[10px]">
+                <thead className="bg-slate-50 text-slate-500 uppercase text-[10px]">
                   <tr>
                     <th className="py-2.5 px-3 text-center">Rang</th>
                     <th className="py-2.5 px-3">Candidat</th>
@@ -233,26 +233,26 @@ export const ExamValidationView: React.FC = () => {
                     <th className="py-2.5 px-3">Mention & Décision</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-blue-100">
                   {mockHonorsList.map(h => (
-                    <tr key={h.rank} className="hover:bg-slate-800/40">
+                    <tr key={h.rank} className="hover:bg-blue-50">
                       <td className="py-2.5 px-3 text-center">
                         <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full font-bold text-xs ${
                           h.rank === 1 ? 'bg-amber-500 text-slate-950 shadow-md' :
                           h.rank === 2 ? 'bg-slate-300 text-slate-950' :
                           h.rank === 3 ? 'bg-amber-700 text-white' :
-                          'bg-slate-800 text-slate-300'
+                          'bg-slate-50 text-slate-700'
                         }`}>
                           {h.rank}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 font-bold text-white">{h.name}</td>
-                      <td className="py-2.5 px-3 text-slate-300">{h.class}</td>
-                      <td className="py-2.5 px-3 text-center font-mono font-bold text-emerald-400">
+                      <td className="py-2.5 px-3 font-bold text-blue-950">{h.name}</td>
+                      <td className="py-2.5 px-3 text-slate-700">{h.class}</td>
+                      <td className="py-2.5 px-3 text-center font-mono font-bold text-emerald-600">
                         {h.average.toFixed(2)}/20
                       </td>
                       <td className="py-2.5 px-3">
-                        <span className="text-[10px] font-semibold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                        <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                           {h.decision}
                         </span>
                       </td>
@@ -263,12 +263,12 @@ export const ExamValidationView: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between pt-2">
-              <div className="text-[11px] text-slate-400">
+              <div className="text-[11px] text-slate-500">
                 Certifié conforme aux délibérations du Jury Pédagogique.
               </div>
               <button
                 onClick={() => setPalmaresModalExam(null)}
-                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700"
+                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-900 bg-slate-50 hover:bg-blue-100"
               >
                 Fermer
               </button>
@@ -279,57 +279,57 @@ export const ExamValidationView: React.FC = () => {
 
       {/* Exam Details Modal */}
       {selectedExam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
               <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-purple-400" />
-                <h3 className="text-base font-bold text-white">Procès-Verbal Académique</h3>
+                <FileText className="w-5 h-5 text-purple-600" />
+                <h3 className="text-base font-bold text-blue-950">Procès-Verbal Académique</h3>
               </div>
-              <button onClick={() => setSelectedExam(null)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setSelectedExam(null)} className="text-slate-500 hover:text-blue-950">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-3 text-xs">
               <div>
-                <div className="text-sm font-bold text-white">{selectedExam.title}</div>
-                <div className="text-slate-400">{selectedExam.session} · Date : {selectedExam.date}</div>
+                <div className="text-sm font-bold text-blue-950">{selectedExam.title}</div>
+                <div className="text-slate-500">{selectedExam.session} · Date : {selectedExam.date}</div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700">
-                  <div className="text-[10px] text-slate-400 uppercase">Candidats inscrits</div>
-                  <div className="text-lg font-black text-white">{selectedExam.candidatesCount}</div>
+                <div className="p-3 rounded-xl bg-blue-50/60 border border-slate-200">
+                  <div className="text-[10px] text-slate-500 uppercase">Candidats inscrits</div>
+                  <div className="text-lg font-black text-blue-950">{selectedExam.candidatesCount}</div>
                 </div>
-                <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700">
-                  <div className="text-[10px] text-slate-400 uppercase">Présents</div>
-                  <div className="text-lg font-black text-blue-400">{selectedExam.presentCount}</div>
+                <div className="p-3 rounded-xl bg-blue-50/60 border border-slate-200">
+                  <div className="text-[10px] text-slate-500 uppercase">Présents</div>
+                  <div className="text-lg font-black text-blue-600">{selectedExam.presentCount}</div>
                 </div>
-                <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700">
-                  <div className="text-[10px] text-slate-400 uppercase">Taux réussite</div>
-                  <div className="text-lg font-black text-emerald-400">{selectedExam.successRate.toFixed(1)}%</div>
+                <div className="p-3 rounded-xl bg-blue-50/60 border border-slate-200">
+                  <div className="text-[10px] text-slate-500 uppercase">Taux réussite</div>
+                  <div className="text-lg font-black text-emerald-600">{selectedExam.successRate.toFixed(1)}%</div>
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-800/40 border border-slate-800 space-y-1">
-                <div className="text-slate-300"><span className="font-semibold">Moyenne de session :</span> {selectedExam.classAverage.toFixed(2)}/20</div>
-                <div className="text-slate-300"><span className="font-semibold">Meilleure note :</span> {selectedExam.highestAverage.toFixed(2)}/20</div>
-                <div className="text-slate-300"><span className="font-semibold">Note plancher :</span> {selectedExam.lowestAverage.toFixed(2)}/20</div>
+              <div className="p-3 rounded-xl bg-blue-50/60 border border-blue-100 space-y-1">
+                <div className="text-slate-700"><span className="font-semibold">Moyenne de session :</span> {selectedExam.classAverage.toFixed(2)}/20</div>
+                <div className="text-slate-700"><span className="font-semibold">Meilleure note :</span> {selectedExam.highestAverage.toFixed(2)}/20</div>
+                <div className="text-slate-700"><span className="font-semibold">Note plancher :</span> {selectedExam.lowestAverage.toFixed(2)}/20</div>
               </div>
 
               {selectedExam.directorNotes && (
-                <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-300">
+                <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 text-purple-700">
                   <span className="font-semibold block mb-0.5">Observations du Directeur des Études :</span>
                   {selectedExam.directorNotes}
                 </div>
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-blue-100">
               <button
                 onClick={() => setSelectedExam(null)}
-                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800"
+                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50"
               >
                 Fermer
               </button>

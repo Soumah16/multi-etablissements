@@ -58,27 +58,27 @@ export const DirectorPinModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-md w-full shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="bg-white border border-amber-200 rounded-2xl max-w-md w-full shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-amber-600/20 via-slate-900 to-amber-600/10 p-5 border-b border-amber-500/20 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-amber-50 via-blue-50/40 to-amber-50 p-5 border-b border-amber-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-inner">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shadow-inner">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <h3 className="text-sm font-bold text-blue-950 uppercase tracking-wider flex items-center gap-1.5">
                 <span>Vérification de Sécurité</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono">
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-mono">
                   PIN + 2FA
                 </span>
               </h3>
-              <p className="text-xs text-slate-400">Action sensible du Directeur Pédagogique</p>
+              <p className="text-xs text-slate-500">Action sensible du Directeur Pédagogique</p>
             </div>
           </div>
           <button
             onClick={closePinModal}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-slate-500 hover:text-blue-950 rounded-lg hover:bg-blue-50 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -86,20 +86,20 @@ export const DirectorPinModal: React.FC = () => {
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200/90 leading-relaxed">
-            <p className="font-semibold text-amber-300 mb-1">{currentPinPrompt.title}</p>
-            <p className="text-[11px] text-slate-300">{currentPinPrompt.description}</p>
+          <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800 leading-relaxed">
+            <p className="font-semibold text-amber-700 mb-1">{currentPinPrompt.title}</p>
+            <p className="text-[11px] text-slate-700">{currentPinPrompt.description}</p>
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs animate-in shake">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs animate-in shake">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>Autorisation accordée ! Exécution en cours...</span>
             </div>
@@ -107,15 +107,15 @@ export const DirectorPinModal: React.FC = () => {
 
           {/* 6-Digit PIN Field */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
+            <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-amber-400" />
+                <Lock className="w-3.5 h-3.5 text-amber-700" />
                 Code PIN Directeur (6 chiffres)
               </span>
               <button
                 type="button"
                 onClick={handleFillDemoCode}
-                className="text-[10px] text-amber-400 hover:text-amber-300 underline"
+                className="text-[10px] text-amber-700 hover:text-amber-700 underline"
               >
                 Auto-remplir démo ({directorPin})
               </button>
@@ -126,19 +126,19 @@ export const DirectorPinModal: React.FC = () => {
               value={enteredPin}
               onChange={(e) => setEnteredPin(e.target.value.replace(/\D/g, ''))}
               placeholder="••••••"
-              className="w-full text-center tracking-[0.5em] text-lg font-mono px-4 py-2.5 rounded-lg bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 focus:outline-hidden focus:border-amber-500 transition-colors"
+              className="w-full text-center tracking-[0.5em] text-lg font-mono px-4 py-2.5 rounded-lg bg-blue-50/60 border border-slate-200 text-blue-950 placeholder-slate-400 focus:outline-hidden focus:border-amber-500 transition-colors"
               autoFocus
             />
           </div>
 
           {/* 2FA Code Field */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
+            <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <KeyRound className="w-3.5 h-3.5 text-blue-400" />
+                <KeyRound className="w-3.5 h-3.5 text-blue-600" />
                 Code 2FA Authenticator ({profile.twoFactorMethod === 'app' ? 'Application TOTP' : 'SMS'})
               </span>
-              <span className="text-[10px] text-slate-400 font-mono">Ex: 849201</span>
+              <span className="text-[10px] text-slate-500 font-mono">Ex: 849201</span>
             </label>
             <input
               type="text"
@@ -146,7 +146,7 @@ export const DirectorPinModal: React.FC = () => {
               value={entered2FA}
               onChange={(e) => setEntered2FA(e.target.value.replace(/\D/g, ''))}
               placeholder="000000"
-              className="w-full text-center tracking-[0.3em] text-base font-mono px-4 py-2.5 rounded-lg bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 focus:outline-hidden focus:border-blue-500 transition-colors"
+              className="w-full text-center tracking-[0.3em] text-base font-mono px-4 py-2.5 rounded-lg bg-blue-50/60 border border-slate-200 text-blue-950 placeholder-slate-400 focus:outline-hidden focus:border-blue-500 transition-colors"
             />
           </div>
 
@@ -154,7 +154,7 @@ export const DirectorPinModal: React.FC = () => {
             <button
               type="button"
               onClick={closePinModal}
-              className="px-4 py-2 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-800 transition-colors"
+              className="px-4 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-blue-50 transition-colors"
             >
               Annuler
             </button>

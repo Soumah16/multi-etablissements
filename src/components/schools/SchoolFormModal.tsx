@@ -117,26 +117,26 @@ export const SchoolFormModal: React.FC<SchoolFormModalProps> = ({ schoolToEdit, 
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs">
-      <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-xl bg-slate-900 border border-slate-700 shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+      <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-3.5 border-b border-slate-800 bg-slate-800/60 shrink-0">
+        <div className="flex items-center justify-between px-6 py-3.5 border-b border-blue-100 bg-blue-50/60 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+            <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">
+              <h2 className="text-base font-bold text-blue-950">
                 {schoolToEdit ? 'Modifier l\'Établissement' : 'Créer un Nouvel Établissement'}
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Configuration multi-tenant avec isolation automatique school_id
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/60 transition-colors"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-blue-950 hover:bg-blue-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -147,14 +147,14 @@ export const SchoolFormModal: React.FC<SchoolFormModalProps> = ({ schoolToEdit, 
           <div className="p-6 space-y-5 flex-1 overflow-y-auto">
           {/* Section: Identité */}
           <div className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-blue-400">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-blue-600">
               1. Informations Générales
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="md:col-span-2 space-y-1">
-                <label className="text-xs font-medium text-slate-300">
-                  Nom officiel de l'école <span className="text-rose-400">*</span>
+                <label className="text-xs font-medium text-slate-700">
+                  Nom officiel de l'école <span className="text-rose-600">*</span>
                 </label>
                 <input
                   type="text"
@@ -162,29 +162,29 @@ export const SchoolFormModal: React.FC<SchoolFormModalProps> = ({ schoolToEdit, 
                   placeholder="Ex: Complexe Scolaire Belle-Vue"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Code abrégé</label>
+                <label className="text-xs font-medium text-slate-700">Code abrégé</label>
                 <input
                   type="text"
                   placeholder="Ex: CS-BV"
                   value={code}
                   onChange={e => setCode(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white uppercase focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 uppercase focus:outline-none focus:border-blue-500"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Type d'établissement</label>
+                <label className="text-xs font-medium text-slate-700">Type d'établissement</label>
                 <select
                   value={type}
                   onChange={e => setType(e.target.value as SchoolType)}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 >
                   {schoolTypes.map(t => (
                     <option key={t} value={t}>{t}</option>
@@ -193,11 +193,11 @@ export const SchoolFormModal: React.FC<SchoolFormModalProps> = ({ schoolToEdit, 
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Langue principale</label>
+                <label className="text-xs font-medium text-slate-700">Langue principale</label>
                 <select
                   value={primaryLanguage}
                   onChange={e => setPrimaryLanguage(e.target.value as LanguageCode)}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 >
                   <option value="fr">Français</option>
                   <option value="en">Anglais</option>
@@ -208,116 +208,116 @@ export const SchoolFormModal: React.FC<SchoolFormModalProps> = ({ schoolToEdit, 
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Devise de facturation</label>
+                <label className="text-xs font-medium text-slate-700">Devise de facturation</label>
                 <input
                   type="text"
                   value={currency}
                   readOnly
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800/50 border border-slate-700 text-slate-400 font-mono cursor-not-allowed"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-blue-50/60 border border-slate-200 text-slate-500 font-mono cursor-not-allowed"
                 />
               </div>
             </div>
           </div>
 
           {/* Section: Localisation & Contact */}
-          <div className="space-y-3 pt-3 border-t border-slate-800">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-blue-400">
+          <div className="space-y-3 pt-3 border-t border-blue-100">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-blue-600">
               2. Localisation & Contact
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Ville</label>
+                <label className="text-xs font-medium text-slate-700">Ville</label>
                 <input
                   type="text"
                   value={city}
                   onChange={e => setCity(e.target.value)}
                   placeholder="Conakry, Kankan, Kindia, Labé..."
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Préfecture / Commune</label>
+                <label className="text-xs font-medium text-slate-700">Préfecture / Commune</label>
                 <input
                   type="text"
                   value={prefecture}
                   onChange={e => setPrefecture(e.target.value)}
                   placeholder="Kaloum, Dixinn, Matam..."
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Pays</label>
+                <label className="text-xs font-medium text-slate-700">Pays</label>
                 <input
                   type="text"
                   value={country}
                   onChange={e => setCountry(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-300">Adresse géographique complète</label>
+              <label className="text-xs font-medium text-slate-700">Adresse géographique complète</label>
               <input
                 type="text"
                 value={address}
                 onChange={e => setAddress(e.target.value)}
                 placeholder="Ex: Quartier Almamya, Rue KA-020"
-                className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Téléphone</label>
+                <label className="text-xs font-medium text-slate-700">Téléphone</label>
                 <input
                   type="text"
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   placeholder="+224 621 ..."
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Email institutionnel</label>
+                <label className="text-xs font-medium text-slate-700">Email institutionnel</label>
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="direction@ecole.edu.gn"
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Site Web</label>
+                <label className="text-xs font-medium text-slate-700">Site Web</label>
                 <input
                   type="text"
                   value={website}
                   onChange={e => setWebsite(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 />
               </div>
             </div>
           </div>
 
           {/* Section: Abonnement & Statut */}
-          <div className="space-y-3 pt-3 border-t border-slate-800">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-blue-400">
+          <div className="space-y-3 pt-3 border-t border-blue-100">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-blue-600">
               3. Abonnement & Gouvernance
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Formule d'abonnement</label>
+                <label className="text-xs font-medium text-slate-700">Formule d'abonnement</label>
                 <select
                   value={subscriptionTier}
                   onChange={e => setSubscriptionTier(e.target.value as SubscriptionTierId)}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 >
                   {plans.map(p => (
                     <option key={p.id} value={p.id}>
@@ -328,21 +328,21 @@ export const SchoolFormModal: React.FC<SchoolFormModalProps> = ({ schoolToEdit, 
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Date d'expiration</label>
+                <label className="text-xs font-medium text-slate-700">Date d'expiration</label>
                 <input
                   type="date"
                   value={subscriptionExpiresAt}
                   onChange={e => setSubscriptionExpiresAt(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Statut d'accès</label>
+                <label className="text-xs font-medium text-slate-700">Statut d'accès</label>
                 <select
                   value={status}
                   onChange={e => setStatus(e.target.value as any)}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 >
                   <option value="active">Actif (Accès autorisé)</option>
                   <option value="suspended">Suspendu (Accès bloqué)</option>
@@ -353,8 +353,8 @@ export const SchoolFormModal: React.FC<SchoolFormModalProps> = ({ schoolToEdit, 
           </div>
 
           {/* Section: Visuels */}
-          <div className="space-y-4 pt-3 border-t border-slate-800">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-blue-400">
+          <div className="space-y-4 pt-3 border-t border-blue-100">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-blue-600">
               4. Visuels & Identité
             </h3>
 
@@ -381,11 +381,11 @@ export const SchoolFormModal: React.FC<SchoolFormModalProps> = ({ schoolToEdit, 
           </div>
 
           {/* Actions */}
-          <div className="px-6 py-3.5 border-t border-slate-800 bg-slate-900/95 flex items-center justify-end gap-3 shrink-0">
+          <div className="px-6 py-3.5 border-t border-blue-100 bg-white flex items-center justify-end gap-3 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+              className="px-4 py-2 text-xs font-medium text-slate-500 hover:text-blue-950 rounded-lg bg-slate-50 hover:bg-blue-100 transition-colors"
             >
               Annuler
             </button>

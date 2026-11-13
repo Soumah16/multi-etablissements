@@ -62,11 +62,11 @@ export const SupervisorMeetingsView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-            <Calendar className="w-6 h-6 text-purple-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2.5">
+            <Calendar className="w-6 h-6 text-purple-600" />
             <span>Convocations des Parents & Entretiens Disciplinaires</span>
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Gestion des rendez-vous avec les tuteurs légaux suite à infractions ou absentéisme
           </p>
         </div>
@@ -81,18 +81,18 @@ export const SupervisorMeetingsView: React.FC = () => {
       </div>
 
       {/* Search Bar */}
-      <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4">
+      <div className="p-4 rounded-2xl bg-white border border-blue-100 flex items-center justify-between gap-4">
         <div className="relative w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input 
             type="text"
             placeholder="Rechercher par élève ou parent..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-blue-950 placeholder-slate-400 focus:outline-none focus:border-purple-500"
           />
         </div>
-        <div className="text-xs text-slate-400">
+        <div className="text-xs text-slate-500">
           {filteredMeetings.length} rendez-vous programmés
         </div>
       </div>
@@ -102,41 +102,41 @@ export const SupervisorMeetingsView: React.FC = () => {
         {filteredMeetings.map(m => (
           <div 
             key={m.id}
-            className="rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4 hover:border-slate-700 transition-all shadow-xl"
+            className="rounded-2xl bg-white border border-blue-100 p-5 space-y-4 hover:border-slate-200 transition-all shadow-xl"
           >
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center justify-between border-b border-blue-100 pb-3">
               <div>
-                <span className="font-bold text-base text-white">{m.studentName}</span>
-                <span className="text-xs text-slate-400 ml-2 font-mono">({m.className})</span>
+                <span className="font-bold text-base text-blue-950">{m.studentName}</span>
+                <span className="text-xs text-slate-500 ml-2 font-mono">({m.className})</span>
               </div>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold font-mono bg-purple-50 text-purple-700 border border-purple-200">
                 {m.date} à {m.time}
               </span>
             </div>
 
             <div className="space-y-2 text-xs">
-              <div className="flex items-center gap-2 text-slate-300">
+              <div className="flex items-center gap-2 text-slate-700">
                 <User className="w-4 h-4 text-slate-500" />
-                <span>Parent convoqué : <strong className="text-white">{m.parentName}</strong> ({m.parentPhone})</span>
+                <span>Parent convoqué : <strong className="text-blue-950">{m.parentName}</strong> ({m.parentPhone})</span>
               </div>
-              <div className="p-3 rounded-xl bg-slate-800/40 border border-slate-700/60 text-slate-300 leading-relaxed">
+              <div className="p-3 rounded-xl bg-blue-50/60 border border-slate-200 text-slate-700 leading-relaxed">
                 Motif : {m.reason}
               </div>
             </div>
 
-            <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
+            <div className="pt-2 border-t border-blue-100 flex items-center justify-between text-xs">
               <button
                 onClick={() => triggerToast(`Convocation par SMS transmise au ${m.parentPhone}`)}
-                className="flex items-center gap-1.5 text-blue-400 hover:text-blue-300 font-semibold"
+                className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-semibold"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>Rappel SMS</span>
               </button>
               <button
                 onClick={() => setPrintMeeting(m)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 font-semibold"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-900 border border-slate-200 font-semibold"
               >
-                <Printer className="w-3.5 h-3.5 text-purple-400" />
+                <Printer className="w-3.5 h-3.5 text-purple-600" />
                 <span>Lettre Officielle</span>
               </button>
             </div>
@@ -146,8 +146,8 @@ export const SupervisorMeetingsView: React.FC = () => {
 
       {/* Printable Convocation Letter Modal */}
       {printMeeting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in">
-          <div id="meeting-convocation-printable-paper" className="w-full max-w-lg bg-white text-slate-900 rounded-2xl p-6 shadow-2xl space-y-4 font-sans">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div id="meeting-convocation-printable-paper" className="w-full max-w-lg bg-white text-slate-900 rounded-2xl p-6 shadow-2xl space-y-4 font-sans max-h-[92vh] overflow-y-auto">
             <div className="text-center border-b-2 border-slate-900 pb-3 space-y-1">
               <div className="text-[10px] uppercase font-bold tracking-wider text-slate-700">
                 RÉPUBLIQUE DE GUINÉE · MEPU-A
@@ -210,99 +210,99 @@ export const SupervisorMeetingsView: React.FC = () => {
 
       {/* Modal: Schedule Meeting */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-base text-white">Programmer un Rendez-vous</h3>
-              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-white border border-blue-100 p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <h3 className="font-bold text-base text-blue-950">Programmer un Rendez-vous</h3>
+              <button onClick={() => setModalOpen(false)} className="text-slate-500 hover:text-blue-950">✕</button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Élève concerné *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Élève concerné *</label>
                 <input 
                   type="text" 
                   required
                   placeholder="Ex: Mohamed Lamine Camara"
                   value={studentName}
                   onChange={e => setStudentName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Classe *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Classe *</label>
                 <input 
                   type="text" 
                   value={className}
                   onChange={e => setClassName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Nom du parent / tuteur *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Nom du parent / tuteur *</label>
                   <input 
                     type="text" 
                     required
                     placeholder="Ex: M. Lansana Camara"
                     value={parentName}
                     onChange={e => setParentName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Téléphone *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Téléphone *</label>
                   <input 
                     type="text" 
                     required
                     value={parentPhone}
                     onChange={e => setParentPhone(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Date du rendez-vous *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Date du rendez-vous *</label>
                   <input 
                     type="date" 
                     required
                     value={date}
                     onChange={e => setDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Heure *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Heure *</label>
                   <input 
                     type="time" 
                     value={time}
                     onChange={e => setTime(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Motif officiel *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Motif officiel *</label>
                 <textarea 
                   rows={3}
                   required
                   placeholder="Ex: Examen du dossier disciplinaire suite à altercation et retenues non effectuées..."
                   value={reason}
                   onChange={e => setReason(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-purple-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-purple-500"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-blue-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-blue-950 bg-slate-50 text-xs font-semibold"
                 >
                   Annuler
                 </button>

@@ -108,34 +108,34 @@ export const DashboardView: React.FC = () => {
       {/* Primary KPI Grid: High-level overview */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Schools */}
-        <div className="p-4 rounded-xl bg-slate-800/70 border border-slate-700/60 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-slate-400">
+        <div className="p-4 rounded-xl bg-blue-50/60 border border-slate-200 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs text-slate-500">
             <span>{t.dashboard.totalSchools}</span>
-            <Building2 className="w-4 h-4 text-blue-400" />
+            <Building2 className="w-4 h-4 text-blue-600" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold tracking-tight text-white font-mono tabular-nums">
+            <div className="text-2xl font-bold tracking-tight text-blue-950 font-mono tabular-nums">
               {totalSchools}
             </div>
-            <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
-              <span className="text-emerald-400 font-medium">{activeSchools} actives</span>
+            <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+              <span className="text-emerald-600 font-medium">{activeSchools} actives</span>
               <span>·</span>
-              <span className="text-rose-400 font-medium">{suspendedSchools} suspendues</span>
+              <span className="text-rose-600 font-medium">{suspendedSchools} suspendues</span>
             </div>
           </div>
         </div>
 
         {/* Global Users */}
-        <div className="p-4 rounded-xl bg-slate-800/70 border border-slate-700/60 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-slate-400">
+        <div className="p-4 rounded-xl bg-blue-50/60 border border-slate-200 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs text-slate-500">
             <span>{t.dashboard.totalUsers}</span>
-            <Users className="w-4 h-4 text-indigo-400" />
+            <Users className="w-4 h-4 text-indigo-600" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold tracking-tight text-white font-mono tabular-nums">
+            <div className="text-2xl font-bold tracking-tight text-blue-950 font-mono tabular-nums">
               {totalUsers.toLocaleString('fr-FR')}
             </div>
-            <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-400 truncate">
+            <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500 truncate">
               <span>{totalStudents.toLocaleString('fr-FR')} élèves</span>
               <span>·</span>
               <span>{totalTeachers} profs</span>
@@ -144,86 +144,86 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {/* Monthly Revenue (GNF) */}
-        <div className="p-4 rounded-xl bg-slate-800/70 border border-slate-700/60 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-slate-400">
+        <div className="p-4 rounded-xl bg-blue-50/60 border border-slate-200 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs text-slate-500">
             <span>{t.dashboard.monthlyRevenue}</span>
-            <Coins className="w-4 h-4 text-emerald-400" />
+            <Coins className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="mt-3">
-            <div className="text-xl sm:text-2xl font-bold tracking-tight text-emerald-400 font-mono tabular-nums truncate">
+            <div className="text-xl sm:text-2xl font-bold tracking-tight text-emerald-600 font-mono tabular-nums truncate">
               {formatGnf(monthlyRevenueGnf)}
             </div>
-            <div className="flex items-center gap-1 mt-1 text-xs text-slate-400">
+            <div className="flex items-center gap-1 mt-1 text-xs text-slate-500">
               <span>Annuel récurrent : </span>
-              <span className="text-slate-300 font-mono tabular-nums">{formatGnf(annualRevenueGnf)}</span>
+              <span className="text-slate-700 font-mono tabular-nums">{formatGnf(annualRevenueGnf)}</span>
             </div>
           </div>
         </div>
 
         {/* Subscriptions Status */}
-        <div className="p-4 rounded-xl bg-slate-800/70 border border-slate-700/60 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-slate-400">
+        <div className="p-4 rounded-xl bg-blue-50/60 border border-slate-200 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs text-slate-500">
             <span>{t.dashboard.activeSubs}</span>
-            <CreditCard className="w-4 h-4 text-amber-400" />
+            <CreditCard className="w-4 h-4 text-amber-700" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold tracking-tight text-white font-mono tabular-nums">
+            <div className="text-2xl font-bold tracking-tight text-blue-950 font-mono tabular-nums">
               {activeSubscriptions}
             </div>
-            <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
-              <span className="text-slate-300">Taux de rétention 94%</span>
+            <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+              <span className="text-slate-700">Taux de rétention 94%</span>
               <span>·</span>
-              <span className="text-amber-400">{expiredSubscriptions} à renouveler</span>
+              <span className="text-amber-700">{expiredSubscriptions} à renouveler</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Secondary Demographic Strip: Student, Parent, Teacher, Employee */}
-      <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+      <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+          <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
             <GraduationCap className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-slate-400">{t.dashboard.totalStudents}</div>
-            <div className="font-semibold text-slate-200 text-sm font-mono tabular-nums">
+            <div className="text-slate-500">{t.dashboard.totalStudents}</div>
+            <div className="font-semibold text-slate-900 text-sm font-mono tabular-nums">
               {totalStudents.toLocaleString('fr-FR')}
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+          <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600">
             <Users className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-slate-400">{t.dashboard.totalParents}</div>
-            <div className="font-semibold text-slate-200 text-sm font-mono tabular-nums">
+            <div className="text-slate-500">{t.dashboard.totalParents}</div>
+            <div className="font-semibold text-slate-900 text-sm font-mono tabular-nums">
               {totalParents.toLocaleString('fr-FR')}
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
+          <div className="p-2 rounded-lg bg-purple-50 text-purple-600">
             <UserCheck className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-slate-400">{t.dashboard.totalTeachers}</div>
-            <div className="font-semibold text-slate-200 text-sm font-mono tabular-nums">
+            <div className="text-slate-500">{t.dashboard.totalTeachers}</div>
+            <div className="font-semibold text-slate-900 text-sm font-mono tabular-nums">
               {totalTeachers.toLocaleString('fr-FR')}
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
+          <div className="p-2 rounded-lg bg-amber-50 text-amber-700">
             <Briefcase className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-slate-400">{t.dashboard.totalEmployees}</div>
-            <div className="font-semibold text-slate-200 text-sm font-mono tabular-nums">
+            <div className="text-slate-500">{t.dashboard.totalEmployees}</div>
+            <div className="font-semibold text-slate-900 text-sm font-mono tabular-nums">
               {totalEmployees.toLocaleString('fr-FR')}
             </div>
           </div>
@@ -233,21 +233,21 @@ export const DashboardView: React.FC = () => {
       {/* Charts & Visual Analytics Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chart 1: Revenue Trends in GNF */}
-        <div className="lg:col-span-2 p-5 rounded-xl bg-slate-800/70 border border-slate-700/60 flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-700/50">
+        <div className="lg:col-span-2 p-5 rounded-xl bg-blue-50/60 border border-slate-200 flex flex-col justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200">
             <div>
-              <h3 className="font-semibold text-sm text-white">
+              <h3 className="font-semibold text-sm text-blue-950">
                 {t.dashboard.revenueTrend}
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Facturations d'abonnements mensuels encaissés en Franc Guinéen
               </p>
             </div>
-            <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-lg border border-slate-700">
+            <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200">
               <button
                 onClick={() => setRevenuePeriod('monthly')}
                 className={`px-2.5 py-1 text-xs rounded font-medium transition-colors ${
-                  revenuePeriod === 'monthly' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                  revenuePeriod === 'monthly' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 Mensuel
@@ -255,7 +255,7 @@ export const DashboardView: React.FC = () => {
               <button
                 onClick={() => setRevenuePeriod('annual')}
                 className={`px-2.5 py-1 text-xs rounded font-medium transition-colors ${
-                  revenuePeriod === 'annual' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                  revenuePeriod === 'annual' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 Cumul Annuel
@@ -272,7 +272,7 @@ export const DashboardView: React.FC = () => {
                 return (
                   <div key={item.month} className="flex-1 flex flex-col items-center gap-2 group relative">
                     {/* Tooltip on hover */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-slate-900 border border-slate-700 text-white text-[10px] px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap z-10 font-mono">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-white border border-slate-200 text-blue-950 text-[10px] px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap z-10 font-mono">
                       {formatGnf(item.amount)}
                     </div>
                     <div className="w-full flex justify-center items-end h-36">
@@ -285,27 +285,27 @@ export const DashboardView: React.FC = () => {
                         }`}
                       />
                     </div>
-                    <span className="text-[11px] text-slate-400 font-medium">
+                    <span className="text-[11px] text-slate-500 font-medium">
                       {item.month}
                     </span>
                   </div>
                 );
               })}
             </div>
-            <div className="flex items-center justify-between pt-3 text-[11px] text-slate-400 border-t border-slate-700/50 mt-2 font-mono">
+            <div className="flex items-center justify-between pt-3 text-[11px] text-slate-500 border-t border-slate-200 mt-2 font-mono">
               <span>Moyenne : ~21 000 000 GNF / mois</span>
-              <span className="text-emerald-400 font-semibold">+18.5% de croissance trimestrielle</span>
+              <span className="text-emerald-600 font-semibold">+18.5% de croissance trimestrielle</span>
             </div>
           </div>
         </div>
 
         {/* Chart 2: Plan Breakdown & Platform Utilization */}
-        <div className="p-5 rounded-xl bg-slate-800/70 border border-slate-700/60 flex flex-col justify-between">
+        <div className="p-5 rounded-xl bg-blue-50/60 border border-slate-200 flex flex-col justify-between">
           <div>
-            <h3 className="font-semibold text-sm text-white">
+            <h3 className="font-semibold text-sm text-blue-950">
               {t.dashboard.subDistribution}
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Répartition des écoles par palier de licence
             </p>
 
@@ -315,10 +315,10 @@ export const DashboardView: React.FC = () => {
                 return (
                   <div key={item.tier} className="space-y-1">
                     <div className="flex justify-between text-xs">
-                      <span className="text-slate-300 font-medium">{item.tier}</span>
-                      <span className="text-slate-400 font-mono tabular-nums">{item.count} écoles ({pct}%)</span>
+                      <span className="text-slate-700 font-medium">{item.tier}</span>
+                      <span className="text-slate-500 font-mono tabular-nums">{item.count} écoles ({pct}%)</span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
+                    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
                       <div 
                         className={`h-full ${item.color} rounded-full transition-all duration-500`} 
                         style={{ width: `${pct}%` }}
@@ -330,17 +330,17 @@ export const DashboardView: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-700/50 mt-6 space-y-2">
+          <div className="pt-4 border-t border-slate-200 mt-6 space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400 flex items-center gap-1.5">
-                <HardDrive className="w-3.5 h-3.5 text-blue-400" />
+              <span className="text-slate-500 flex items-center gap-1.5">
+                <HardDrive className="w-3.5 h-3.5 text-blue-600" />
                 Stockage Total Consommé
               </span>
-              <span className="text-white font-mono font-medium">
+              <span className="text-blue-950 font-mono font-medium">
                 627.1 Go / 2.0 To
               </span>
             </div>
-            <div className="w-full h-1.5 rounded-full bg-slate-700 overflow-hidden">
+            <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
               <div className="h-full bg-blue-500 rounded-full" style={{ width: '31.3%' }} />
             </div>
           </div>
@@ -350,32 +350,32 @@ export const DashboardView: React.FC = () => {
       {/* Tables Row: Recent Activities & System Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Platform Activities */}
-        <div className="p-5 rounded-xl bg-slate-800/70 border border-slate-700/60 flex flex-col">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-700/50">
+        <div className="p-5 rounded-xl bg-blue-50/60 border border-slate-200 flex flex-col">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200">
             <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-blue-400" />
-              <h3 className="font-semibold text-sm text-white">{t.dashboard.recentActivities}</h3>
+              <Activity className="w-4 h-4 text-blue-600" />
+              <h3 className="font-semibold text-sm text-blue-950">{t.dashboard.recentActivities}</h3>
             </div>
             <button 
               onClick={() => setActiveTab('security')}
-              className="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1"
+              className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
             >
               Voir tout le journal <ArrowUpRight className="w-3 h-3" />
             </button>
           </div>
 
-          <div className="divide-y divide-slate-700/40 mt-2 flex-1">
+          <div className="divide-y divide-slate-200 mt-2 flex-1">
             {auditLogs.slice(0, 5).map((log) => (
               <div key={log.id} className="py-2.5 flex items-start justify-between gap-3 text-xs">
                 <div>
-                  <div className="text-slate-200 font-medium">{log.action}</div>
-                  <div className="text-slate-400 text-[11px] mt-0.5 flex items-center gap-2">
+                  <div className="text-slate-900 font-medium">{log.action}</div>
+                  <div className="text-slate-500 text-[11px] mt-0.5 flex items-center gap-2">
                     <span>{log.actor}</span>
                     <span>·</span>
                     <span className="font-mono text-slate-500">{log.ip}</span>
                   </div>
                 </div>
-                <span className="text-[11px] text-slate-400 whitespace-nowrap font-mono">
+                <span className="text-[11px] text-slate-500 whitespace-nowrap font-mono">
                   {log.timestamp.substring(11, 16)}
                 </span>
               </div>
@@ -384,43 +384,43 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {/* System & Security Alerts */}
-        <div className="p-5 rounded-xl bg-slate-800/70 border border-slate-700/60 flex flex-col">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-700/50">
+        <div className="p-5 rounded-xl bg-blue-50/60 border border-slate-200 flex flex-col">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200">
             <div className="flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-amber-400" />
-              <h3 className="font-semibold text-sm text-white">{t.dashboard.systemAlerts}</h3>
+              <ShieldAlert className="w-4 h-4 text-amber-700" />
+              <h3 className="font-semibold text-sm text-blue-950">{t.dashboard.systemAlerts}</h3>
             </div>
-            <span className="text-xs font-mono text-emerald-400 flex items-center gap-1">
+            <span className="text-xs font-mono text-emerald-600 flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5" /> Système 100% Opérationnel
             </span>
           </div>
 
           <div className="space-y-3 mt-3">
-            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs flex items-start gap-3">
-              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs flex items-start gap-3">
+              <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
               <div>
-                <div className="font-medium text-amber-300">Renouvellement Abonnement requis</div>
-                <div className="text-slate-300 text-[11px] mt-0.5">
+                <div className="font-medium text-amber-700">Renouvellement Abonnement requis</div>
+                <div className="text-slate-700 text-[11px] mt-0.5">
                   L'établissement « École Primaire Bilingue Franco-Arabe de Matam » arrive à échéance le 31/12/2026.
                 </div>
               </div>
             </div>
 
-            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs flex items-start gap-3">
-              <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs flex items-start gap-3">
+              <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
               <div>
-                <div className="font-medium text-rose-300">Établissement Suspendu</div>
-                <div className="text-slate-300 text-[11px] mt-0.5">
+                <div className="font-medium text-rose-700">Établissement Suspendu</div>
+                <div className="text-slate-700 text-[11px] mt-0.5">
                   « Centre de Formation Professionnelle en Forêt » (Nzérékoré) est actuellement hors-ligne suite à décision administrative.
                 </div>
               </div>
             </div>
 
-            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs flex items-start gap-3">
-              <Clock className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+            <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs flex items-start gap-3">
+              <Clock className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
               <div>
-                <div className="font-medium text-blue-300">Dernière Sauvegarde Chiffrée</div>
-                <div className="text-slate-300 text-[11px] mt-0.5">
+                <div className="font-medium text-blue-700">Dernière Sauvegarde Chiffrée</div>
+                <div className="text-slate-700 text-[11px] mt-0.5">
                   Snapshot multi-tenant exécuté automatiquement avec succès ce matin à 02:00 GMT (842.6 Mo, SHA-256 certifié).
                 </div>
               </div>

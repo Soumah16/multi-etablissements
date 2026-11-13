@@ -13,13 +13,13 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ payment, onClose }) 
   const { formatGnf, profile } = useAccountant();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-700 p-6 shadow-2xl space-y-6 text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-sm animate-in fade-in">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl space-y-6 text-blue-950">
         {/* Actions bar at top */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="flex items-center justify-between pb-3 border-b border-blue-100">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-            <span className="font-bold text-sm text-slate-200">Reçu Officiel d'Encaissement</span>
+            <span className="font-bold text-sm text-slate-900">Reçu Officiel d'Encaissement</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -31,7 +31,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ payment, onClose }) 
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-blue-950 hover:bg-blue-50 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -91,31 +91,33 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ payment, onClose }) 
           </div>
 
           {/* Payment Table */}
-          <table className="w-full text-xs text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-800 text-white font-bold text-[10px] uppercase">
-                <th className="py-2 px-3">Désignation du Frais</th>
-                <th className="py-2 px-3 text-right">Montant Total</th>
-                <th className="py-2 px-3 text-right">Montant Versé</th>
-                <th className="py-2 px-3 text-right">Solde Restant</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              <tr className="font-semibold text-slate-800">
-                <td className="py-3 px-3">
-                  <div>{payment.feeType}</div>
-                  <div className="text-[10px] text-slate-500 font-normal mt-0.5">{payment.notes}</div>
-                </td>
-                <td className="py-3 px-3 text-right font-mono">{formatGnf(payment.totalFeeGnf)}</td>
-                <td className="py-3 px-3 text-right font-mono font-bold text-emerald-700 text-sm">
-                  {formatGnf(payment.amountPaidGnf)}
-                </td>
-                <td className="py-3 px-3 text-right font-mono font-bold text-rose-700">
-                  {formatGnf(payment.balanceRemainingGnf)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 text-blue-950 font-bold text-[10px] uppercase">
+                  <th className="py-2 px-3">Désignation du Frais</th>
+                  <th className="py-2 px-3 text-right">Montant Total</th>
+                  <th className="py-2 px-3 text-right">Montant Versé</th>
+                  <th className="py-2 px-3 text-right">Solde Restant</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                <tr className="font-semibold text-slate-800">
+                  <td className="py-3 px-3">
+                    <div>{payment.feeType}</div>
+                    <div className="text-[10px] text-slate-500 font-normal mt-0.5">{payment.notes}</div>
+                  </td>
+                  <td className="py-3 px-3 text-right font-mono">{formatGnf(payment.totalFeeGnf)}</td>
+                  <td className="py-3 px-3 text-right font-mono font-bold text-emerald-700 text-sm">
+                    {formatGnf(payment.amountPaidGnf)}
+                  </td>
+                  <td className="py-3 px-3 text-right font-mono font-bold text-rose-700">
+                    {formatGnf(payment.balanceRemainingGnf)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
           {/* Summary Box */}
           <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">

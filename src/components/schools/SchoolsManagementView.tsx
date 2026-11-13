@@ -80,11 +80,11 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
   const getStatusBadge = (status: School['status']) => {
     switch (status) {
       case 'active':
-        return <span className="text-[11px] font-medium text-emerald-400">Actif</span>;
+        return <span className="text-[11px] font-medium text-emerald-600">Actif</span>;
       case 'suspended':
-        return <span className="text-[11px] font-medium text-rose-400">Suspendu</span>;
+        return <span className="text-[11px] font-medium text-rose-600">Suspendu</span>;
       case 'archived':
-        return <span className="text-[11px] font-medium text-slate-400">Archivé</span>;
+        return <span className="text-[11px] font-medium text-slate-500">Archivé</span>;
       default:
         return null;
     }
@@ -97,12 +97,12 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
   return (
     <div className="space-y-6">
       {/* Header with Title and Create Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-blue-950">
             {t.schools.title}
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             {t.schools.subtitle}
           </p>
         </div>
@@ -120,13 +120,13 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder={t.schools.searchPlaceholder}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-slate-800/80 border border-slate-700/80 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-blue-50/60 border border-slate-200 text-blue-950 placeholder-slate-400 focus:outline-none focus:border-blue-500"
           />
         </div>
 
@@ -135,7 +135,7 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
           <select
             value={filterType}
             onChange={e => setFilterType(e.target.value)}
-            className="px-3 py-2 text-xs rounded-lg bg-slate-800/80 border border-slate-700/80 text-slate-200 focus:outline-none focus:border-blue-500"
+            className="px-3 py-2 text-xs rounded-lg bg-blue-50/60 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500"
           >
             <option value="all">Tous les types ({schools.length})</option>
             <option value="Primaire">Primaire</option>
@@ -149,7 +149,7 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
           <select
             value={filterStatus}
             onChange={e => setFilterStatus(e.target.value)}
-            className="px-3 py-2 text-xs rounded-lg bg-slate-800/80 border border-slate-700/80 text-slate-200 focus:outline-none focus:border-blue-500"
+            className="px-3 py-2 text-xs rounded-lg bg-blue-50/60 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500"
           >
             <option value="all">Tous les statuts</option>
             <option value="active">Actives uniquement</option>
@@ -160,11 +160,11 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
       </div>
 
       {/* Schools Table */}
-      <div className="rounded-xl border border-slate-700/60 bg-slate-800/60 overflow-hidden shadow-xs">
+      <div className="rounded-xl border border-slate-200 bg-blue-50/60 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-700 bg-slate-800/90 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
+              <tr className="border-b border-slate-200 bg-blue-50/60 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="py-3 px-4">Établissement</th>
                 <th className="py-3 px-4">Type & Localisation</th>
                 <th className="py-3 px-4">Effectif & Quotas</th>
@@ -173,10 +173,10 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
                 <th className="py-3 px-4 text-right">Actions de Contrôle</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/40 text-slate-200">
+            <tbody className="divide-y divide-slate-200 text-slate-900">
               {filteredSchools.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400 text-xs">
+                  <td colSpan={6} className="py-8 text-center text-slate-500 text-xs">
                     Aucun établissement ne correspond aux critères de recherche.
                   </td>
                 </tr>
@@ -186,26 +186,26 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
                   return (
                     <tr 
                       key={school.id} 
-                      className="hover:bg-slate-700/30 transition-colors group"
+                      className="hover:bg-blue-100 transition-colors group"
                     >
                       {/* Name & Logo */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-slate-700/80 border border-slate-600 flex items-center justify-center shrink-0 overflow-hidden">
+                          <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-300 flex items-center justify-center shrink-0 overflow-hidden">
                             {school.logo ? (
                               <img src={school.logo} alt={school.name} className="w-full h-full object-cover" />
                             ) : (
-                              <Building2 className="w-5 h-5 text-blue-400" />
+                              <Building2 className="w-5 h-5 text-blue-600" />
                             )}
                           </div>
                           <div>
                             <button
                               onClick={() => handleOpenDetail(school)}
-                              className="font-bold text-white hover:text-blue-400 text-left transition-colors text-xs flex items-center gap-1.5"
+                              className="font-bold text-blue-950 hover:text-blue-600 text-left transition-colors text-xs flex items-center gap-1.5"
                             >
                               <span>{school.name}</span>
                             </button>
-                            <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400 font-mono">
+                            <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 font-mono">
                               <span>{school.code}</span>
                               <span>·</span>
                               <span className="text-slate-500 truncate max-w-[140px]">{school.id}</span>
@@ -216,8 +216,8 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
 
                       {/* Type & Location */}
                       <td className="py-3.5 px-4">
-                        <div className="font-medium text-slate-200">{school.type}</div>
-                        <div className="flex items-center gap-1 mt-0.5 text-[11px] text-slate-400">
+                        <div className="font-medium text-slate-900">{school.type}</div>
+                        <div className="flex items-center gap-1 mt-0.5 text-[11px] text-slate-500">
                           <MapPin className="w-3 h-3 text-slate-500" />
                           <span>{school.city}, {school.prefecture}</span>
                         </div>
@@ -225,11 +225,11 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
 
                       {/* Students & Storage */}
                       <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-1.5 font-mono tabular-nums text-slate-200">
-                          <GraduationCap className="w-3.5 h-3.5 text-blue-400" />
+                        <div className="flex items-center gap-1.5 font-mono tabular-nums text-slate-900">
+                          <GraduationCap className="w-3.5 h-3.5 text-blue-600" />
                           <span className="font-semibold">{school.stats.studentsCount.toLocaleString('fr-FR')}</span> élèves
                         </div>
-                        <div className="flex items-center gap-1 mt-0.5 text-[11px] text-slate-400 font-mono">
+                        <div className="flex items-center gap-1 mt-0.5 text-[11px] text-slate-500 font-mono">
                           <HardDrive className="w-3 h-3 text-slate-500" />
                           <span>{(school.stats.storageUsedMb / 1024).toFixed(1)} Go utilisés</span>
                         </div>
@@ -237,10 +237,10 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
 
                       {/* Subscription */}
                       <td className="py-3.5 px-4">
-                        <div className="font-medium text-slate-200">
+                        <div className="font-medium text-slate-900">
                           {plan?.name.split('(')[0] || school.subscriptionTier.toUpperCase()}
                         </div>
-                        <div className="text-[11px] text-emerald-400 font-mono tabular-nums mt-0.5">
+                        <div className="text-[11px] text-emerald-600 font-mono tabular-nums mt-0.5">
                           {formatGnf(school.stats.monthlyRevenueGnf)} / mois
                         </div>
                       </td>
@@ -261,7 +261,7 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
                           {onSwitchToSchoolAdmin && school.status === 'active' && (
                             <button
                               onClick={() => onSwitchToSchoolAdmin(school.id)}
-                              className="p-1.5 text-emerald-400 hover:text-white hover:bg-emerald-600/30 rounded-md transition-colors"
+                              className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-100 rounded-md transition-colors"
                               title="Accéder au portail Admin École"
                             >
                               <LogIn className="w-4 h-4" />
@@ -269,7 +269,7 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
                           )}
                           <button
                             onClick={() => handleOpenDetail(school)}
-                            className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-slate-700/60 rounded-md transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
                             title="Consulter la fiche complète"
                           >
                             <Eye className="w-4 h-4" />
@@ -277,7 +277,7 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
 
                           <button
                             onClick={() => handleOpenEdit(school)}
-                            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-md transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-blue-950 hover:bg-blue-100 rounded-md transition-colors"
                             title="Modifier les informations"
                           >
                             <Edit3 className="w-4 h-4" />
@@ -286,7 +286,7 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
                           {school.status === 'active' ? (
                             <button
                               onClick={() => suspendSchool(school.id)}
-                              className="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-slate-700/60 rounded-md transition-colors"
+                              className="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-blue-100 rounded-md transition-colors"
                               title="Suspendre l'établissement"
                             >
                               <PauseCircle className="w-4 h-4" />
@@ -294,7 +294,7 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
                           ) : (
                             <button
                               onClick={() => reactivateSchool(school.id)}
-                              className="p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-slate-700/60 rounded-md transition-colors"
+                              className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-blue-100 rounded-md transition-colors"
                               title="Réactiver l'établissement"
                             >
                               <PlayCircle className="w-4 h-4" />
@@ -303,7 +303,7 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
 
                           <button
                             onClick={() => archiveSchool(school.id)}
-                            className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700/60 rounded-md transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-blue-100 rounded-md transition-colors"
                             title="Archiver"
                           >
                             <Archive className="w-4 h-4" />
@@ -315,7 +315,7 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
                                 deleteSchool(school.id);
                               }
                             }}
-                            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-700/60 rounded-md transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-blue-100 rounded-md transition-colors"
                             title="Supprimer définitivement"
                           >
                             <Trash2 className="w-4 h-4" />

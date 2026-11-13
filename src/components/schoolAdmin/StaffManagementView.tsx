@@ -141,12 +141,12 @@ export const StaffManagementView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-blue-950">
             Gestion du Personnel & Comptes ({staff.length})
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Création des collaborateurs, badges professionnels, QR codes de pointage et expédition d'identifiants
           </p>
         </div>
@@ -163,20 +163,20 @@ export const StaffManagementView: React.FC = () => {
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Rechercher par nom, matricule, fonction ou email..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-white border border-slate-200 text-blue-950 placeholder-slate-400 focus:outline-none focus:border-blue-500"
           />
         </div>
 
         <select
           value={roleFilter}
           onChange={e => setRoleFilter(e.target.value)}
-          className="px-3 py-2 text-xs rounded-lg bg-slate-900 border border-slate-700 text-slate-200 focus:outline-none focus:border-blue-500"
+          className="px-3 py-2 text-xs rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500"
         >
           <option value="all">Toutes les fonctions ({staff.length})</option>
           {allRoles.map(r => (
@@ -186,11 +186,11 @@ export const StaffManagementView: React.FC = () => {
       </div>
 
       {/* Staff Table */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden shadow-xs">
+      <div className="rounded-xl border border-blue-100 bg-white overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-800 bg-slate-800/60 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
+              <tr className="border-b border-blue-100 bg-blue-50/60 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="py-3 px-4">Employé</th>
                 <th className="py-3 px-4">Fonction & Service</th>
                 <th className="py-3 px-4">Identifiants & QR</th>
@@ -199,7 +199,7 @@ export const StaffManagementView: React.FC = () => {
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/80 text-slate-200">
+            <tbody className="divide-y divide-blue-100 text-slate-900">
               {filteredStaff.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-500 text-xs">
@@ -208,20 +208,20 @@ export const StaffManagementView: React.FC = () => {
                 </tr>
               ) : (
                 filteredStaff.map((member) => (
-                  <tr key={member.id} className="hover:bg-slate-800/40 transition-colors">
+                  <tr key={member.id} className="hover:bg-blue-50 transition-colors">
                     {/* Photo & Name */}
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <img 
                           src={member.photo} 
                           alt={member.firstName} 
-                          className="w-9 h-9 rounded-full object-cover border border-slate-700 shrink-0"
+                          className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0"
                         />
                         <div>
-                          <div className="font-bold text-white text-xs">
+                          <div className="font-bold text-blue-950 text-xs">
                             {member.firstName} {member.lastName}
                           </div>
-                          <div className="text-[11px] font-mono text-blue-400">
+                          <div className="text-[11px] font-mono text-blue-600">
                             {member.matricule}
                           </div>
                         </div>
@@ -230,19 +230,19 @@ export const StaffManagementView: React.FC = () => {
 
                     {/* Role & Department */}
                     <td className="py-3 px-4">
-                      <span className="font-semibold text-slate-100">{member.role}</span>
-                      <div className="text-[11px] text-slate-400 mt-0.5">{member.department}</div>
+                      <span className="font-semibold text-slate-900">{member.role}</span>
+                      <div className="text-[11px] text-slate-500 mt-0.5">{member.department}</div>
                     </td>
 
                     {/* Automated Username & Temporary Password */}
                     <td className="py-3 px-4">
-                      <div className="text-[11px] font-mono text-slate-300">
-                        user : <strong className="text-white">{member.username}</strong>
+                      <div className="text-[11px] font-mono text-slate-700">
+                        user : <strong className="text-blue-950">{member.username}</strong>
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <button
                           onClick={() => setSelectedStaffForBadge(member)}
-                          className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-colors"
+                          className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-50 border border-blue-200 transition-colors"
                           title="Voir le badge & QR Code"
                         >
                           <QrCode className="w-3 h-3" />
@@ -253,8 +253,8 @@ export const StaffManagementView: React.FC = () => {
                           onClick={() => sendStaffCredentials(member.id)}
                           className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded transition-colors ${
                             member.credentialsSent
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700'
+                              ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                              : 'bg-slate-50 text-slate-700 hover:text-blue-950 border border-slate-200'
                           }`}
                           title="Transmettre par Email & SMS"
                         >
@@ -265,12 +265,12 @@ export const StaffManagementView: React.FC = () => {
                     </td>
 
                     {/* Contacts */}
-                    <td className="py-3 px-4 text-slate-300 text-[11px]">
+                    <td className="py-3 px-4 text-slate-700 text-[11px]">
                       <div className="flex items-center gap-1">
                         <Mail className="w-3 h-3 text-slate-500" />
                         <span>{member.email}</span>
                       </div>
-                      <div className="flex items-center gap-1 font-mono text-slate-400 mt-0.5">
+                      <div className="flex items-center gap-1 font-mono text-slate-500 mt-0.5">
                         <Phone className="w-3 h-3 text-slate-500" />
                         <span>{member.phone}</span>
                       </div>
@@ -279,7 +279,7 @@ export const StaffManagementView: React.FC = () => {
                     {/* Status */}
                     <td className="py-3 px-4 whitespace-nowrap">
                       <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${
-                        member.status === 'actif' ? 'text-emerald-400' : 'text-rose-400'
+                        member.status === 'actif' ? 'text-emerald-600' : 'text-rose-600'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${
                           member.status === 'actif' ? 'bg-emerald-400' : 'bg-rose-400'
@@ -293,7 +293,7 @@ export const StaffManagementView: React.FC = () => {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => resetStaffPassword(member.id)}
-                          className="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-slate-800 rounded transition-colors"
+                          className="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-blue-50 rounded transition-colors"
                           title="Réinitialiser le mot de passe (Code PIN requis)"
                         >
                           <KeyRound className="w-4 h-4" />
@@ -301,7 +301,7 @@ export const StaffManagementView: React.FC = () => {
 
                         <button
                           onClick={() => handleOpenEdit(member)}
-                          className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors"
+                          className="p-1.5 text-slate-500 hover:text-blue-950 hover:bg-blue-50 rounded transition-colors"
                           title="Modifier"
                         >
                           <Edit3 className="w-4 h-4" />
@@ -309,7 +309,7 @@ export const StaffManagementView: React.FC = () => {
 
                         <button
                           onClick={() => toggleStaffStatus(member.id)}
-                          className="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-slate-800 rounded transition-colors"
+                          className="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-blue-50 rounded transition-colors"
                           title={member.status === 'actif' ? "Désactiver l'employé" : "Réactiver l'employé"}
                         >
                           {member.status === 'actif' ? <PauseCircle className="w-4 h-4" /> : <PlayCircle className="w-4 h-4" />}
@@ -317,7 +317,7 @@ export const StaffManagementView: React.FC = () => {
 
                         <button
                           onClick={() => deleteStaff(member.id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded transition-colors"
+                          className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-blue-50 rounded transition-colors"
                           title="Supprimer (Code PIN requis)"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -334,13 +334,13 @@ export const StaffManagementView: React.FC = () => {
 
       {/* Create / Edit Staff Modal */}
       {isFormModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
-          <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-white text-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="relative w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <h3 className="font-bold text-blue-950 text-sm">
                 {staffToEdit ? "Modifier l'Employé" : "Créer un Nouveau Membre du Personnel"}
               </h3>
-              <button onClick={() => setIsFormModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setIsFormModalOpen(false)} className="text-slate-500 hover:text-blue-950">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -348,35 +348,35 @@ export const StaffManagementView: React.FC = () => {
             <form onSubmit={handleSubmit} className="mt-4 space-y-3.5 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-medium">Prénom *</label>
+                  <label className="text-slate-700 font-medium">Prénom *</label>
                   <input
                     type="text"
                     required
                     value={firstName}
                     onChange={e => setFirstName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-medium">Nom de famille *</label>
+                  <label className="text-slate-700 font-medium">Nom de famille *</label>
                   <input
                     type="text"
                     required
                     value={lastName}
                     onChange={e => setLastName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-medium">Fonction / Rôle *</label>
+                  <label className="text-slate-700 font-medium">Fonction / Rôle *</label>
                   <select
                     value={role}
                     onChange={e => setRole(e.target.value as StaffRole)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                   >
                     {allRoles.map(r => (
                       <option key={r} value={r}>{r}</option>
@@ -385,59 +385,59 @@ export const StaffManagementView: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-medium">Département / Service *</label>
+                  <label className="text-slate-700 font-medium">Département / Service *</label>
                   <input
                     type="text"
                     value={department}
                     onChange={e => setDepartment(e.target.value)}
                     placeholder="Ex: Sciences Exactes, Secrétariat..."
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-medium">Email professionnel *</label>
+                  <label className="text-slate-700 font-medium">Email professionnel *</label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-medium">Téléphone mobile *</label>
+                  <label className="text-slate-700 font-medium">Téléphone mobile *</label>
                   <input
                     type="text"
                     required
                     value={phone}
                     onChange={e => setPhone(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-medium">Date d'embauche</label>
+                  <label className="text-slate-700 font-medium">Date d'embauche</label>
                   <input
                     type="date"
                     value={hireDate}
                     onChange={e => setHireDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-medium">Adresse géographique</label>
+                  <label className="text-slate-700 font-medium">Adresse géographique</label>
                   <input
                     type="text"
                     value={address}
                     onChange={e => setAddress(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -451,18 +451,18 @@ export const StaffManagementView: React.FC = () => {
                 helperText="Importez depuis votre PC ou collez un lien. Cette photo figure sur le badge professionnel imprimable."
               />
 
-              <div className="p-3 rounded-lg bg-blue-950/30 border border-blue-500/30 text-slate-300 text-[11px]">
-                <strong className="text-blue-300">Génération automatique SmartSchool :</strong>
+              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-slate-700 text-[11px]">
+                <strong className="text-blue-700">Génération automatique SmartSchool :</strong>
                 <p className="mt-0.5">
                   Un matricule officiel, un identifiant de connexion, un mot de passe temporaire et un QR code unique de badge seront automatiquement attribués.
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+              <div className="pt-3 border-t border-blue-100 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsFormModalOpen(false)}
-                  className="px-4 py-2 text-slate-400 hover:text-white rounded-lg bg-slate-800"
+                  className="px-4 py-2 text-slate-500 hover:text-blue-950 rounded-lg bg-slate-50"
                 >
                   Annuler
                 </button>

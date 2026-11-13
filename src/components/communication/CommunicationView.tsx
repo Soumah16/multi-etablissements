@@ -69,12 +69,12 @@ export const CommunicationView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-blue-950">
             {t.nav.communication}
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Diffusion centralisée d'annonces, alertes par email, SMS Orange/MTN et WhatsApp
           </p>
         </div>
@@ -83,34 +83,34 @@ export const CommunicationView: React.FC = () => {
       {/* Main 2-column layout: Broadcast Composer & History */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Composer Form */}
-        <div className="lg:col-span-6 p-5 rounded-xl bg-slate-800/60 border border-slate-700/60">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-700/60">
-            <Megaphone className="w-5 h-5 text-blue-400" />
-            <h2 className="text-sm font-bold text-white">
+        <div className="lg:col-span-6 p-5 rounded-xl bg-blue-50/60 border border-slate-200">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-200">
+            <Megaphone className="w-5 h-5 text-blue-600" />
+            <h2 className="text-sm font-bold text-blue-950">
               Composer un Message Global
             </h2>
           </div>
 
           <form onSubmit={handleSendBroadcast} className="mt-4 space-y-4 text-xs">
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Titre de l'annonce *</label>
+              <label className="text-slate-700 font-medium">Titre de l'annonce *</label>
               <input
                 type="text"
                 required
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="Ex: Mise à jour majeure de la plateforme ou Maintenance"
-                className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-slate-300 font-medium">Cibles du message *</label>
+                <label className="text-slate-700 font-medium">Cibles du message *</label>
                 <select
                   value={target}
                   onChange={e => setTarget(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 >
                   <option value="all_schools">Toutes les écoles ({schools.length})</option>
                   <option value="selected_schools">Écoles sélectionnées spécifiquement</option>
@@ -119,11 +119,11 @@ export const CommunicationView: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-300 font-medium">Nature du message</label>
+                <label className="text-slate-700 font-medium">Nature du message</label>
                 <select
                   value={type}
                   onChange={e => setType(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 >
                   <option value="info">Information générale</option>
                   <option value="urgent">Notification Urgente</option>
@@ -135,18 +135,18 @@ export const CommunicationView: React.FC = () => {
 
             {/* School selector if target === 'selected_schools' */}
             {target === 'selected_schools' && (
-              <div className="p-3 rounded-lg bg-slate-900 border border-slate-700 space-y-2">
-                <div className="text-[11px] font-semibold text-slate-300">
+              <div className="p-3 rounded-lg bg-white border border-slate-200 space-y-2">
+                <div className="text-[11px] font-semibold text-slate-700">
                   Cochez les établissements destinataires :
                 </div>
                 <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
                   {schools.map(s => (
-                    <label key={s.id} className="flex items-center gap-2 text-[11px] text-slate-300 hover:text-white cursor-pointer">
+                    <label key={s.id} className="flex items-center gap-2 text-[11px] text-slate-700 hover:text-blue-950 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={selectedSchoolIds.includes(s.id)}
                         onChange={() => handleToggleSchool(s.id)}
-                        className="rounded text-blue-600 focus:ring-0 bg-slate-800 border-slate-600"
+                        className="rounded text-blue-600 focus:ring-0 bg-slate-50 border-slate-300"
                       />
                       <span>{s.name} ({s.city})</span>
                     </label>
@@ -157,63 +157,63 @@ export const CommunicationView: React.FC = () => {
 
             {/* Channels Multi-Select */}
             <div className="space-y-1.5">
-              <label className="text-slate-300 font-medium">Canaux de transmission activés :</label>
+              <label className="text-slate-700 font-medium">Canaux de transmission activés :</label>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <label className="flex items-center gap-2 p-2 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer text-slate-300">
+                <label className="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-200 cursor-pointer text-slate-700">
                   <input
                     type="checkbox"
                     checked={channelInApp}
                     onChange={e => setChannelInApp(e.target.checked)}
-                    className="rounded text-blue-600 focus:ring-0 bg-slate-800"
+                    className="rounded text-blue-600 focus:ring-0 bg-slate-50"
                   />
-                  <Bell className="w-3.5 h-3.5 text-blue-400" />
+                  <Bell className="w-3.5 h-3.5 text-blue-600" />
                   <span>Bannière In-App ERP</span>
                 </label>
 
-                <label className="flex items-center gap-2 p-2 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer text-slate-300">
+                <label className="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-200 cursor-pointer text-slate-700">
                   <input
                     type="checkbox"
                     checked={channelEmail}
                     onChange={e => setChannelEmail(e.target.checked)}
-                    className="rounded text-blue-600 focus:ring-0 bg-slate-800"
+                    className="rounded text-blue-600 focus:ring-0 bg-slate-50"
                   />
-                  <Mail className="w-3.5 h-3.5 text-emerald-400" />
+                  <Mail className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Email Automatisé</span>
                 </label>
 
-                <label className="flex items-center gap-2 p-2 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer text-slate-300">
+                <label className="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-200 cursor-pointer text-slate-700">
                   <input
                     type="checkbox"
                     checked={channelSms}
                     onChange={e => setChannelSms(e.target.checked)}
-                    className="rounded text-blue-600 focus:ring-0 bg-slate-800"
+                    className="rounded text-blue-600 focus:ring-0 bg-slate-50"
                   />
-                  <Smartphone className="w-3.5 h-3.5 text-amber-400" />
+                  <Smartphone className="w-3.5 h-3.5 text-amber-700" />
                   <span>Passerelle SMS Guinée</span>
                 </label>
 
-                <label className="flex items-center gap-2 p-2 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer text-slate-300">
+                <label className="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-200 cursor-pointer text-slate-700">
                   <input
                     type="checkbox"
                     checked={channelWhatsApp}
                     onChange={e => setChannelWhatsApp(e.target.checked)}
-                    className="rounded text-blue-600 focus:ring-0 bg-slate-800"
+                    className="rounded text-blue-600 focus:ring-0 bg-slate-50"
                   />
-                  <MessageSquare className="w-3.5 h-3.5 text-green-400" />
+                  <MessageSquare className="w-3.5 h-3.5 text-green-600" />
                   <span>WhatsApp Business API</span>
                 </label>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-300 font-medium">Contenu du message *</label>
+              <label className="text-slate-700 font-medium">Contenu du message *</label>
               <textarea
                 rows={4}
                 required
                 value={content}
                 onChange={e => setContent(e.target.value)}
                 placeholder="Rédigez votre annonce ici..."
-                className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -230,41 +230,41 @@ export const CommunicationView: React.FC = () => {
         </div>
 
         {/* History of Sent Broadcasts */}
-        <div className="lg:col-span-6 p-5 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
+        <div className="lg:col-span-6 p-5 rounded-xl bg-blue-50/60 border border-slate-200 flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-3 border-b border-slate-700/60">
-              <h2 className="text-sm font-bold text-white">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <h2 className="text-sm font-bold text-blue-950">
                 Historique des Diffusions Récentes ({announcements.length})
               </h2>
             </div>
 
             <div className="mt-4 space-y-3 max-h-[500px] overflow-y-auto pr-1">
               {announcements.map((ann) => (
-                <div key={ann.id} className="p-4 rounded-lg bg-slate-900 border border-slate-700/70 text-xs space-y-2">
+                <div key={ann.id} className="p-4 rounded-lg bg-white border border-slate-200 text-xs space-y-2">
                   <div className="flex items-start justify-between gap-3">
-                    <span className="font-bold text-white text-xs leading-snug">
+                    <span className="font-bold text-blue-950 text-xs leading-snug">
                       {ann.title}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono whitespace-nowrap">
+                    <span className="text-[10px] text-slate-500 font-mono whitespace-nowrap">
                       {ann.createdAt}
                     </span>
                   </div>
 
-                  <p className="text-slate-300 text-[11px] leading-relaxed">
+                  <p className="text-slate-700 text-[11px] leading-relaxed">
                     {ann.content}
                   </p>
 
-                  <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
+                  <div className="pt-2 border-t border-blue-100 flex items-center justify-between text-[10px] text-slate-500">
                     <div className="flex items-center gap-1.5">
                       <span>Canaux :</span>
                       {ann.channels.map(c => (
-                        <span key={c} className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono uppercase">
+                        <span key={c} className="px-1.5 py-0.5 rounded bg-slate-50 text-slate-700 font-mono uppercase">
                           {c}
                         </span>
                       ))}
                     </div>
 
-                    <span className="text-emerald-400 font-mono">
+                    <span className="text-emerald-600 font-mono">
                       ✓ Délivré à {ann.deliveryCount} établissements
                     </span>
                   </div>

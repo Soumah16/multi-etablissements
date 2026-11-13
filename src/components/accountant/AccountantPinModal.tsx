@@ -45,10 +45,10 @@ export const AccountantPinModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-      <div className="w-full max-w-sm rounded-2xl bg-slate-900 border-2 border-amber-500/50 p-6 shadow-2xl space-y-5 text-white">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div className="flex items-center gap-2 text-amber-400">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-sm animate-in fade-in">
+      <div className="w-full max-w-sm rounded-2xl bg-white border-2 border-amber-200 p-6 shadow-2xl space-y-5 text-blue-950 max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+          <div className="flex items-center gap-2 text-amber-700">
             <ShieldAlert className="w-5 h-5" />
             <h3 className="font-bold text-sm">Autorisation Sécurisée Requise</h3>
           </div>
@@ -58,17 +58,17 @@ export const AccountantPinModal: React.FC = () => {
               setEnteredPin('');
               setErrorMsg(null);
             }} 
-            className="text-slate-400 hover:text-white"
+            className="text-slate-500 hover:text-blue-950"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="text-center space-y-1">
-          <p className="text-xs text-slate-300">
-            Opération sensible : <strong className="text-amber-300">{pinActionPending?.title || 'Validation financière'}</strong>
+          <p className="text-xs text-slate-700">
+            Opération sensible : <strong className="text-amber-700">{pinActionPending?.title || 'Validation financière'}</strong>
           </p>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-slate-500">
             Veuillez saisir votre code PIN comptable à 6 chiffres pour valider cette opération.
           </p>
         </div>
@@ -81,14 +81,14 @@ export const AccountantPinModal: React.FC = () => {
               className={`w-3.5 h-3.5 rounded-full transition-all duration-200 ${
                 idx < enteredPin.length 
                   ? 'bg-amber-400 scale-110 shadow-sm shadow-amber-400/50' 
-                  : 'bg-slate-800 border border-slate-700'
+                  : 'bg-slate-50 border border-slate-200'
               }`}
             />
           ))}
         </div>
 
         {errorMsg && (
-          <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs text-center font-medium animate-shake">
+          <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs text-center font-medium animate-shake">
             {errorMsg}
           </div>
         )}
@@ -100,7 +100,7 @@ export const AccountantPinModal: React.FC = () => {
               key={d}
               type="button"
               onClick={() => handleDigit(d)}
-              className="w-16 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-mono font-bold text-lg transition-colors flex items-center justify-center border border-slate-700 active:scale-95"
+              className="w-16 h-12 rounded-xl bg-slate-50 hover:bg-blue-100 text-blue-950 font-mono font-bold text-lg transition-colors flex items-center justify-center border border-slate-200 active:scale-95"
             >
               {d}
             </button>
@@ -111,28 +111,28 @@ export const AccountantPinModal: React.FC = () => {
               setEnteredPin('');
               setErrorMsg(null);
             }}
-            className="w-16 h-12 rounded-xl bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white text-xs font-semibold transition-colors flex items-center justify-center border border-slate-800"
+            className="w-16 h-12 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-500 hover:text-blue-950 text-xs font-semibold transition-colors flex items-center justify-center border border-blue-100"
           >
             Effacer
           </button>
           <button
             type="button"
             onClick={() => handleDigit('0')}
-            className="w-16 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-mono font-bold text-lg transition-colors flex items-center justify-center border border-slate-700 active:scale-95"
+            className="w-16 h-12 rounded-xl bg-slate-50 hover:bg-blue-100 text-blue-950 font-mono font-bold text-lg transition-colors flex items-center justify-center border border-slate-200 active:scale-95"
           >
             0
           </button>
           <button
             type="button"
             onClick={handleBackspace}
-            className="w-16 h-12 rounded-xl bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white text-sm font-semibold transition-colors flex items-center justify-center border border-slate-800"
+            className="w-16 h-12 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-500 hover:text-blue-950 text-sm font-semibold transition-colors flex items-center justify-center border border-blue-100"
           >
             ⌫
           </button>
         </div>
 
         <div className="text-center text-[10px] text-slate-500 pt-1">
-          Code PIN par défaut : <strong className="text-slate-400 font-mono">123456</strong>
+          Code PIN par défaut : <strong className="text-slate-500 font-mono">123456</strong>
         </div>
       </div>
     </div>

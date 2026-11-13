@@ -155,12 +155,12 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-blue-950">
             {t.admins.title}
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             {t.admins.subtitle}
           </p>
         </div>
@@ -177,20 +177,20 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Rechercher par nom, email, téléphone ou établissement..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-slate-800/80 border border-slate-700/80 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-blue-50/60 border border-slate-200 text-blue-950 placeholder-slate-400 focus:outline-none focus:border-blue-500"
           />
         </div>
 
         <select
           value={filterSchool}
           onChange={e => setFilterSchool(e.target.value)}
-          className="px-3 py-2 text-xs rounded-lg bg-slate-800/80 border border-slate-700/80 text-slate-200 focus:outline-none focus:border-blue-500"
+          className="px-3 py-2 text-xs rounded-lg bg-blue-50/60 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500"
         >
           <option value="all">Tous les établissements ({schools.length})</option>
           {schools.map(s => (
@@ -200,11 +200,11 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
       </div>
 
       {/* Admins Table */}
-      <div className="rounded-xl border border-slate-700/60 bg-slate-800/60 overflow-hidden shadow-xs">
+      <div className="rounded-xl border border-slate-200 bg-blue-50/60 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-700 bg-slate-800/90 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
+              <tr className="border-b border-slate-200 bg-blue-50/60 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="py-3 px-4">Administrateur</th>
                 <th className="py-3 px-4">Établissement Rattaché</th>
                 <th className="py-3 px-4">Contacts</th>
@@ -213,29 +213,29 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/40 text-slate-200">
+            <tbody className="divide-y divide-slate-200 text-slate-900">
               {filteredAdmins.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400 text-xs">
+                  <td colSpan={6} className="py-8 text-center text-slate-500 text-xs">
                     Aucun administrateur d'école trouvé.
                   </td>
                 </tr>
               ) : (
                 filteredAdmins.map((admin) => (
-                  <tr key={admin.id} className="hover:bg-slate-700/30 transition-colors">
+                  <tr key={admin.id} className="hover:bg-blue-100 transition-colors">
                     {/* Admin Avatar & Name */}
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
                         <img
                           src={admin.avatar}
                           alt={admin.firstName}
-                          className="w-9 h-9 rounded-full object-cover border border-slate-600 shrink-0"
+                          className="w-9 h-9 rounded-full object-cover border border-slate-300 shrink-0"
                         />
                         <div>
-                          <div className="font-bold text-white text-xs">
+                          <div className="font-bold text-blue-950 text-xs">
                             {admin.firstName} {admin.lastName}
                           </div>
-                          <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                          <div className="text-[11px] text-slate-500 font-mono mt-0.5">
                             ID: {admin.id}
                           </div>
                         </div>
@@ -244,22 +244,22 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
 
                     {/* School */}
                     <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-1.5 font-medium text-slate-200">
-                        <Building2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                      <div className="flex items-center gap-1.5 font-medium text-slate-900">
+                        <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                         <span className="truncate max-w-[200px]">{admin.schoolName}</span>
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                      <div className="text-[10px] text-slate-500 font-mono mt-0.5">
                         Tenant: {admin.schoolId}
                       </div>
                     </td>
 
                     {/* Contacts */}
                     <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-1.5 text-slate-300">
-                        <Mail className="w-3 h-3 text-slate-400" />
+                      <div className="flex items-center gap-1.5 text-slate-700">
+                        <Mail className="w-3 h-3 text-slate-500" />
                         <span>{admin.email}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-slate-400 font-mono text-[11px] mt-0.5">
+                      <div className="flex items-center gap-1.5 text-slate-500 font-mono text-[11px] mt-0.5">
                         <Phone className="w-3 h-3 text-slate-500" />
                         <span>{admin.phone}</span>
                       </div>
@@ -268,7 +268,7 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
                     {/* Status */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${
-                        admin.status === 'active' ? 'text-emerald-400' : 'text-rose-400'
+                        admin.status === 'active' ? 'text-emerald-600' : 'text-rose-600'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${
                           admin.status === 'active' ? 'bg-emerald-400' : 'bg-rose-400'
@@ -278,7 +278,7 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
                     </td>
 
                     {/* Last Login */}
-                    <td className="py-3.5 px-4 text-slate-400 text-[11px] whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-slate-500 text-[11px] whitespace-nowrap">
                       {admin.lastLogin}
                     </td>
 
@@ -288,7 +288,7 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
                         {onSwitchToSchoolAdmin && admin.schoolId && (
                           <button
                             onClick={() => onSwitchToSchoolAdmin(admin.schoolId)}
-                            className="p-1.5 text-emerald-400 hover:text-white hover:bg-emerald-600/30 rounded-md transition-colors"
+                            className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-100 rounded-md transition-colors"
                             title="Se connecter au portail Admin École"
                           >
                             <LogIn className="w-4 h-4" />
@@ -296,7 +296,7 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
                         )}
                         <button
                           onClick={() => handleResetPassword(admin)}
-                          className="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-slate-700/60 rounded-md transition-colors"
+                          className="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-blue-100 rounded-md transition-colors"
                           title="Réinitialiser le mot de passe"
                         >
                           <KeyRound className="w-4 h-4" />
@@ -307,7 +307,7 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
                             setTransferAdmin(admin);
                             setTargetTransferSchoolId(admin.schoolId);
                           }}
-                          className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-slate-700/60 rounded-md transition-colors"
+                          className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-blue-100 rounded-md transition-colors"
                           title="Changer d'école (Mutation)"
                         >
                           <Shuffle className="w-4 h-4" />
@@ -315,7 +315,7 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
 
                         <button
                           onClick={() => handleOpenEdit(admin)}
-                          className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-md transition-colors"
+                          className="p-1.5 text-slate-500 hover:text-blue-950 hover:bg-blue-100 rounded-md transition-colors"
                           title="Modifier"
                         >
                           <Edit3 className="w-4 h-4" />
@@ -324,7 +324,7 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
                         {admin.status === 'active' ? (
                           <button
                             onClick={() => suspendAdmin(admin.id)}
-                            className="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-slate-700/60 rounded-md transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-blue-100 rounded-md transition-colors"
                             title="Suspendre"
                           >
                             <PauseCircle className="w-4 h-4" />
@@ -332,7 +332,7 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
                         ) : (
                           <button
                             onClick={() => reactivateAdmin(admin.id)}
-                            className="p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-slate-700/60 rounded-md transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-blue-100 rounded-md transition-colors"
                             title="Réactiver"
                           >
                             <PlayCircle className="w-4 h-4" />
@@ -345,7 +345,7 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
                               deleteAdmin(admin.id);
                             }
                           }}
-                          className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-700/60 rounded-md transition-colors"
+                          className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-blue-100 rounded-md transition-colors"
                           title="Supprimer"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -362,13 +362,13 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
 
       {/* Create / Edit Admin Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs">
-          <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col rounded-xl bg-slate-900 border border-slate-700 shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-800 shrink-0 bg-slate-900">
-              <h2 className="text-base font-bold text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col rounded-xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-blue-100 shrink-0 bg-white">
+              <h2 className="text-base font-bold text-blue-950">
                 {adminToEdit ? 'Modifier Admin École' : 'Créer un Admin École'}
               </h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white p-1">
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-blue-950 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -377,55 +377,55 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3.5">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-slate-300 font-medium">Prénom *</label>
+                    <label className="text-slate-700 font-medium">Prénom *</label>
                     <input
                       type="text"
                       required
                       value={firstName}
                       onChange={e => setFirstName(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-hidden focus:border-blue-500"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-hidden focus:border-blue-500"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-slate-300 font-medium">Nom de famille *</label>
+                    <label className="text-slate-700 font-medium">Nom de famille *</label>
                     <input
                       type="text"
                       required
                       value={lastName}
                       onChange={e => setLastName(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-hidden focus:border-blue-500"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-hidden focus:border-blue-500"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-slate-300 font-medium">Email *</label>
+                    <label className="text-slate-700 font-medium">Email *</label>
                     <input
                       type="email"
                       required
                       value={email}
                       onChange={e => setEmail(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-hidden focus:border-blue-500"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-hidden focus:border-blue-500"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-slate-300 font-medium">Téléphone</label>
+                    <label className="text-slate-700 font-medium">Téléphone</label>
                     <input
                       type="text"
                       value={phone}
                       onChange={e => setPhone(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-hidden focus:border-blue-500"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-hidden focus:border-blue-500"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-medium">Établissement scolaire associé *</label>
+                  <label className="text-slate-700 font-medium">Établissement scolaire associé *</label>
                   <select
                     value={schoolId}
                     onChange={e => setSchoolId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-hidden focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-hidden focus:border-blue-500"
                   >
                     {schools.map(s => (
                       <option key={s.id} value={s.id}>{s.name} ({s.city})</option>
@@ -443,11 +443,11 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
                 />
               </div>
 
-              <div className="px-5 py-3 border-t border-slate-800 bg-slate-900/95 flex justify-end gap-2 shrink-0">
+              <div className="px-5 py-3 border-t border-blue-100 bg-white flex justify-end gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-slate-400 hover:text-white rounded-lg bg-slate-800"
+                  className="px-4 py-2 text-slate-500 hover:text-blue-950 rounded-lg bg-slate-50"
                 >
                   Annuler
                 </button>
@@ -465,32 +465,32 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
 
       {/* Password Reset Notification Modal */}
       {resetModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
-          <div className="relative w-full max-w-md rounded-xl bg-slate-900 border border-amber-500/40 p-6 shadow-2xl">
-            <div className="flex items-center gap-3 text-amber-400 pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="relative w-full max-w-md rounded-xl bg-white border border-amber-200 p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center gap-3 text-amber-700 pb-3 border-b border-blue-100">
               <KeyRound className="w-5 h-5" />
-              <h3 className="font-bold text-white text-sm">
+              <h3 className="font-bold text-blue-950 text-sm">
                 Nouveau Mot de Passe Temporaire
               </h3>
             </div>
 
-            <div className="mt-4 text-xs text-slate-300 space-y-3">
+            <div className="mt-4 text-xs text-slate-700 space-y-3">
               <p>
-                Le mot de passe de l'administrateur <strong className="text-white">{resetModalData.adminName}</strong> a été réinitialisé.
+                Le mot de passe de l'administrateur <strong className="text-blue-950">{resetModalData.adminName}</strong> a été réinitialisé.
               </p>
               
-              <div className="p-3 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-between font-mono text-sm text-emerald-400">
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between font-mono text-sm text-emerald-600">
                 <span>{resetModalData.tempPass}</span>
                 <button
                   onClick={copyPassword}
-                  className="p-1 text-slate-400 hover:text-white transition-colors"
+                  className="p-1 text-slate-500 hover:text-blue-950 transition-colors"
                   title="Copier le mot de passe"
                 >
-                  {copiedPass ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  {copiedPass ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
 
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500">
                 Transmettez ce mot de passe à l'administrateur. Il sera invité à le changer dès sa prochaine connexion.
               </p>
             </div>
@@ -509,26 +509,26 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
 
       {/* Transfer School Modal */}
       {transferAdmin && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
-          <div className="relative w-full max-w-md rounded-xl bg-slate-900 border border-indigo-500/40 p-6 shadow-2xl">
-            <div className="flex items-center gap-3 text-indigo-400 pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="relative w-full max-w-md rounded-xl bg-white border border-indigo-200 p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center gap-3 text-indigo-600 pb-3 border-b border-blue-100">
               <Shuffle className="w-5 h-5" />
-              <h3 className="font-bold text-white text-sm">
+              <h3 className="font-bold text-blue-950 text-sm">
                 Mutation d'Établissement Scolaire
               </h3>
             </div>
 
-            <div className="mt-4 text-xs text-slate-300 space-y-3">
+            <div className="mt-4 text-xs text-slate-700 space-y-3">
               <p>
-                Transférer l'administrateur <strong className="text-white">{transferAdmin.firstName} {transferAdmin.lastName}</strong> vers un autre établissement :
+                Transférer l'administrateur <strong className="text-blue-950">{transferAdmin.firstName} {transferAdmin.lastName}</strong> vers un autre établissement :
               </p>
 
               <div className="space-y-1">
-                <label className="text-slate-400 font-medium">Nouvelle école d'affectation :</label>
+                <label className="text-slate-500 font-medium">Nouvelle école d'affectation :</label>
                 <select
                   value={targetTransferSchoolId}
                   onChange={e => setTargetTransferSchoolId(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-indigo-500"
                 >
                   {schools.map(s => (
                     <option key={s.id} value={s.id}>{s.name} ({s.city})</option>
@@ -540,7 +540,7 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
             <div className="mt-5 flex justify-end gap-2 text-xs">
               <button
                 onClick={() => setTransferAdmin(null)}
-                className="px-3 py-1.5 text-slate-400 hover:text-white rounded-lg bg-slate-800"
+                className="px-3 py-1.5 text-slate-500 hover:text-blue-950 rounded-lg bg-slate-50"
               >
                 Annuler
               </button>

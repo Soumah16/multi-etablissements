@@ -332,12 +332,12 @@ const MainLayout: React.FC = () => {
 
     // Default Super Admin Main Layout
     return (
-      <div className={`min-h-screen bg-slate-950 text-slate-100 flex ${isRtl ? 'rtl' : 'ltr'}`}>
+      <div className={`min-h-screen overflow-x-hidden bg-gradient-to-b from-[#F0F5FA] via-[#E8F1FB] to-[#DFEDFA] text-slate-800 flex ${isRtl ? 'rtl' : 'ltr'}`}>
         {/* Toast popup */}
         {toastMessage && (
-          <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600 text-white text-xs font-semibold shadow-2xl animate-in fade-in slide-in-from-bottom-3 duration-200">
-            <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-            <span>{toastMessage}</span>
+          <div className="fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-semibold shadow-2xl animate-in fade-in slide-in-from-bottom-3 duration-200">
+            <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
+            <span className="truncate">{toastMessage}</span>
           </div>
         )}
 
@@ -364,12 +364,12 @@ const MainLayout: React.FC = () => {
             onSwitchToStudent={handleSwitchToStudent}
           />
 
-          <main className="flex-1 p-4 md:p-8 max-w-[1560px] w-full mx-auto">
+          <main className="flex-1 p-3 sm:p-5 md:p-8 max-w-[1560px] w-full mx-auto min-w-0">
             {renderActiveView()}
           </main>
 
-          <footer className="mt-auto px-4 py-4 text-center text-xs text-slate-500 border-t border-slate-800/60">
-            <span>SmartSchool ERP Guinée · Conçu et développé par <strong className="text-slate-300">Saïd Soumah</strong> (<a href="mailto:saidsoumah23@gmail.com" className="text-blue-400 hover:underline">saidsoumah23@gmail.com</a>)</span>
+          <footer className="mt-auto px-3 sm:px-6 py-4 text-center text-[11px] sm:text-xs text-slate-600 border-t border-blue-100 bg-white/75 backdrop-blur-xs">
+            <span className="break-words">SmartSchool ERP Guinée · Conçu et développé par <strong className="text-blue-950">Saïd Soumah</strong> (<a href="mailto:saidsoumah23@gmail.com" className="text-blue-600 hover:underline font-medium">saidsoumah23@gmail.com</a>)</span>
           </footer>
         </div>
       </div>

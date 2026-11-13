@@ -19,19 +19,19 @@ export const StaffBadgeModal: React.FC<StaffBadgeModalProps> = ({ staff, onClose
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
-      <div className="relative w-full max-w-xl rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+      <div className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl bg-white border border-blue-100 shadow-2xl p-5 sm:p-6">
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="flex items-center justify-between pb-3 border-b border-blue-100">
           <div>
-            <h3 className="text-base font-bold text-white">
+            <h3 className="text-base font-bold text-blue-950">
               Badge Professionnel & Carte d'Identification
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Généré automatiquement par SmartSchool ERP pour {staff.firstName} {staff.lastName}
             </p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
+          <button onClick={onClose} className="text-slate-400 hover:text-blue-950 cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -101,48 +101,48 @@ export const StaffBadgeModal: React.FC<StaffBadgeModalProps> = ({ staff, onClose
           </div>
 
           {/* Right Panel: Capabilities & QR Scan Simulator */}
-          <div className="space-y-4 text-xs text-slate-300 max-w-xs">
+          <div className="space-y-4 text-xs text-slate-700 max-w-xs w-full">
             <div className="space-y-1.5">
-              <span className="font-semibold text-white uppercase tracking-wider text-[11px]">
+              <span className="font-semibold text-blue-950 uppercase tracking-wider text-[11px]">
                 Usages Autorisés du QR Code
               </span>
-              <ul className="space-y-1 text-slate-400 text-[11px]">
+              <ul className="space-y-1 text-slate-600 text-[11px]">
                 <li className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   <span>Pointage présence & émargement</span>
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   <span>Contrôle d'accès portail & laboratoires</span>
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   <span>Emprunt d'ouvrages à la bibliothèque</span>
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   <span>Identification rapide en réunion</span>
                 </li>
               </ul>
             </div>
 
-            <div className="p-3 rounded-lg bg-slate-800/80 border border-slate-700/80 space-y-2">
-              <div className="font-medium text-white flex items-center gap-1.5">
-                <Scan className="w-4 h-4 text-blue-400" />
+            <div className="p-3 rounded-lg bg-blue-50/70 border border-blue-100 space-y-2">
+              <div className="font-semibold text-blue-950 flex items-center gap-1.5">
+                <Scan className="w-4 h-4 text-blue-600" />
                 Testeur de Scan QR Code
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-600">
                 Simulez la lecture optique de la borne de contrôle d'accès :
               </p>
               <button
                 onClick={handleTestScan}
-                className="w-full py-1.5 text-xs font-semibold rounded bg-blue-600 hover:bg-blue-500 text-white transition-colors"
+                className="w-full py-1.5 text-xs font-semibold rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer"
               >
                 Simuler le Scan du Badge
               </button>
 
               {scanVerified && (
-                <div className="p-2 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[11px] animate-in fade-in">
+                <div className="p-2 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] animate-in fade-in">
                   ✓ Accès Autorisé : {staff.firstName} {staff.lastName} ({staff.role})
                 </div>
               )}
@@ -151,17 +151,17 @@ export const StaffBadgeModal: React.FC<StaffBadgeModalProps> = ({ staff, onClose
         </div>
 
         {/* Modal Actions */}
-        <div className="mt-6 pt-4 border-t border-slate-800 flex justify-end gap-2 text-xs">
+        <div className="mt-6 pt-4 border-t border-blue-100 flex justify-end gap-2 text-xs">
           <button
             onClick={() => triggerPrint('staff-badge-printable-card', `Badge_${staff.firstName}_${staff.lastName}`)}
-            className="flex items-center gap-1.5 px-4 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-xs cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>Imprimer le Badge</span>
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 font-semibold text-slate-400 hover:text-white rounded-lg bg-slate-800 cursor-pointer"
+            className="px-4 py-2 font-semibold text-slate-600 hover:text-blue-950 rounded-lg bg-slate-100 hover:bg-blue-50 cursor-pointer"
           >
             Fermer
           </button>

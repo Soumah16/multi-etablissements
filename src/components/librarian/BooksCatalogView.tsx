@@ -137,8 +137,8 @@ export const BooksCatalogView: React.FC = () => {
       {/* Title & Action */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-black text-white">Catalogue des Ouvrages Physiques</h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <h1 className="text-xl md:text-2xl font-black text-blue-950">Catalogue des Ouvrages Physiques</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
             Inventaire des manuels scolaires, romans, revues, rayonnage et génération des étiquettes QR Code.
           </p>
         </div>
@@ -154,13 +154,13 @@ export const BooksCatalogView: React.FC = () => {
       {/* Filter and Search Bar */}
       <div className="flex flex-col md:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher par titre, auteur, ISBN ou emplacement de rayon..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-blue-100 text-xs text-blue-950 placeholder-slate-400 focus:outline-hidden focus:border-blue-500"
           />
         </div>
 
@@ -172,7 +172,7 @@ export const BooksCatalogView: React.FC = () => {
               className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 selectedCategory === cat 
                   ? 'bg-blue-600 text-white shadow-xs' 
-                  : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800'
+                  : 'bg-white hover:bg-blue-50 text-slate-500 border border-blue-100'
               }`}
             >
               {cat === 'all' ? 'Tous les rayons' : cat}
@@ -182,11 +182,11 @@ export const BooksCatalogView: React.FC = () => {
       </div>
 
       {/* Books Table Grid */}
-      <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+      <div className="rounded-2xl bg-white border border-blue-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
             <thead>
-              <tr className="border-b border-slate-800 text-[11px] text-slate-400 uppercase font-semibold bg-slate-800/40">
+              <tr className="border-b border-blue-100 text-[11px] text-slate-500 uppercase font-semibold bg-blue-50/60">
                 <th className="py-3 px-4">Titre & Auteur</th>
                 <th className="py-3 px-4">Catégorie</th>
                 <th className="py-3 px-4">ISBN & QR Code</th>
@@ -196,50 +196,50 @@ export const BooksCatalogView: React.FC = () => {
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-blue-100">
               {filteredBooks.map(book => {
                 const isOutOfStock = book.availableQuantity === 0;
                 return (
-                  <tr key={book.id} className="hover:bg-slate-800/40 transition-colors">
+                  <tr key={book.id} className="hover:bg-blue-50 transition-colors">
                     <td className="py-3 px-4">
-                      <div className="font-bold text-white text-xs">{book.title}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">{book.author} · {book.yearPublished}</div>
+                      <div className="font-bold text-blue-950 text-xs">{book.title}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">{book.author} · {book.yearPublished}</div>
                     </td>
                     <td className="py-3 px-4">
-                      <span className="px-2.5 py-1 rounded-md text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                      <span className="px-2.5 py-1 rounded-md text-[10px] font-semibold bg-slate-50 text-slate-700 border border-slate-200">
                         {book.category}
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="font-mono text-[11px] text-slate-300">{book.isbn}</div>
+                      <div className="font-mono text-[11px] text-slate-700">{book.isbn}</div>
                       <button
                         onClick={() => setQrModalBook(book)}
-                        className="text-[10px] text-blue-400 hover:text-blue-300 font-mono flex items-center gap-1 mt-0.5 cursor-pointer"
+                        className="text-[10px] text-blue-600 hover:text-blue-700 font-mono flex items-center gap-1 mt-0.5 cursor-pointer"
                       >
                         <QrCode className="w-3 h-3" />
                         <span>{book.qrCodeId}</span>
                       </button>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex items-center gap-1.5 text-slate-300">
-                        <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                      <div className="flex items-center gap-1.5 text-slate-700">
+                        <MapPin className="w-3.5 h-3.5 text-amber-700" />
                         <span>{book.shelfLocation}</span>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-center">
                       <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
                         isOutOfStock 
-                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' 
-                          : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          ? 'bg-rose-50 text-rose-700 border border-rose-200' 
+                          : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                       }`}>
                         {book.availableQuantity} / {book.totalQuantity}
                       </span>
                     </td>
                     <td className="py-3 px-4">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
-                        book.state === 'Neuf' ? 'text-emerald-400 bg-emerald-500/10' :
-                        book.state === 'Bon état' ? 'text-blue-400 bg-blue-500/10' :
-                        book.state === 'Usé' ? 'text-amber-400 bg-amber-500/10' : 'text-rose-400 bg-rose-500/10'
+                        book.state === 'Neuf' ? 'text-emerald-600 bg-emerald-50' :
+                        book.state === 'Bon état' ? 'text-blue-600 bg-blue-50' :
+                        book.state === 'Usé' ? 'text-amber-700 bg-amber-50' : 'text-rose-600 bg-rose-50'
                       }`}>
                         {book.state}
                       </span>
@@ -248,7 +248,7 @@ export const BooksCatalogView: React.FC = () => {
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => setReadingBook(book)}
-                          className="px-2.5 py-1 rounded-md bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                          className="px-2.5 py-1 rounded-md bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer"
                           title="Lire le livre ou consulter les chapitres"
                         >
                           <BookOpen className="w-3.5 h-3.5" />
@@ -262,20 +262,20 @@ export const BooksCatalogView: React.FC = () => {
                           }}
                           disabled={isOutOfStock}
                           title="Enregistrer un emprunt"
-                          className="px-2 py-1 rounded bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 text-[11px] font-semibold disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                          className="px-2 py-1 rounded bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 text-[11px] font-semibold disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
                         >
                           Prêter
                         </button>
                         <button
                           onClick={() => handleOpenEdit(book)}
-                          className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                          className="p-1.5 rounded text-slate-500 hover:text-blue-950 hover:bg-blue-50 transition-colors"
                           title="Modifier la fiche"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => deleteBook(book.id)}
-                          className="p-1.5 rounded text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+                          className="p-1.5 rounded text-slate-500 hover:text-rose-600 hover:bg-blue-50 transition-colors"
                           title="Supprimer du catalogue"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -292,17 +292,17 @@ export const BooksCatalogView: React.FC = () => {
 
       {/* Add / Edit Book Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs">
-          <div className="w-full max-w-xl max-h-[90vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="w-full max-w-xl max-h-[90vh] flex flex-col rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
             {/* Pinned Modal Header */}
-            <div className="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900">
-              <h3 className="text-sm font-bold text-white">
+            <div className="px-5 py-3.5 border-b border-blue-100 flex items-center justify-between shrink-0 bg-white">
+              <h3 className="text-sm font-bold text-blue-950">
                 {editingBook ? 'Modifier l’ouvrage' : 'Enregistrer un nouvel ouvrage physique'}
               </h3>
               <button 
                 type="button"
                 onClick={() => setModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg"
+                className="text-slate-500 hover:text-blue-950 p-1 rounded-lg"
               >
                 ✕
               </button>
@@ -313,43 +313,43 @@ export const BooksCatalogView: React.FC = () => {
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3.5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-slate-300">Titre de l'ouvrage *</label>
+                    <label className="text-[11px] font-semibold text-slate-700">Titre de l'ouvrage *</label>
                     <input
                       type="text"
                       required
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-slate-300">Auteur(s) *</label>
+                    <label className="text-[11px] font-semibold text-slate-700">Auteur(s) *</label>
                     <input
                       type="text"
                       required
                       value={formData.author}
                       onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-slate-300">ISBN</label>
+                    <label className="text-[11px] font-semibold text-slate-700">ISBN</label>
                     <input
                       type="text"
                       value={formData.isbn}
                       onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white font-mono"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950 font-mono"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-slate-300">Catégorie</label>
+                    <label className="text-[11px] font-semibold text-slate-700">Catégorie</label>
                     <select
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                     >
                       <option value="Manuel Scolaire">Manuel Scolaire</option>
                       <option value="Sciences">Sciences</option>
@@ -361,19 +361,19 @@ export const BooksCatalogView: React.FC = () => {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-slate-300">Année d'édition</label>
+                    <label className="text-[11px] font-semibold text-slate-700">Année d'édition</label>
                     <input
                       type="number"
                       value={formData.yearPublished}
                       onChange={(e) => setFormData({ ...formData, yearPublished: Number(e.target.value) })}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-slate-300">Quantité totale</label>
+                    <label className="text-[11px] font-semibold text-slate-700">Quantité totale</label>
                     <input
                       type="number"
                       min="1"
@@ -382,25 +382,25 @@ export const BooksCatalogView: React.FC = () => {
                         const total = Number(e.target.value);
                         setFormData({ ...formData, totalQuantity: total, availableQuantity: total });
                       }}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-slate-300">Localisation Rayon</label>
+                    <label className="text-[11px] font-semibold text-slate-700">Localisation Rayon</label>
                     <input
                       type="text"
                       value={formData.shelfLocation}
                       onChange={(e) => setFormData({ ...formData, shelfLocation: e.target.value })}
                       placeholder="Rayon A - Étagère 3"
-                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-slate-300">État du livre</label>
+                    <label className="text-[11px] font-semibold text-slate-700">État du livre</label>
                     <select
                       value={formData.state}
                       onChange={(e) => setFormData({ ...formData, state: e.target.value as any })}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                     >
                       <option value="Neuf">Neuf</option>
                       <option value="Bon état">Bon état</option>
@@ -411,22 +411,22 @@ export const BooksCatalogView: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-slate-300">Description / Résumé</label>
+                  <label className="text-[11px] font-semibold text-slate-700">Description / Résumé</label>
                   <textarea
                     rows={2}
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                     placeholder="Résumé de l'œuvre ou chapitres couverts..."
                   />
                 </div>
 
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-semibold text-slate-300">
+                    <label className="text-[11px] font-semibold text-slate-700">
                       Contenu ou texte intégral à lire dans la bibliothèque (Optionnel)
                     </label>
-                    <label className="text-[10px] text-blue-400 hover:text-blue-300 cursor-pointer flex items-center gap-1">
+                    <label className="text-[10px] text-blue-600 hover:text-blue-700 cursor-pointer flex items-center gap-1">
                       <Upload className="w-3 h-3" />
                       <span>Charger un fichier texte</span>
                       <input
@@ -456,18 +456,18 @@ export const BooksCatalogView: React.FC = () => {
                     rows={3}
                     value={formData.content || ''}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white font-serif leading-relaxed"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950 font-serif leading-relaxed"
                     placeholder="Collez ici le texte des chapitres, le cours ou les extraits pour lecture immédiate par les élèves et enseignants..."
                   />
                 </div>
               </div>
 
               {/* Pinned Modal Footer */}
-              <div className="px-5 py-3 border-t border-slate-800 bg-slate-900/95 flex items-center justify-end gap-2.5 shrink-0">
+              <div className="px-5 py-3 border-t border-blue-100 bg-white flex items-center justify-end gap-2.5 shrink-0">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white"
+                  className="px-4 py-2 rounded-lg text-xs text-slate-500 hover:text-blue-950"
                 >
                   Annuler
                 </button>
@@ -485,82 +485,82 @@ export const BooksCatalogView: React.FC = () => {
 
       {/* Quick Loan Modal */}
       {loanModalBook && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 space-y-4">
-            <h3 className="text-base font-bold text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-4 max-h-[92vh] overflow-y-auto">
+            <h3 className="text-base font-bold text-blue-950">
               Enregistrer un prêt : « {loanModalBook.title} »
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Associez ce livre à un élève ou enseignant via son matricule ou sa carte scolaire.
             </p>
 
             <form onSubmit={handleQuickLoanSubmit} className="space-y-3">
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-300">Nom & Prénom de l'emprunteur *</label>
+                <label className="text-[11px] font-semibold text-slate-700">Nom & Prénom de l'emprunteur *</label>
                 <input
                   type="text"
                   required
                   value={borrowerName}
                   onChange={(e) => setBorrowerName(e.target.value)}
                   placeholder="ex: Fatoumata Binta Diallo"
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-slate-300">Rôle</label>
+                  <label className="text-[11px] font-semibold text-slate-700">Rôle</label>
                   <select
                     value={borrowerRole}
                     onChange={(e) => setBorrowerRole(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                   >
                     <option value="Élève">Élève</option>
                     <option value="Enseignant">Enseignant</option>
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-slate-300">Matricule</label>
+                  <label className="text-[11px] font-semibold text-slate-700">Matricule</label>
                   <input
                     type="text"
                     required
                     value={borrowerMatricule}
                     onChange={(e) => setBorrowerMatricule(e.target.value)}
                     placeholder="MAT-2026-..."
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white font-mono"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950 font-mono"
                   />
                 </div>
               </div>
 
               {borrowerRole === 'Élève' && (
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-slate-300">Classe</label>
+                  <label className="text-[11px] font-semibold text-slate-700">Classe</label>
                   <input
                     type="text"
                     value={borrowerClass}
                     onChange={(e) => setBorrowerClass(e.target.value)}
                     placeholder="Terminale SM"
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                   />
                 </div>
               )}
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-300">Date limite de retour</label>
+                <label className="text-[11px] font-semibold text-slate-700">Date limite de retour</label>
                 <input
                   type="date"
                   required
                   value={loanDueDate}
                   onChange={(e) => setLoanDueDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-blue-100">
                 <button
                   type="button"
                   onClick={() => setLoanModalBook(null)}
-                  className="px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white"
+                  className="px-4 py-2 rounded-lg text-xs text-slate-500 hover:text-blue-950"
                 >
                   Annuler
                 </button>
@@ -578,10 +578,10 @@ export const BooksCatalogView: React.FC = () => {
 
       {/* QR Code Tag Modal */}
       {qrModalBook && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 text-center space-y-4">
-            <h3 className="text-base font-bold text-white">Étiquette QR Code Bibliothèque</h3>
-            <p className="text-xs text-slate-400">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 text-center space-y-4 max-h-[92vh] overflow-y-auto">
+            <h3 className="text-base font-bold text-blue-950">Étiquette QR Code Bibliothèque</h3>
+            <p className="text-xs text-slate-500">
               Imprimable pour collage sur la 1ère de couverture ou la tranche de l'ouvrage.
             </p>
 
@@ -590,7 +590,7 @@ export const BooksCatalogView: React.FC = () => {
                 BIBLIOTHÈQUE LYCÉE D'EXCELLENCE
               </div>
               <div className="w-36 h-36 mx-auto bg-slate-100 p-2 flex items-center justify-center border border-slate-300 my-2">
-                <div className="w-full h-full border-2 border-dashed border-slate-800 flex flex-col items-center justify-center text-[11px] font-mono">
+                <div className="w-full h-full border-2 border-dashed border-blue-100 flex flex-col items-center justify-center text-[11px] font-mono">
                   <QrCode className="w-12 h-12 text-slate-800 mb-1" />
                   <span className="font-bold">{qrModalBook.qrCodeId}</span>
                 </div>
@@ -602,7 +602,7 @@ export const BooksCatalogView: React.FC = () => {
             <div className="flex items-center justify-center gap-2">
               <button
                 onClick={() => setQrModalBook(null)}
-                className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+                className="px-4 py-2 rounded-lg bg-slate-50 hover:bg-blue-100 text-slate-700 text-xs font-semibold"
               >
                 Fermer
               </button>

@@ -46,19 +46,19 @@ export const StudentCardView: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900 border border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-white border border-blue-100 shadow-xs">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-100 text-teal-800 border border-teal-200">
               Cartes d'Identité Scolaires Numériques
             </span>
-            <span className="text-xs text-slate-400">Puce Sécurisée & QR Code Unique</span>
+            <span className="text-xs text-slate-500">Puce Sécurisée & QR Code Unique</span>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <CreditCard className="w-6 h-6 text-teal-400" />
+          <h1 className="text-xl sm:text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2">
+            <CreditCard className="w-6 h-6 text-teal-600 shrink-0" />
             <span>Cartes Scolaires & QR Code de Contrôle</span>
           </h1>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs text-slate-600 mt-1">
             Identification des élèves, contrôle des présences, accès à la bibliothèque et aux salles d'examens.
           </p>
         </div>
@@ -66,7 +66,7 @@ export const StudentCardView: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={handlePrint}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/30 transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 transition-all cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>Imprimer la Carte</span>
@@ -76,9 +76,9 @@ export const StudentCardView: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Col: Student Selector */}
-        <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <Search className="w-4 h-4 text-teal-400" />
+        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-blue-100 shadow-xs space-y-4">
+          <h3 className="text-sm font-bold text-blue-950 flex items-center gap-2">
+            <Search className="w-4 h-4 text-teal-600" />
             <span>Sélectionner un Élève</span>
           </h3>
 
@@ -87,31 +87,31 @@ export const StudentCardView: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Rechercher élève ou matricule..."
-            className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-teal-500"
+            className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:border-teal-500"
           />
 
-          <div className="space-y-1.5 max-h-[500px] overflow-y-auto">
+          <div className="space-y-1.5 max-h-[360px] lg:max-h-[500px] overflow-y-auto">
             {filteredStudents.map(student => (
               <button
                 key={student.id}
                 onClick={() => setSelectedStudent(student)}
-                className={`w-full p-2.5 rounded-xl border text-left transition-colors flex items-center justify-between ${
+                className={`w-full p-2.5 rounded-xl border text-left transition-colors flex items-center justify-between cursor-pointer ${
                   selectedStudent.id === student.id 
-                    ? 'bg-teal-600/20 border-teal-500 text-white' 
-                    : 'bg-slate-800/40 border-slate-800 text-slate-300 hover:bg-slate-800'
+                    ? 'bg-teal-50 border-teal-400 text-teal-950' 
+                    : 'bg-slate-50/80 border-slate-200 text-slate-700 hover:bg-blue-50'
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <img 
                     src={student.photo} 
                     alt="" 
-                    className="w-8 h-8 rounded-full object-cover border border-slate-700 shrink-0" 
+                    className="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0" 
                   />
                   <div className="min-w-0">
                     <div className="font-bold text-xs truncate">
                       {student.firstName} {student.lastName}
                     </div>
-                    <div className="text-[10px] text-slate-400 font-mono truncate">
+                    <div className="text-[10px] text-slate-500 font-mono truncate">
                       {student.matricule} · {student.className}
                     </div>
                   </div>
@@ -127,7 +127,7 @@ export const StudentCardView: React.FC = () => {
           <div id="student-card-printable-area" className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {/* Front of Student Card */}
             <div className="space-y-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Recto · Carte Scolaire Officielle
               </span>
               <div className="w-full aspect-[85.6/53.98] rounded-2xl bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 border-2 border-teal-500/50 p-4 shadow-2xl relative overflow-hidden flex flex-col justify-between text-white print:border-black">
@@ -189,7 +189,7 @@ export const StudentCardView: React.FC = () => {
 
             {/* Back of Student Card */}
             <div className="space-y-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Verso · QR Code & Contrôle d'Accès
               </span>
               <div className="w-full aspect-[85.6/53.98] rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-slate-700 p-4 shadow-2xl relative overflow-hidden flex flex-col justify-between text-white">
@@ -222,20 +222,20 @@ export const StudentCardView: React.FC = () => {
           </div>
 
           {/* Interactive QR Code Simulator */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-blue-100 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <Smartphone className="w-5 h-5 text-teal-400" />
-                <h3 className="text-sm font-bold text-white">
+                <Smartphone className="w-5 h-5 text-teal-600 shrink-0" />
+                <h3 className="text-sm font-bold text-blue-950">
                   Simulateur de Scan du QR Code Élève
                 </h3>
               </div>
-              <span className="text-xs text-slate-400 font-mono">
+              <span className="text-xs text-slate-500 font-mono truncate">
                 Token : {selectedStudent.qrToken.substring(0, 18)}...
               </span>
             </div>
 
-            <p className="text-xs text-slate-300">
+            <p className="text-xs text-slate-600">
               Testez l'utilisation du QR Code de {selectedStudent.firstName} {selectedStudent.lastName} sur les différents terminaux scolaires :
             </p>
 
@@ -249,7 +249,7 @@ export const StudentCardView: React.FC = () => {
                 <button
                   key={b.label}
                   onClick={() => handleTestScan(b.type)}
-                  className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-semibold text-slate-200 transition-colors text-center"
+                  className="p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 text-xs font-semibold text-slate-700 transition-colors text-center cursor-pointer"
                 >
                   {b.label}
                 </button>
@@ -257,8 +257,8 @@ export const StudentCardView: React.FC = () => {
             </div>
 
             {simulatedScanResult && (
-              <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 flex items-center gap-2 animate-in fade-in">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2 animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
                 <span>{simulatedScanResult}</span>
               </div>
             )}

@@ -51,7 +51,7 @@ const RAW_DEMO_ACCOUNTS: Omit<DemoAccount, 'password'>[] = [
     updatedAt: '2026-01-01',
     permissions: ROLE_PERMISSIONS_MATRIX['SUPER_ADMIN_NATIONAL'],
     category: 'Direction & Administration',
-    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+    badgeColor: 'bg-blue-100 text-blue-800 border-blue-200',
     icon: ShieldCheck,
     description: 'Pilotage multi-écoles, abonnements SaaS, devises et gouvernance globale.',
     photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',
@@ -81,7 +81,7 @@ const RAW_DEMO_ACCOUNTS: Omit<DemoAccount, 'password'>[] = [
     updatedAt: '2026-01-05',
     permissions: ROLE_PERMISSIONS_MATRIX['ADMIN_ECOLE'],
     category: 'Direction & Administration',
-    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
     icon: School,
     description: 'Gestion des classes, coefficients MEPU-A, effectifs et personnels.',
     photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200',
@@ -111,7 +111,7 @@ const RAW_DEMO_ACCOUNTS: Omit<DemoAccount, 'password'>[] = [
     updatedAt: '2026-01-08',
     permissions: ROLE_PERMISSIONS_MATRIX['DIRECTEUR'],
     category: 'Direction & Administration',
-    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+    badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
     icon: Award,
     description: 'Validation souveraine des examens, proclamation des bulletins et conseil.',
     photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200',
@@ -141,7 +141,7 @@ const RAW_DEMO_ACCOUNTS: Omit<DemoAccount, 'password'>[] = [
     updatedAt: '2026-01-10',
     permissions: ROLE_PERMISSIONS_MATRIX['CENSEUR'],
     category: 'Direction & Administration',
-    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+    badgeColor: 'bg-orange-100 text-orange-800 border-orange-200',
     icon: Briefcase,
     description: 'Discipline pédagogique, contrôle des présences du personnel et emplois du temps.',
     photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200',
@@ -171,7 +171,7 @@ const RAW_DEMO_ACCOUNTS: Omit<DemoAccount, 'password'>[] = [
     updatedAt: '2026-01-12',
     permissions: ROLE_PERMISSIONS_MATRIX['SECRETAIRE'],
     category: 'Direction & Administration',
-    badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
+    badgeColor: 'bg-teal-100 text-teal-800 border-teal-200',
     icon: FileCheck2,
     description: 'Inscriptions, certificats de scolarité, cartes scolaires et archives.',
     photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200',
@@ -201,7 +201,7 @@ const RAW_DEMO_ACCOUNTS: Omit<DemoAccount, 'password'>[] = [
     updatedAt: '2026-01-15',
     permissions: ROLE_PERMISSIONS_MATRIX['ENSEIGNANT'],
     category: 'Pédagogie & Encadrement',
-    badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+    badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-200',
     icon: GraduationCap,
     description: 'Cahier de textes, devoirs à la maison, saisie des notes et assiduité.',
     photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200',
@@ -231,7 +231,7 @@ const RAW_DEMO_ACCOUNTS: Omit<DemoAccount, 'password'>[] = [
     updatedAt: '2026-01-15',
     permissions: ROLE_PERMISSIONS_MATRIX['SURVEILLANT'],
     category: 'Pédagogie & Encadrement',
-    badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+    badgeColor: 'bg-rose-100 text-rose-800 border-rose-200',
     icon: Compass,
     description: 'Pointage des entrées/sorties, gestion de la discipline, retards et billets.',
     photo: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=200',
@@ -261,7 +261,7 @@ const RAW_DEMO_ACCOUNTS: Omit<DemoAccount, 'password'>[] = [
     updatedAt: '2026-01-18',
     permissions: ROLE_PERMISSIONS_MATRIX['COMPTABLE'],
     category: 'Finances & Ressources',
-    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
     icon: DollarSign,
     description: 'Encaissements frais scolaires GNF, reçus numérotés, dépenses et salaires.',
     photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200',
@@ -291,7 +291,7 @@ const RAW_DEMO_ACCOUNTS: Omit<DemoAccount, 'password'>[] = [
     updatedAt: '2026-01-20',
     permissions: ROLE_PERMISSIONS_MATRIX['BIBLIOTHECAIRE'],
     category: 'Finances & Ressources',
-    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+    badgeColor: 'bg-purple-100 text-purple-800 border-purple-200',
     icon: BookOpen,
     description: 'Gestion des manuels physiques, liseuse e-books MEPU-A et suivi des prêts.',
     photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',
@@ -321,7 +321,7 @@ const RAW_DEMO_ACCOUNTS: Omit<DemoAccount, 'password'>[] = [
     updatedAt: '2026-01-22',
     permissions: ROLE_PERMISSIONS_MATRIX['PARENT'],
     category: 'Famille & Apprenant',
-    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+    badgeColor: 'bg-cyan-100 text-cyan-800 border-cyan-200',
     icon: Users,
     description: 'Consultation des moyennes, assiduité et paiement Orange/MTN Money.',
     photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200',
@@ -351,7 +351,7 @@ const RAW_DEMO_ACCOUNTS: Omit<DemoAccount, 'password'>[] = [
     updatedAt: '2026-01-25',
     permissions: ROLE_PERMISSIONS_MATRIX['ELEVE'],
     category: 'Famille & Apprenant',
-    badgeColor: 'bg-pink-500/20 text-pink-300 border-pink-500/30',
+    badgeColor: 'bg-pink-100 text-pink-800 border-pink-200',
     icon: GraduationCap,
     description: 'Dépôt de devoirs (PDF/image), emploi du temps, bibliothèque et badge.',
     photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200',
@@ -383,17 +383,17 @@ export const getIconForRole = (role: WorkspaceMode): React.ComponentType<{ class
 
 export const getBadgeColorForRole = (role: WorkspaceMode): string => {
   switch (role) {
-    case 'super_admin': return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
-    case 'school_admin': return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
-    case 'director': return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
-    case 'secretary': return 'bg-teal-500/20 text-teal-300 border-teal-500/30';
-    case 'teacher': return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
-    case 'supervisor': return 'bg-rose-500/20 text-rose-300 border-rose-500/30';
-    case 'accountant': return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
-    case 'librarian': return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
-    case 'parent': return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
-    case 'student': return 'bg-pink-500/20 text-pink-300 border-pink-500/30';
-    default: return 'bg-slate-500/20 text-slate-300 border-slate-500/30';
+    case 'super_admin': return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'school_admin': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    case 'director': return 'bg-amber-100 text-amber-800 border-amber-200';
+    case 'secretary': return 'bg-teal-100 text-teal-800 border-teal-200';
+    case 'teacher': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+    case 'supervisor': return 'bg-rose-100 text-rose-800 border-rose-200';
+    case 'accountant': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    case 'librarian': return 'bg-purple-100 text-purple-800 border-purple-200';
+    case 'parent': return 'bg-cyan-100 text-cyan-800 border-cyan-200';
+    case 'student': return 'bg-pink-100 text-pink-800 border-pink-200';
+    default: return 'bg-slate-100 text-slate-700 border-slate-200';
   }
 };
 

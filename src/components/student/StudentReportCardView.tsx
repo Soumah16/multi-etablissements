@@ -36,8 +36,8 @@ export const StudentReportCardView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-black text-white">Mon Bulletin Scolaire Officiel</h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <h1 className="text-xl md:text-2xl font-black text-blue-950">Mon Bulletin Scolaire Officiel</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
             Document officiel certifié avec signature électronique de la Direction des Études et QR Code de vérification.
           </p>
         </div>
@@ -50,9 +50,9 @@ export const StudentReportCardView: React.FC = () => {
                 exportPrintableDocument(`Bulletin_${profile.lastName}_${profile.matricule}`, el.innerHTML);
               }
             }}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold cursor-pointer"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-50 hover:bg-blue-100 text-slate-900 border border-slate-200 text-xs font-semibold cursor-pointer"
           >
-            <Download className="w-4 h-4 text-blue-400" />
+            <Download className="w-4 h-4 text-blue-600" />
             <span>Télécharger (HTML/PDF)</span>
           </button>
           <button
@@ -114,32 +114,34 @@ export const StudentReportCardView: React.FC = () => {
         </div>
 
         {/* Grades Table */}
-        <table className="w-full text-xs font-sans border-collapse border border-slate-300">
-          <thead>
-            <tr className="bg-slate-100 text-[10px] uppercase font-bold text-slate-700">
-              <th className="border border-slate-300 p-2 text-left">Disciplines</th>
-              <th className="border border-slate-300 p-2 text-center">Coef</th>
-              <th className="border border-slate-300 p-2 text-center">Devoir</th>
-              <th className="border border-slate-300 p-2 text-center">Compo</th>
-              <th className="border border-slate-300 p-2 text-center">Moyenne</th>
-              <th className="border border-slate-300 p-2 text-center">Rang</th>
-              <th className="border border-slate-300 p-2 text-left">Appréciation de l'Enseignant</th>
-            </tr>
-          </thead>
-          <tbody>
-            {subjects.map((s, idx) => (
-              <tr key={idx} className="border-b border-slate-200">
-                <td className="border border-slate-300 p-2 font-bold">{s.name}</td>
-                <td className="border border-slate-300 p-2 text-center font-bold">{s.coef}</td>
-                <td className="border border-slate-300 p-2 text-center">{s.devoir.toFixed(1)}</td>
-                <td className="border border-slate-300 p-2 text-center">{s.compo.toFixed(1)}</td>
-                <td className="border border-slate-300 p-2 text-center font-black text-blue-900">{s.avg.toFixed(2)}</td>
-                <td className="border border-slate-300 p-2 text-center">{s.rank}er</td>
-                <td className="border border-slate-300 p-2 italic text-[11px]">{s.comments}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs font-sans border-collapse border border-slate-300">
+            <thead>
+              <tr className="bg-slate-100 text-[10px] uppercase font-bold text-slate-700">
+                <th className="border border-slate-300 p-2 text-left">Disciplines</th>
+                <th className="border border-slate-300 p-2 text-center">Coef</th>
+                <th className="border border-slate-300 p-2 text-center">Devoir</th>
+                <th className="border border-slate-300 p-2 text-center">Compo</th>
+                <th className="border border-slate-300 p-2 text-center">Moyenne</th>
+                <th className="border border-slate-300 p-2 text-center">Rang</th>
+                <th className="border border-slate-300 p-2 text-left">Appréciation de l'Enseignant</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {subjects.map((s, idx) => (
+                <tr key={idx} className="border-b border-slate-200">
+                  <td className="border border-slate-300 p-2 font-bold">{s.name}</td>
+                  <td className="border border-slate-300 p-2 text-center font-bold">{s.coef}</td>
+                  <td className="border border-slate-300 p-2 text-center">{s.devoir.toFixed(1)}</td>
+                  <td className="border border-slate-300 p-2 text-center">{s.compo.toFixed(1)}</td>
+                  <td className="border border-slate-300 p-2 text-center font-black text-blue-900">{s.avg.toFixed(2)}</td>
+                  <td className="border border-slate-300 p-2 text-center">{s.rank}er</td>
+                  <td className="border border-slate-300 p-2 italic text-[11px]">{s.comments}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Footer Statistics & Decision */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-sans pt-4 border-t-2 border-slate-900">

@@ -34,34 +34,34 @@ export const DirectorBadgeModal: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900 border border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-white border border-blue-100 shadow-xs">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
               Format Standard ISO-7810 (ID-1)
             </span>
-            <span className="text-xs text-slate-400">Puce Sécurisée & QR Code Cryptographique</span>
+            <span className="text-xs text-slate-500">Puce Sécurisée & QR Code Cryptographique</span>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <CreditCard className="w-6 h-6 text-amber-400" />
+          <h1 className="text-xl sm:text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2">
+            <CreditCard className="w-6 h-6 text-amber-600 shrink-0" />
             <span>Badge & Carte Professionnelle du Directeur</span>
           </h1>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs text-slate-600 mt-1">
             Carte d'accréditation pédagogique avec signature numérique, sceau d'État et contrôle d'accès biométrique/QR.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => setPhotoEditOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-blue-50 border border-slate-200 transition-colors cursor-pointer"
           >
-            <Camera className="w-4 h-4 text-blue-400" />
+            <Camera className="w-4 h-4 text-blue-600" />
             <span>Modifier la Photo</span>
           </button>
           <button
             onClick={handlePrint}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/30 transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 transition-all cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>Imprimer le Badge</span>
@@ -70,10 +70,10 @@ export const DirectorBadgeModal: React.FC = () => {
       </div>
 
       {/* Badge Rendering Area */}
-      <div id="director-badge-printable-area" className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <div id="director-badge-printable-area" className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-start">
         {/* Front of Badge */}
         <div className="space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Recto de la Carte Professionnelle</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Recto de la Carte Professionnelle</span>
           
           <div className="w-full max-w-[420px] aspect-[85.6/53.98] rounded-2xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 border-2 border-amber-500/50 p-5 shadow-2xl relative overflow-hidden flex flex-col justify-between text-white print:border-black">
             {/* Watermark logo */}
@@ -135,7 +135,7 @@ export const DirectorBadgeModal: React.FC = () => {
 
         {/* Back of Badge */}
         <div className="space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Verso de la Carte (QR Code de Contrôle)</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Verso de la Carte (QR Code de Contrôle)</span>
           
           <div className="w-full max-w-[420px] aspect-[85.6/53.98] rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-slate-700 p-5 shadow-2xl relative overflow-hidden flex flex-col justify-between text-white">
             {/* Magnetic Stripe simulation */}
@@ -168,37 +168,37 @@ export const DirectorBadgeModal: React.FC = () => {
       </div>
 
       {/* QR Code Scanner Simulation */}
-      <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-        <div className="flex items-center justify-between">
+      <div className="p-4 sm:p-5 rounded-2xl bg-white border border-blue-100 shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Smartphone className="w-5 h-5 text-emerald-400" />
-            <h3 className="text-sm font-bold text-white">
+            <Smartphone className="w-5 h-5 text-emerald-600 shrink-0" />
+            <h3 className="text-sm font-bold text-blue-950">
               Simulateur de Contrôle & Scan QR Code en Temps Réel
             </h3>
           </div>
           <button
             onClick={() => setIsScanTested(!isScanTested)}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition-colors shadow-xs"
+            className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
           >
             {isScanTested ? 'Réinitialiser le test' : 'Tester le Scan QR Code'}
           </button>
         </div>
 
         {isScanTested && (
-          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between gap-4 text-xs animate-in fade-in">
+          <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs animate-in fade-in">
             <div className="space-y-0.5">
-              <div className="font-bold text-emerald-300 flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4" />
+              <div className="font-bold text-emerald-800 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
                 <span>QR Code Vérifié avec Succès ! Titulaire Accrédité.</span>
               </div>
-              <div className="text-[11px] text-slate-300">
-                Titulaire : <strong className="text-white">{profile.name}</strong> · Fonction : {profile.title}
+              <div className="text-[11px] text-slate-700">
+                Titulaire : <strong className="text-blue-950">{profile.name}</strong> · Fonction : {profile.title}
               </div>
-              <div className="text-[10px] text-slate-400 font-mono">
+              <div className="text-[10px] text-slate-500 font-mono">
                 Hash de validation : SHA256-LEC-DIR-2026-9812-OK
               </div>
             </div>
-            <span className="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 font-bold uppercase text-[10px] border border-emerald-500/30">
+            <span className="px-2.5 py-1 rounded bg-emerald-100 text-emerald-800 font-bold uppercase text-[10px] border border-emerald-200 self-start sm:self-auto">
               Accès Autorisé
             </span>
           </div>
@@ -207,11 +207,11 @@ export const DirectorBadgeModal: React.FC = () => {
 
       {/* Photo Edit Modal */}
       {photoEditOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-base font-bold text-white">Modifier la Photo du Badge</h3>
-              <button onClick={() => setPhotoEditOpen(false)} className="text-slate-400 hover:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-blue-100 rounded-2xl max-w-md w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <h3 className="text-base font-bold text-blue-950">Modifier la Photo du Badge</h3>
+              <button onClick={() => setPhotoEditOpen(false)} className="text-slate-400 hover:text-blue-950 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -224,18 +224,18 @@ export const DirectorBadgeModal: React.FC = () => {
               helperText="Téléversez depuis votre ordinateur (JPG/PNG) ou saisissez une URL directe."
             />
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-blue-100">
               <button
                 type="button"
                 onClick={() => setPhotoEditOpen(false)}
-                className="px-3.5 py-2 rounded-lg text-xs text-slate-400 hover:text-white"
+                className="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-blue-950 bg-slate-100 hover:bg-blue-50 cursor-pointer"
               >
                 Annuler
               </button>
               <button
                 type="button"
                 onClick={handleSavePhoto}
-                className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/20"
+                className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 cursor-pointer"
               >
                 Appliquer sur le Badge
               </button>

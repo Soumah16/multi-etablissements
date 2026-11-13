@@ -23,8 +23,8 @@ export const StudentGradesView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-black text-white">Mes Notes & Évaluations Pédagogiques</h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <h1 className="text-xl md:text-2xl font-black text-blue-950">Mes Notes & Évaluations Pédagogiques</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
             Détail des devoirs surveillés, interrogations et moyennes trimestrielles pondérées.
           </p>
         </div>
@@ -40,34 +40,34 @@ export const StudentGradesView: React.FC = () => {
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] text-slate-400 font-semibold">Moyenne Pondérée Calculée</div>
-          <div className="text-2xl font-black text-emerald-400 mt-1">{currentAvg} / 20</div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Rang : {profile.classRank}ère de la classe</div>
+        <div className="p-4 rounded-xl bg-white border border-blue-100">
+          <div className="text-[11px] text-slate-500 font-semibold">Moyenne Pondérée Calculée</div>
+          <div className="text-2xl font-black text-emerald-600 mt-1">{currentAvg} / 20</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Rang : {profile.classRank}ère de la classe</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] text-slate-400 font-semibold">Total Évaluations Rentrées</div>
-          <div className="text-2xl font-black text-white mt-1">{grades.length}</div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Devoirs, compos et interrogations</div>
+        <div className="p-4 rounded-xl bg-white border border-blue-100">
+          <div className="text-[11px] text-slate-500 font-semibold">Total Évaluations Rentrées</div>
+          <div className="text-2xl font-black text-blue-950 mt-1">{grades.length}</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Devoirs, compos et interrogations</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] text-slate-400 font-semibold">Mention du Trimestre</div>
-          <div className="text-sm font-bold text-amber-300 mt-2 flex items-center gap-1.5">
-            <Award className="w-4 h-4 text-amber-400" />
+        <div className="p-4 rounded-xl bg-white border border-blue-100">
+          <div className="text-[11px] text-slate-500 font-semibold">Mention du Trimestre</div>
+          <div className="text-sm font-bold text-amber-700 mt-2 flex items-center gap-1.5">
+            <Award className="w-4 h-4 text-amber-700" />
             <span>Tableau d'Honneur (Félicitations)</span>
           </div>
-          <div className="text-[10px] text-slate-400 mt-1">Lycée d'Excellence Conakry</div>
+          <div className="text-[10px] text-slate-500 mt-1">Lycée d'Excellence Conakry</div>
         </div>
       </div>
 
       {/* Grades Table */}
-      <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+      <div className="rounded-2xl bg-white border border-blue-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
             <thead>
-              <tr className="border-b border-slate-800 text-[11px] text-slate-400 uppercase font-semibold bg-slate-800/40">
+              <tr className="border-b border-blue-100 text-[11px] text-slate-500 uppercase font-semibold bg-blue-50/60">
                 <th className="py-3 px-4">Discipline</th>
                 <th className="py-3 px-4">Évaluation & Titre</th>
                 <th className="py-3 px-4">Type</th>
@@ -77,31 +77,31 @@ export const StudentGradesView: React.FC = () => {
                 <th className="py-3 px-4">Appréciation de l'Enseignant</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-blue-100">
               {grades.map(grade => {
                 const isAboveAverage = grade.score >= grade.classAverage;
                 return (
-                  <tr key={grade.id} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3 px-4 font-bold text-white text-xs">{grade.subject}</td>
+                  <tr key={grade.id} className="hover:bg-blue-50 transition-colors">
+                    <td className="py-3 px-4 font-bold text-blue-950 text-xs">{grade.subject}</td>
                     <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-200">{grade.title}</div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">{grade.date}</div>
+                      <div className="font-semibold text-slate-900">{grade.title}</div>
+                      <div className="text-[10px] text-slate-500 font-mono mt-0.5">{grade.date}</div>
                     </td>
                     <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-50 text-slate-700 border border-slate-200">
                         {grade.type}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center font-mono font-bold text-slate-300">{grade.coefficient}</td>
+                    <td className="py-3 px-4 text-center font-mono font-bold text-slate-700">{grade.coefficient}</td>
                     <td className="py-3 px-4 text-center">
-                      <span className="font-mono font-black text-sm text-emerald-400">
+                      <span className="font-mono font-black text-sm text-emerald-600">
                         {grade.score} <span className="text-[10px] text-slate-500 font-normal">/{grade.maxScore}</span>
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center font-mono text-slate-400">
+                    <td className="py-3 px-4 text-center font-mono text-slate-500">
                       {grade.classAverage} / 20
                     </td>
-                    <td className="py-3 px-4 text-slate-300 italic text-[11px] max-w-xs leading-relaxed">
+                    <td className="py-3 px-4 text-slate-700 italic text-[11px] max-w-xs leading-relaxed">
                       {grade.comments}
                     </td>
                   </tr>

@@ -63,19 +63,19 @@ export const SecretaryCommunicationView: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900 border border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-blue-100">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
               Information & Convocations Administratives
             </span>
-            <span className="text-xs text-slate-400">Diffusion Multi-Canaux Instantanée</span>
+            <span className="text-xs text-slate-500">Diffusion Multi-Canaux Instantanée</span>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <Megaphone className="w-6 h-6 text-teal-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2">
+            <Megaphone className="w-6 h-6 text-teal-600" />
             <span>Communication & Rappels aux Familles</span>
           </h1>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs text-slate-700 mt-1">
             Envoi de rappels de dossiers incomplets, convocations pour retrait de cartes et notes administratives.
           </p>
         </div>
@@ -91,14 +91,14 @@ export const SecretaryCommunicationView: React.FC = () => {
 
       {/* Messages List */}
       <div className="space-y-4">
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3">
-          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+        <div className="p-4 rounded-xl bg-white border border-blue-100 flex items-center gap-3">
+          <Search className="w-4 h-4 text-slate-500 shrink-0" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Rechercher parmi les messages diffusés..."
-            className="w-full bg-transparent text-xs text-white placeholder-slate-500 focus:outline-hidden"
+            className="w-full bg-transparent text-xs text-blue-950 placeholder-slate-400 focus:outline-hidden"
           />
         </div>
 
@@ -106,40 +106,40 @@ export const SecretaryCommunicationView: React.FC = () => {
           {filteredMessages.map(msg => (
             <div 
               key={msg.id}
-              className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all space-y-3"
+              className="p-5 rounded-2xl bg-white border border-blue-100 hover:border-slate-200 transition-all space-y-3"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-500/10 text-teal-300 border border-teal-500/20 uppercase tracking-wider">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200 uppercase tracking-wider">
                     {msg.target === 'all_parents' ? 'Tous les Parents' :
                      msg.target === 'class_parents' ? 'Parents d\'une classe' :
                      msg.target === 'all_students' ? 'Tous les élèves' : 'Parent individuel'}
                   </span>
                   {msg.targetDetail && (
-                    <span className="text-xs font-semibold text-slate-300">
+                    <span className="text-xs font-semibold text-slate-700">
                       ({msg.targetDetail})
                     </span>
                   )}
                 </div>
-                <span className="text-xs font-mono text-slate-400">{msg.date}</span>
+                <span className="text-xs font-mono text-slate-500">{msg.date}</span>
               </div>
 
               <div>
-                <h3 className="text-base font-bold text-white">{msg.title}</h3>
-                <p className="text-xs text-slate-300 mt-1 leading-relaxed">{msg.content}</p>
+                <h3 className="text-base font-bold text-blue-950">{msg.title}</h3>
+                <p className="text-xs text-slate-700 mt-1 leading-relaxed">{msg.content}</p>
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+              <div className="pt-3 border-t border-blue-100 flex items-center justify-between text-xs text-slate-500">
                 <div className="flex items-center gap-1.5">
                   <span>Canaux utilisés :</span>
                   {msg.channels.map(ch => (
-                    <span key={ch} className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-300 border border-slate-700">
+                    <span key={ch} className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-50 text-slate-700 border border-slate-200">
                       {ch === 'app' ? 'In-App' : ch === 'sms' ? 'SMS Guinée' : ch === 'whatsapp' ? 'WhatsApp' : 'Email'}
                     </span>
                   ))}
                 </div>
 
-                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400">
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>Diffusé avec succès</span>
                 </span>
@@ -151,37 +151,37 @@ export const SecretaryCommunicationView: React.FC = () => {
 
       {/* Creation Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
               <div className="flex items-center gap-2">
-                <Megaphone className="w-5 h-5 text-teal-400" />
-                <h3 className="text-base font-bold text-white">Rédiger un Message Administratif</h3>
+                <Megaphone className="w-5 h-5 text-teal-600" />
+                <h3 className="text-base font-bold text-blue-950">Rédiger un Message Administratif</h3>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-blue-950">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSend} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Titre / Objet du message *</label>
+                <label className="block font-semibold text-slate-700 mb-1">Titre / Objet du message *</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Ex: Rappel impératif pour retrait des cartes scolaires au secrétariat"
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
                   required
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Cible des destinataires *</label>
+                <label className="block font-semibold text-slate-700 mb-1">Cible des destinataires *</label>
                 <select
                   value={target}
                   onChange={(e) => setTarget(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
                 >
                   <option value="all_parents">Tous les parents d'élèves</option>
                   <option value="class_parents">Parents d'une classe spécifique</option>
@@ -192,7 +192,7 @@ export const SecretaryCommunicationView: React.FC = () => {
 
               {(target === 'class_parents' || target === 'single_parent') && (
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">
+                  <label className="block font-semibold text-slate-700 mb-1">
                     Préciser le nom de la classe ou du parent
                   </label>
                   <input
@@ -200,14 +200,14 @@ export const SecretaryCommunicationView: React.FC = () => {
                     value={targetDetail}
                     onChange={(e) => setTargetDetail(e.target.value)}
                     placeholder="Ex: Terminale SM 1 ou Elhadj Amadou Diallo"
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
                   />
                 </div>
               )}
 
               {/* Channels Selector */}
               <div>
-                <label className="block font-semibold text-slate-300 mb-1.5">
+                <label className="block font-semibold text-slate-700 mb-1.5">
                   Canaux de distribution simultanée :
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -223,8 +223,8 @@ export const SecretaryCommunicationView: React.FC = () => {
                       onClick={() => toggleChannel(ch.id as any)}
                       className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium border transition-colors ${
                         channels.includes(ch.id as any)
-                          ? 'bg-teal-600/20 border-teal-500 text-teal-300 font-bold'
-                          : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                          ? 'bg-teal-50 border-teal-500 text-teal-700 font-bold'
+                          : 'bg-slate-50 border-slate-200 text-slate-500 hover:text-blue-950'
                       }`}
                     >
                       {ch.icon}
@@ -235,22 +235,22 @@ export const SecretaryCommunicationView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Corps du message *</label>
+                <label className="block font-semibold text-slate-700 mb-1">Corps du message *</label>
                 <textarea
                   rows={4}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Rédigez ici le texte de votre communiqué administratif..."
-                  className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
                   required
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-blue-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-slate-400 hover:text-white"
+                  className="px-4 py-2 rounded-lg text-slate-500 hover:text-blue-950"
                 >
                   Annuler
                 </button>

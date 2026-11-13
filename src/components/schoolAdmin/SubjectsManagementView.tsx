@@ -75,12 +75,12 @@ export const SubjectsManagementView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-blue-950">
             Gestion des Matières & Coefficients ({subjects.length})
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Configuration du barème officiel d'évaluation, codes matières et départements disciplinaires
           </p>
         </div>
@@ -97,20 +97,20 @@ export const SubjectsManagementView: React.FC = () => {
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Rechercher par matière, code ou département..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-white border border-slate-200 text-blue-950 placeholder-slate-400 focus:outline-none focus:border-blue-500"
           />
         </div>
 
         <select
           value={deptFilter}
           onChange={e => setDeptFilter(e.target.value)}
-          className="px-3 py-2 text-xs rounded-lg bg-slate-900 border border-slate-700 text-slate-200 focus:outline-none focus:border-blue-500"
+          className="px-3 py-2 text-xs rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500"
         >
           <option value="all">Tous les départements ({departments.length})</option>
           {departments.map(d => (
@@ -120,10 +120,10 @@ export const SubjectsManagementView: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden shadow-xs">
+      <div className="rounded-xl border border-blue-100 bg-white overflow-x-auto shadow-xs">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="border-b border-slate-800 bg-slate-800/60 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
+            <tr className="border-b border-blue-100 bg-blue-50/60 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
               <th className="py-3 px-4">Code</th>
               <th className="py-3 px-4">Intitulé de la Matière</th>
               <th className="py-3 px-4">Département Disciplinaire</th>
@@ -132,24 +132,24 @@ export const SubjectsManagementView: React.FC = () => {
               <th className="py-3 px-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/80 text-slate-200">
+          <tbody className="divide-y divide-blue-100 text-slate-900">
             {filteredSubjects.map((sub) => (
-              <tr key={sub.id} className="hover:bg-slate-800/40 transition-colors">
-                <td className="py-3 px-4 font-mono font-bold text-blue-400">
+              <tr key={sub.id} className="hover:bg-blue-50 transition-colors">
+                <td className="py-3 px-4 font-mono font-bold text-blue-600">
                   {sub.code}
                 </td>
-                <td className="py-3 px-4 font-semibold text-white">
+                <td className="py-3 px-4 font-semibold text-blue-950">
                   {sub.name}
                 </td>
-                <td className="py-3 px-4 text-slate-300">
+                <td className="py-3 px-4 text-slate-700">
                   {sub.department}
                 </td>
-                <td className="py-3 px-4 font-mono font-bold text-emerald-400 tabular-nums">
+                <td className="py-3 px-4 font-mono font-bold text-emerald-600 tabular-nums">
                   Coef. {sub.coefficient}
                 </td>
                 <td className="py-3 px-4 whitespace-nowrap">
                   <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${
-                    sub.active ? 'text-emerald-400' : 'text-slate-500'
+                    sub.active ? 'text-emerald-600' : 'text-slate-500'
                   }`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${sub.active ? 'bg-emerald-400' : 'bg-slate-500'}`} />
                     {sub.active ? 'Active' : 'Désactivée'}
@@ -159,14 +159,14 @@ export const SubjectsManagementView: React.FC = () => {
                   <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => handleOpenEdit(sub)}
-                      className="p-1.5 text-slate-400 hover:text-white rounded bg-slate-800 transition-colors"
+                      className="p-1.5 text-slate-500 hover:text-blue-950 rounded bg-slate-50 transition-colors"
                       title="Modifier"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => toggleSubjectActive(sub.id)}
-                      className="p-1.5 text-slate-400 hover:text-amber-400 rounded bg-slate-800 transition-colors"
+                      className="p-1.5 text-slate-500 hover:text-amber-700 rounded bg-slate-50 transition-colors"
                       title={sub.active ? "Désactiver" : "Activer"}
                     >
                       {sub.active ? <PauseCircle className="w-3.5 h-3.5" /> : <PlayCircle className="w-3.5 h-3.5" />}
@@ -181,44 +181,44 @@ export const SubjectsManagementView: React.FC = () => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
-          <div className="relative w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-white text-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="relative w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <h3 className="font-bold text-blue-950 text-sm">
                 {subjectToEdit ? "Modifier la Matière" : "Créer une Nouvelle Matière"}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-blue-950">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="mt-4 space-y-3.5 text-xs">
               <div className="space-y-1">
-                <label className="text-slate-300 font-medium">Nom de la matière *</label>
+                <label className="text-slate-700 font-medium">Nom de la matière *</label>
                 <input
                   type="text"
                   required
                   placeholder="Ex: Mathématiques, Histoire..."
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-medium">Code abrégé</label>
+                  <label className="text-slate-700 font-medium">Code abrégé</label>
                   <input
                     type="text"
                     placeholder="MATH-SM"
                     value={code}
                     onChange={e => setCode(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white uppercase font-mono focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 uppercase font-mono focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-medium">Coefficient d'examen *</label>
+                  <label className="text-slate-700 font-medium">Coefficient d'examen *</label>
                   <input
                     type="number"
                     required
@@ -226,27 +226,27 @@ export const SubjectsManagementView: React.FC = () => {
                     max={15}
                     value={coefficient}
                     onChange={e => setCoefficient(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-emerald-400 font-mono font-bold"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-emerald-600 font-mono font-bold"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-300 font-medium">Département</label>
+                <label className="text-slate-700 font-medium">Département</label>
                 <input
                   type="text"
                   placeholder="Sciences Exactes, Lettres..."
                   value={department}
                   onChange={e => setDepartment(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+              <div className="pt-3 border-t border-blue-100 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-slate-400 hover:text-white rounded-lg bg-slate-800"
+                  className="px-4 py-2 text-slate-500 hover:text-blue-950 rounded-lg bg-slate-50"
                 >
                   Annuler
                 </button>

@@ -57,17 +57,17 @@ export const BadgeDesignerModal: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-blue-950">
             {t.badges.title}
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             {t.badges.subtitle} · Standardisé pour l'ensemble des établissements
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => triggerPrint('badge-designer-printable-card', 'Badge_Officiel_SmartSchool')}
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors shadow-xs cursor-pointer"
@@ -78,7 +78,7 @@ export const BadgeDesignerModal: React.FC = () => {
 
           <button
             onClick={handleSaveTemplate}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-sm transition-colors whitespace-nowrap"
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg shadow-sm transition-colors whitespace-nowrap"
           >
             <Check className="w-4 h-4" />
             <span>Enregistrer le Modèle National</span>
@@ -91,23 +91,23 @@ export const BadgeDesignerModal: React.FC = () => {
         {/* Left Column: Form & Options */}
         <div className="lg:col-span-6 space-y-5">
           {/* Card Type Selector */}
-          <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-3">
-            <label className="text-xs font-semibold text-white uppercase tracking-wider">
+          <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs space-y-3">
+            <label className="text-xs font-semibold text-blue-950 uppercase tracking-wider">
               Type de Carte à Configurer
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setTemplateType('student')}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   templateType === 'student'
-                    ? 'bg-blue-600/20 border-blue-500 text-white'
-                    : 'bg-slate-800/80 border-slate-700 text-slate-400 hover:text-slate-200'
+                    ? 'bg-blue-50 border-blue-500 text-blue-950 shadow-xs'
+                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-blue-950'
                 }`}
               >
-                <GraduationCap className="w-4 h-4 mb-1 text-blue-400" />
+                <GraduationCap className="w-4 h-4 mb-1 text-blue-600" />
                 <div className="font-bold text-xs">{t.badges.studentCard}</div>
-                <div className="text-[10px] text-slate-400">Élèves / Étudiants</div>
+                <div className="text-[10px] text-slate-500">Élèves / Étudiants</div>
               </button>
 
               <button
@@ -115,13 +115,13 @@ export const BadgeDesignerModal: React.FC = () => {
                 onClick={() => setTemplateType('teacher')}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   templateType === 'teacher'
-                    ? 'bg-blue-600/20 border-blue-500 text-white'
-                    : 'bg-slate-800/80 border-slate-700 text-slate-400 hover:text-slate-200'
+                    ? 'bg-blue-50 border-blue-500 text-blue-950 shadow-xs'
+                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-blue-950'
                 }`}
               >
-                <UserCheck className="w-4 h-4 mb-1 text-emerald-400" />
+                <UserCheck className="w-4 h-4 mb-1 text-emerald-600" />
                 <div className="font-bold text-xs">{t.badges.teacherBadge}</div>
-                <div className="text-[10px] text-slate-400">Corps professoral</div>
+                <div className="text-[10px] text-slate-500">Corps professoral</div>
               </button>
 
               <button
@@ -129,20 +129,20 @@ export const BadgeDesignerModal: React.FC = () => {
                 onClick={() => setTemplateType('staff')}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   templateType === 'staff'
-                    ? 'bg-blue-600/20 border-blue-500 text-white'
-                    : 'bg-slate-800/80 border-slate-700 text-slate-400 hover:text-slate-200'
+                    ? 'bg-blue-50 border-blue-500 text-blue-950 shadow-xs'
+                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-blue-950'
                 }`}
               >
-                <Briefcase className="w-4 h-4 mb-1 text-purple-400" />
+                <Briefcase className="w-4 h-4 mb-1 text-purple-600" />
                 <div className="font-bold text-xs">{t.badges.staffCard}</div>
-                <div className="text-[10px] text-slate-400">Personnel administratif</div>
+                <div className="text-[10px] text-slate-500">Personnel administratif</div>
               </button>
             </div>
           </div>
 
           {/* Color & Theme */}
-          <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-3 text-xs">
-            <label className="font-semibold text-white uppercase tracking-wider text-[11px]">
+          <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs space-y-3 text-xs">
+            <label className="font-semibold text-blue-950 uppercase tracking-wider text-[11px]">
               Palette & Thème Couleur
             </label>
             <div className="flex items-center gap-2 flex-wrap">
@@ -153,8 +153,8 @@ export const BadgeDesignerModal: React.FC = () => {
                   onClick={() => setThemeColor(c.value)}
                   className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-[11px] transition-all ${
                     themeColor === c.value
-                      ? 'border-white text-white font-semibold'
-                      : 'border-slate-700 text-slate-400 hover:border-slate-500'
+                      ? 'border-blue-600 bg-blue-50 text-blue-950 font-semibold'
+                      : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-blue-300'
                   }`}
                 >
                   <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: c.value }} />
@@ -164,71 +164,71 @@ export const BadgeDesignerModal: React.FC = () => {
             </div>
 
             <div className="pt-2 flex items-center gap-3">
-              <span className="text-slate-400">Couleur personnalisée :</span>
+              <span className="text-slate-600">Couleur personnalisée :</span>
               <input 
                 type="color" 
                 value={themeColor} 
                 onChange={e => setThemeColor(e.target.value)} 
-                className="w-8 h-8 rounded border border-slate-700 cursor-pointer bg-transparent"
+                className="w-8 h-8 rounded border border-slate-300 cursor-pointer bg-transparent"
               />
-              <span className="font-mono text-slate-300">{themeColor}</span>
+              <span className="font-mono text-slate-700">{themeColor}</span>
             </div>
           </div>
 
           {/* QR Code & Barcode Security Options */}
-          <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-3.5 text-xs">
-            <label className="font-semibold text-white uppercase tracking-wider text-[11px]">
+          <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs space-y-3.5 text-xs">
+            <label className="font-semibold text-blue-950 uppercase tracking-wider text-[11px]">
               Paramètres QR Code & Authentification Numérique
             </label>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-slate-300">
+              <div className="flex items-center justify-between text-slate-700">
                 <span>Afficher le QR Code sécurisé</span>
                 <input 
                   type="checkbox" 
                   checked={showQrCode} 
                   onChange={e => setShowQrCode(e.target.checked)} 
-                  className="rounded text-blue-600 focus:ring-0 w-4 h-4 bg-slate-700 border-slate-600"
+                  className="rounded text-blue-600 focus:ring-0 w-4 h-4 bg-white border-slate-300"
                 />
               </div>
 
-              <div className="flex items-center justify-between text-slate-300">
+              <div className="flex items-center justify-between text-slate-700">
                 <span>Afficher le Code-Barres officiel (Format CODE128)</span>
                 <input 
                   type="checkbox" 
                   checked={showBarcode} 
                   onChange={e => setShowBarcode(e.target.checked)} 
-                  className="rounded text-blue-600 focus:ring-0 w-4 h-4 bg-slate-700 border-slate-600"
+                  className="rounded text-blue-600 focus:ring-0 w-4 h-4 bg-white border-slate-300"
                 />
               </div>
 
-              <div className="flex items-center justify-between text-slate-300">
+              <div className="flex items-center justify-between text-slate-700">
                 <span>Emplacement Photo d'identité certifiée</span>
                 <input 
                   type="checkbox" 
                   checked={showPhoto} 
                   onChange={e => setShowPhoto(e.target.checked)} 
-                  className="rounded text-blue-600 focus:ring-0 w-4 h-4 bg-slate-700 border-slate-600"
+                  className="rounded text-blue-600 focus:ring-0 w-4 h-4 bg-white border-slate-300"
                 />
               </div>
 
-              <div className="flex items-center justify-between text-slate-300">
+              <div className="flex items-center justify-between text-slate-700">
                 <span>Signature électronique de la direction d'école</span>
                 <input 
                   type="checkbox" 
                   checked={showSignature} 
                   onChange={e => setShowSignature(e.target.checked)} 
-                  className="rounded text-blue-600 focus:ring-0 w-4 h-4 bg-slate-700 border-slate-600"
+                  className="rounded text-blue-600 focus:ring-0 w-4 h-4 bg-white border-slate-300"
                 />
               </div>
             </div>
 
             <div className="pt-2 space-y-1">
-              <label className="text-slate-400">Contenu encodé dans le QR Code :</label>
+              <label className="text-slate-600 font-medium">Contenu encodé dans le QR Code :</label>
               <select
                 value={qrPayloadType}
                 onChange={e => setQrPayloadType(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none"
               >
                 <option value="verification_url">URL de vérification en ligne (https://verify.smartschool.gn/qr/...)</option>
                 <option value="matricule_uuid">Matricule cryptographique unique (UUIDv5 + school_id)</option>
@@ -237,12 +237,12 @@ export const BadgeDesignerModal: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-400">Année Scolaire d'application :</label>
+              <label className="text-slate-600 font-medium">Année Scolaire d'application :</label>
               <input
                 type="text"
                 value={validityYear}
                 onChange={e => setValidityYear(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 font-mono"
               />
             </div>
           </div>
@@ -250,14 +250,14 @@ export const BadgeDesignerModal: React.FC = () => {
 
         {/* Right Column: Live Printable Card Specimen Preview */}
         <div className="lg:col-span-6 space-y-3">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span className="font-semibold uppercase tracking-wider text-[11px] text-white">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
+            <span className="font-semibold uppercase tracking-wider text-[11px] text-blue-950">
               Aperçu en Direct du Badge Spécimen
             </span>
             <select
               value={selectedSchoolPreviewId}
               onChange={e => setSelectedSchoolPreviewId(e.target.value)}
-              className="px-2.5 py-1 text-xs rounded bg-slate-800 border border-slate-700 text-slate-200"
+              className="px-2.5 py-1 text-xs rounded-lg bg-white border border-blue-200 text-blue-950 font-medium"
             >
               {schools.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
@@ -266,11 +266,11 @@ export const BadgeDesignerModal: React.FC = () => {
           </div>
 
           {/* Interactive Card Canvas (Standard Credit Card Size 85.6mm x 53.98mm ISO/IEC 7810 ID-1) */}
-          <div className="p-8 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center">
+          <div className="p-4 sm:p-8 rounded-2xl bg-white border border-blue-100 shadow-xs flex items-center justify-center overflow-x-auto">
             <div 
               id="badge-designer-printable-card"
               style={{ borderColor: themeColor }}
-              className="w-80 h-[480px] rounded-2xl bg-white text-slate-900 shadow-2xl border-4 overflow-hidden flex flex-col justify-between relative select-none"
+              className="w-72 sm:w-80 h-[440px] sm:h-[480px] rounded-2xl bg-white text-slate-900 shadow-2xl border-4 overflow-hidden flex flex-col justify-between relative select-none shrink-0"
             >
               {/* Header Header Brand */}
               <div 

@@ -41,28 +41,28 @@ export const SupervisorBadgeView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-blue-100 rounded-2xl p-4 sm:p-5 shadow-xs">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-            <CreditCard className="w-6 h-6 text-red-400" />
+          <h1 className="text-xl sm:text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2.5">
+            <CreditCard className="w-6 h-6 text-red-600 shrink-0" />
             <span>Badge & Carte Professionnelle de Surveillant Général</span>
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500 mt-1">
             Carte d'autorité disciplinaire MEPU-A avec QR Code d'identification et protocole de sécurité
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => setEditModalOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors cursor-pointer"
           >
             <Edit3 className="w-3.5 h-3.5" />
             <span>Modifier Photo & Infos</span>
           </button>
           <button
             onClick={() => triggerPrint('supervisor-badge-printable-area', `Badge_Surveillant_${profile.firstName}_${profile.lastName}`)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-md shadow-red-600/30 transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md shadow-red-600/20 transition-colors cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>Imprimer Carte</span>
@@ -71,10 +71,10 @@ export const SupervisorBadgeView: React.FC = () => {
       </div>
 
       {/* Visual Badge Display (Recto & Verso) */}
-      <div id="supervisor-badge-printable-area" className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto pt-2">
+      <div id="supervisor-badge-printable-area" className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto pt-2">
         {/* RECTO */}
         <div className="space-y-2">
-          <div className="text-xs uppercase font-bold text-slate-400 text-center">Recto - Face Officielle</div>
+          <div className="text-xs uppercase font-bold text-slate-500 text-center">Recto - Face Officielle</div>
           <div className="relative w-full aspect-[1.586/1] rounded-2xl bg-gradient-to-br from-slate-900 via-red-950/70 to-slate-900 border-2 border-red-500/40 p-5 shadow-2xl flex flex-col justify-between overflow-hidden text-white">
             {/* Top header */}
             <div className="flex items-center justify-between border-b border-red-500/30 pb-2">
@@ -144,7 +144,7 @@ export const SupervisorBadgeView: React.FC = () => {
 
         {/* VERSO */}
         <div className="space-y-2">
-          <div className="text-xs uppercase font-bold text-slate-400 text-center">Verso - Sécurité & Contacts</div>
+          <div className="text-xs uppercase font-bold text-slate-500 text-center">Verso - Sécurité & Contacts</div>
           <div className="relative w-full aspect-[1.586/1] rounded-2xl bg-slate-900 border-2 border-slate-700/60 p-5 shadow-2xl flex flex-col justify-between overflow-hidden text-white">
             {/* Magnetic Stripe simulation */}
             <div className="w-full h-8 bg-slate-950 -mx-5 -mt-2 mb-3 border-y border-slate-800 flex items-center px-5">
@@ -189,11 +189,11 @@ export const SupervisorBadgeView: React.FC = () => {
 
       {/* Edit Profile Modal */}
       {editModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-base text-white">Mettre à Jour la Photo & Informations</h3>
-              <button onClick={() => setEditModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-2xl bg-white border border-blue-100 p-5 sm:p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <h3 className="font-bold text-base text-blue-950">Mettre à Jour la Photo & Informations</h3>
+              <button onClick={() => setEditModalOpen(false)} className="text-slate-400 hover:text-blue-950 cursor-pointer">✕</button>
             </div>
 
             <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
@@ -204,73 +204,73 @@ export const SupervisorBadgeView: React.FC = () => {
                 helperText="Importez depuis votre PC ou saisissez une URL directe d'image."
               />
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Prénom *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Prénom *</label>
                   <input 
                     type="text" 
                     required
                     value={firstName}
                     onChange={e => setFirstName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Nom *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Nom *</label>
                   <input 
                     type="text" 
                     required
                     value={lastName}
                     onChange={e => setLastName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Téléphone *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Téléphone *</label>
                 <input 
                   type="text" 
                   required
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Adresse (Conakry) *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Adresse (Conakry) *</label>
                 <input 
                   type="text" 
                   required
                   value={address}
                   onChange={e => setAddress(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Titre de fonction *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Titre de fonction *</label>
                 <input 
                   type="text" 
                   required
                   value={roleTitle}
                   onChange={e => setRoleTitle(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-blue-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setEditModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:text-blue-950 bg-slate-100 hover:bg-blue-50 text-xs font-semibold cursor-pointer"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold"
+                  className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold cursor-pointer"
                 >
                   Enregistrer & Actualiser
                 </button>

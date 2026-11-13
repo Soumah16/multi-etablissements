@@ -40,13 +40,13 @@ export const ParentPaymentsView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
               Trésorerie & Scolarité (GNF)
             </span>
-            <span className="text-xs text-slate-400">Élève : {selectedChild.firstName} {selectedChild.lastName} ({selectedChild.className})</span>
+            <span className="text-xs text-slate-500">Élève : {selectedChild.firstName} {selectedChild.lastName} ({selectedChild.className})</span>
           </div>
-          <h1 className="text-xl md:text-2xl font-black text-white mt-1">Historique des Paiements & Reçus Officiels</h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <h1 className="text-xl md:text-2xl font-black text-blue-950 mt-1">Historique des Paiements & Reçus Officiels</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
             Paiements sécurisés Orange Money & MTN MoMo, téléchargement des reçus avec QR Code de certification.
           </p>
         </div>
@@ -62,35 +62,35 @@ export const ParentPaymentsView: React.FC = () => {
 
       {/* Financial Status Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] text-slate-400 font-semibold">Total Déjà Réglé</div>
-          <div className="text-2xl font-black text-emerald-400 mt-1">{formatGnf(totalPaid)}</div>
-          <div className="text-[10px] text-slate-400 mt-0.5">{childPayments.length} versements enregistrés</div>
+        <div className="p-4 rounded-xl bg-white border border-blue-100">
+          <div className="text-[11px] text-slate-500 font-semibold">Total Déjà Réglé</div>
+          <div className="text-2xl font-black text-emerald-600 mt-1">{formatGnf(totalPaid)}</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">{childPayments.length} versements enregistrés</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] text-slate-400 font-semibold">Solde Restant à Régler</div>
-          <div className="text-2xl font-black text-rose-400 mt-1">{formatGnf(selectedChild.feesDueGnf)}</div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Échéance finale : 30 Nov 2026</div>
+        <div className="p-4 rounded-xl bg-white border border-blue-100">
+          <div className="text-[11px] text-slate-500 font-semibold">Solde Restant à Régler</div>
+          <div className="text-2xl font-black text-rose-600 mt-1">{formatGnf(selectedChild.feesDueGnf)}</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Échéance finale : 30 Nov 2026</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] text-slate-400 font-semibold">Canaux Disponibles</div>
-          <div className="text-sm font-bold text-white mt-2 flex items-center gap-2">
-            <span className="text-orange-400">Orange Money (*144#)</span>
+        <div className="p-4 rounded-xl bg-white border border-blue-100">
+          <div className="text-[11px] text-slate-500 font-semibold">Canaux Disponibles</div>
+          <div className="text-sm font-bold text-blue-950 mt-2 flex items-center gap-2">
+            <span className="text-orange-600">Orange Money (*144#)</span>
             <span>·</span>
-            <span className="text-yellow-400">MTN MoMo (*440#)</span>
+            <span className="text-amber-700">MTN MoMo (*440#)</span>
           </div>
-          <div className="text-[10px] text-emerald-400 mt-1">Reçu instantané sans déplacement</div>
+          <div className="text-[10px] text-emerald-600 mt-1">Reçu instantané sans déplacement</div>
         </div>
       </div>
 
       {/* Payments History Table */}
-      <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+      <div className="rounded-2xl bg-white border border-blue-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
             <thead>
-              <tr className="border-b border-slate-800 text-[11px] text-slate-400 uppercase font-semibold bg-slate-800/40">
+              <tr className="border-b border-blue-100 text-[11px] text-slate-500 uppercase font-semibold bg-blue-50/60">
                 <th className="py-3 px-4">N° de Reçu</th>
                 <th className="py-3 px-4">Date & Heure</th>
                 <th className="py-3 px-4">Libellé du Frais</th>
@@ -101,32 +101,32 @@ export const ParentPaymentsView: React.FC = () => {
                 <th className="py-3 px-4 text-right">Reçu PDF</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-blue-100">
               {childPayments.map(pay => (
-                <tr key={pay.id} className="hover:bg-slate-800/40 transition-colors">
-                  <td className="py-3 px-4 font-mono font-bold text-blue-400 text-xs">
+                <tr key={pay.id} className="hover:bg-blue-50 transition-colors">
+                  <td className="py-3 px-4 font-mono font-bold text-blue-600 text-xs">
                     {pay.receiptNumber}
                   </td>
-                  <td className="py-3 px-4 text-slate-300">{pay.date}</td>
-                  <td className="py-3 px-4 font-medium text-white">{pay.feeType}</td>
+                  <td className="py-3 px-4 text-slate-700">{pay.date}</td>
+                  <td className="py-3 px-4 font-medium text-blue-950">{pay.feeType}</td>
                   <td className="py-3 px-4">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-50 text-slate-700 border border-slate-200">
                       {pay.method}
                     </span>
                   </td>
-                  <td className="py-3 px-4 font-mono text-[11px] text-slate-400">{pay.transactionRef}</td>
-                  <td className="py-3 px-4 font-mono font-bold text-emerald-400 text-xs">
+                  <td className="py-3 px-4 font-mono text-[11px] text-slate-500">{pay.transactionRef}</td>
+                  <td className="py-3 px-4 font-mono font-bold text-emerald-600 text-xs">
                     {formatGnf(pay.amountGnf)}
                   </td>
                   <td className="py-3 px-4">
                     {pay.status === 'paye' && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 w-max">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1 w-max">
                         <CheckCircle2 className="w-3 h-3" />
                         <span>Validé</span>
                       </span>
                     )}
                     {pay.status === 'en_attente' && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                         En attente
                       </span>
                     )}
@@ -134,7 +134,7 @@ export const ParentPaymentsView: React.FC = () => {
                   <td className="py-3 px-4 text-right">
                     <button
                       onClick={() => setReceiptModalPayment(pay)}
-                      className="px-2.5 py-1 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 text-[11px] font-semibold transition-all cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 text-[11px] font-semibold transition-all cursor-pointer"
                     >
                       Voir Reçu
                     </button>
@@ -148,13 +148,13 @@ export const ParentPaymentsView: React.FC = () => {
 
       {/* Official Receipt Modal (Reçu de Paiement Imprimable) */}
       {receiptModalPayment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-4 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white">Reçu Officiel d'Encaissement Scolaire</h3>
+              <h3 className="text-sm font-bold text-blue-950">Reçu Officiel d'Encaissement Scolaire</h3>
               <button
                 onClick={() => setReceiptModalPayment(null)}
-                className="text-xs text-slate-400 hover:text-white"
+                className="text-xs text-slate-500 hover:text-blue-950"
               >
                 Fermer
               </button>
@@ -226,9 +226,9 @@ export const ParentPaymentsView: React.FC = () => {
                     exportPrintableDocument(`Recu_${receiptModalPayment.receiptNumber}`, el.innerHTML);
                   }
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 hover:bg-blue-100 text-slate-700 text-xs font-semibold cursor-pointer"
               >
-                <Download className="w-3.5 h-3.5 text-blue-400" />
+                <Download className="w-3.5 h-3.5 text-blue-600" />
                 <span>Télécharger</span>
               </button>
               <button
@@ -245,20 +245,20 @@ export const ParentPaymentsView: React.FC = () => {
 
       {/* Payment Initiation Modal */}
       {paymentModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 space-y-4">
-            <h3 className="text-base font-bold text-white">Nouveau Paiement Mobile Money</h3>
-            <p className="text-xs text-slate-400">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-4 max-h-[92vh] overflow-y-auto">
+            <h3 className="text-base font-bold text-blue-950">Nouveau Paiement Mobile Money</h3>
+            <p className="text-xs text-slate-500">
               Paiement instantané en Francs Guinéens (GNF) pour <strong>{selectedChild.firstName} {selectedChild.lastName}</strong>.
             </p>
 
             <form onSubmit={handlePay} className="space-y-3">
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-300">Frais à régler</label>
+                <label className="text-[11px] font-semibold text-slate-700">Frais à régler</label>
                 <select
                   value={feeType}
                   onChange={(e) => setFeeType(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                 >
                   <option value="2ème Tranche Scolarité">2ème Tranche Scolarité (700 000 GNF)</option>
                   <option value="3ème Tranche Scolarité">3ème Tranche Scolarité (800 000 GNF)</option>
@@ -268,24 +268,24 @@ export const ParentPaymentsView: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-300">Montant (GNF)</label>
+                <label className="text-[11px] font-semibold text-slate-700">Montant (GNF)</label>
                 <input
                   type="number"
                   required
                   value={amount}
                   onChange={(e) => setAmount(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white font-mono"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950 font-mono"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-300">Opérateur</label>
+                <label className="text-[11px] font-semibold text-slate-700">Opérateur</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setMethod('Orange Money')}
                     className={`p-2.5 rounded-lg border text-xs font-bold cursor-pointer ${
-                      method === 'Orange Money' ? 'bg-orange-600/20 border-orange-500 text-orange-300' : 'bg-slate-800 border-slate-700 text-slate-400'
+                      method === 'Orange Money' ? 'bg-orange-50 border-orange-500 text-orange-700' : 'bg-slate-50 border-slate-200 text-slate-500'
                     }`}
                   >
                     Orange Money (*144#)
@@ -294,7 +294,7 @@ export const ParentPaymentsView: React.FC = () => {
                     type="button"
                     onClick={() => setMethod('MTN MoMo')}
                     className={`p-2.5 rounded-lg border text-xs font-bold cursor-pointer ${
-                      method === 'MTN MoMo' ? 'bg-yellow-500/20 border-yellow-500 text-yellow-300' : 'bg-slate-800 border-slate-700 text-slate-400'
+                      method === 'MTN MoMo' ? 'bg-amber-100 border-amber-500 text-amber-800' : 'bg-slate-50 border-slate-200 text-slate-500'
                     }`}
                   >
                     MTN MoMo (*440#)
@@ -303,22 +303,22 @@ export const ParentPaymentsView: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-300">Numéro de Téléphone</label>
+                <label className="text-[11px] font-semibold text-slate-700">Numéro de Téléphone</label>
                 <input
                   type="text"
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="622 00 00 00"
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white font-mono"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950 font-mono"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-blue-100">
                 <button
                   type="button"
                   onClick={() => setPaymentModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white"
+                  className="px-4 py-2 rounded-lg text-xs text-slate-500 hover:text-blue-950"
                 >
                   Annuler
                 </button>

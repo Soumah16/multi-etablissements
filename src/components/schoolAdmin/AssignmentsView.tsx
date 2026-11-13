@@ -65,12 +65,12 @@ export const AssignmentsView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-blue-950">
             Affectations Administratives & Pédagogiques
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Attribution des enseignants aux matières, classes, professeurs principaux et salles de cours
           </p>
         </div>
@@ -79,21 +79,21 @@ export const AssignmentsView: React.FC = () => {
       {/* Grid of 4 Interactive Assignment Panels */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Panel 1: Enseignant -> Matière */}
-        <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
-            <BookOpen className="w-4 h-4 text-blue-400" />
-            <h3 className="font-bold text-white text-xs uppercase tracking-wider">
+        <div className="p-5 rounded-xl bg-white border border-blue-100 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-blue-100">
+            <BookOpen className="w-4 h-4 text-blue-600" />
+            <h3 className="font-bold text-blue-950 text-xs uppercase tracking-wider">
               1. Enseignant → Matière
             </h3>
           </div>
 
           <form onSubmit={handleAssignTeacherSubject} className="space-y-3 text-xs">
             <div className="space-y-1">
-              <label className="text-slate-400 font-medium">Sélectionner l'Enseignant :</label>
+              <label className="text-slate-500 font-medium">Sélectionner l'Enseignant :</label>
               <select
                 value={selectedTeacherId}
                 onChange={e => setSelectedTeacherId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               >
                 {teachers.map(t => (
                   <option key={t.id} value={t.id}>{t.firstName} {t.lastName} ({t.department})</option>
@@ -102,11 +102,11 @@ export const AssignmentsView: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-400 font-medium">Matière à Enseigner :</label>
+              <label className="text-slate-500 font-medium">Matière à Enseigner :</label>
               <select
                 value={selectedSubjectId}
                 onChange={e => setSelectedSubjectId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               >
                 {subjects.map(s => (
                   <option key={s.id} value={s.id}>{s.name} (Coef. {s.coefficient}) - {s.department}</option>
@@ -124,21 +124,21 @@ export const AssignmentsView: React.FC = () => {
         </div>
 
         {/* Panel 2: Enseignant -> Classe */}
-        <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
-            <Building2 className="w-4 h-4 text-emerald-400" />
-            <h3 className="font-bold text-white text-xs uppercase tracking-wider">
+        <div className="p-5 rounded-xl bg-white border border-blue-100 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-blue-100">
+            <Building2 className="w-4 h-4 text-emerald-600" />
+            <h3 className="font-bold text-blue-950 text-xs uppercase tracking-wider">
               2. Enseignant → Classe
             </h3>
           </div>
 
           <form onSubmit={handleAssignTeacherClass} className="space-y-3 text-xs">
             <div className="space-y-1">
-              <label className="text-slate-400 font-medium">Sélectionner l'Enseignant :</label>
+              <label className="text-slate-500 font-medium">Sélectionner l'Enseignant :</label>
               <select
                 value={selectedTeacherId}
                 onChange={e => setSelectedTeacherId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               >
                 {teachers.map(t => (
                   <option key={t.id} value={t.id}>{t.firstName} {t.lastName} ({t.department})</option>
@@ -147,11 +147,11 @@ export const AssignmentsView: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-400 font-medium">Classe Cible :</label>
+              <label className="text-slate-500 font-medium">Classe Cible :</label>
               <select
                 value={selectedClassId}
                 onChange={e => setSelectedClassId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               >
                 {classes.map(c => (
                   <option key={c.id} value={c.id}>{c.name} ({c.level})</option>
@@ -169,21 +169,21 @@ export const AssignmentsView: React.FC = () => {
         </div>
 
         {/* Panel 3: Professeur Principal -> Classe */}
-        <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
-            <UserCheck className="w-4 h-4 text-purple-400" />
-            <h3 className="font-bold text-white text-xs uppercase tracking-wider">
+        <div className="p-5 rounded-xl bg-white border border-blue-100 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-blue-100">
+            <UserCheck className="w-4 h-4 text-purple-600" />
+            <h3 className="font-bold text-blue-950 text-xs uppercase tracking-wider">
               3. Professeur Principal → Classe
             </h3>
           </div>
 
           <form onSubmit={handleAssignPrincipal} className="space-y-3 text-xs">
             <div className="space-y-1">
-              <label className="text-slate-400 font-medium">Sélectionner la Classe :</label>
+              <label className="text-slate-500 font-medium">Sélectionner la Classe :</label>
               <select
                 value={principalClassId}
                 onChange={e => setPrincipalClassId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               >
                 {classes.map(c => (
                   <option key={c.id} value={c.id}>{c.name} - Actuel : {c.principalTeacherName || 'Non défini'}</option>
@@ -192,11 +192,11 @@ export const AssignmentsView: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-400 font-medium">Enseignant Nommé :</label>
+              <label className="text-slate-500 font-medium">Enseignant Nommé :</label>
               <select
                 value={principalTeacherId}
                 onChange={e => setPrincipalTeacherId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               >
                 {teachers.map(t => (
                   <option key={t.id} value={t.id}>{t.firstName} {t.lastName} ({t.department})</option>
@@ -214,21 +214,21 @@ export const AssignmentsView: React.FC = () => {
         </div>
 
         {/* Panel 4: Salle -> Classe */}
-        <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
-            <DoorOpen className="w-4 h-4 text-amber-400" />
-            <h3 className="font-bold text-white text-xs uppercase tracking-wider">
+        <div className="p-5 rounded-xl bg-white border border-blue-100 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-blue-100">
+            <DoorOpen className="w-4 h-4 text-amber-700" />
+            <h3 className="font-bold text-blue-950 text-xs uppercase tracking-wider">
               4. Salle Principale → Classe
             </h3>
           </div>
 
           <form onSubmit={handleAssignRoom} className="space-y-3 text-xs">
             <div className="space-y-1">
-              <label className="text-slate-400 font-medium">Sélectionner la Classe :</label>
+              <label className="text-slate-500 font-medium">Sélectionner la Classe :</label>
               <select
                 value={roomClassId}
                 onChange={e => setRoomClassId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               >
                 {classes.map(c => (
                   <option key={c.id} value={c.id}>{c.name} (Salle actuelle : {c.mainRoomName})</option>
@@ -237,11 +237,11 @@ export const AssignmentsView: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-400 font-medium">Salle / Bâtiment :</label>
+              <label className="text-slate-500 font-medium">Salle / Bâtiment :</label>
               <select
                 value={selectedRoomId}
                 onChange={e => setSelectedRoomId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               >
                 {rooms.map(r => (
                   <option key={r.id} value={r.id}>{r.name} ({r.capacity} places)</option>

@@ -56,39 +56,39 @@ export const DirectorCalendarView: React.FC = () => {
 
   const getEventBadgeColor = (type: DirectorCalendarEvent['type']) => {
     switch (type) {
-      case 'Examen Blanc': return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
-      case 'Reunion Parents': return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
-      case 'Conseil de Classe': return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
-      case 'Formation Pedagogique': return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
-      case 'Journee Culturelle': return 'bg-pink-500/20 text-pink-300 border-pink-500/30';
-      case 'Vacances & Conges': return 'bg-rose-500/20 text-rose-300 border-rose-500/30';
-      default: return 'bg-slate-800 text-slate-300 border-slate-700';
+      case 'Examen Blanc': return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'Reunion Parents': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'Conseil de Classe': return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'Formation Pedagogique': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'Journee Culturelle': return 'bg-pink-50 text-pink-700 border-pink-200';
+      case 'Vacances & Conges': return 'bg-rose-50 text-rose-700 border-rose-200';
+      default: return 'bg-slate-50 text-slate-700 border-slate-200';
     }
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900 border border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-blue-100">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
               Rythmes Scolaires & Échéances
             </span>
-            <span className="text-xs text-slate-400">Année Académique 2026-2027</span>
+            <span className="text-xs text-slate-500">Année Académique 2026-2027</span>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <CalendarIcon className="w-6 h-6 text-purple-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2">
+            <CalendarIcon className="w-6 h-6 text-purple-600" />
             <span>Calendrier & Événements Pédagogiques</span>
           </h1>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs text-slate-700 mt-1">
             Planification des conseils de classe, examens blancs, journées pédagogiques et rencontres parents-professeurs.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           {/* 4 Views Selector */}
-          <div className="flex items-center p-1 rounded-xl bg-slate-800 border border-slate-700">
+          <div className="flex items-center p-1 rounded-xl bg-slate-50 border border-slate-200">
             {(['day', 'week', 'month', 'year'] as CalendarViewMode[]).map(mode => (
               <button
                 key={mode}
@@ -96,7 +96,7 @@ export const DirectorCalendarView: React.FC = () => {
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors ${
                   viewMode === mode 
                     ? 'bg-purple-600 text-white shadow-xs' 
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-500 hover:text-blue-950'
                 }`}
               >
                 {mode === 'day' ? 'Jour' : mode === 'week' ? 'Semaine' : mode === 'month' ? 'Mois' : 'Année'}
@@ -116,19 +116,19 @@ export const DirectorCalendarView: React.FC = () => {
 
       {/* Month View (Default & Most used) */}
       {viewMode === 'month' && (
-        <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <CalendarDays className="w-5 h-5 text-purple-400" />
+        <div className="p-6 rounded-2xl bg-white border border-blue-100 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+            <h2 className="text-base font-bold text-blue-950 flex items-center gap-2">
+              <CalendarDays className="w-5 h-5 text-purple-600" />
               <span>Novembre 2026</span>
             </h2>
-            <div className="flex items-center gap-2 text-xs text-slate-400">
+            <div className="flex items-center gap-2 text-xs text-slate-500">
               <span>{calendarEvents.length} événements programmés ce mois</span>
             </div>
           </div>
 
           {/* Month Grid Simulation */}
-          <div className="grid grid-cols-7 gap-2 text-center text-xs text-slate-400 font-semibold mb-2">
+          <div className="grid grid-cols-7 gap-2 text-center text-xs text-slate-500 font-semibold mb-2">
             <div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div>
           </div>
 
@@ -143,12 +143,12 @@ export const DirectorCalendarView: React.FC = () => {
                   key={dayNum} 
                   className={`min-h-[90px] p-2 rounded-xl border text-left transition-colors flex flex-col justify-between ${
                     dayEvents.length > 0 
-                      ? 'bg-purple-950/20 border-purple-500/40' 
-                      : 'bg-slate-800/40 border-slate-800/80 hover:border-slate-700'
+                      ? 'bg-purple-50 border-purple-200' 
+                      : 'bg-blue-50/60 border-blue-100 hover:border-slate-200'
                   }`}
                 >
                   <span className={`text-xs font-bold ${
-                    dayNum === 2 ? 'text-purple-400 font-black' : 'text-slate-300'
+                    dayNum === 2 ? 'text-purple-600 font-black' : 'text-slate-700'
                   }`}>
                     {dayNum} {dayNum === 2 && '• Aujourd\'hui'}
                   </span>
@@ -173,10 +173,10 @@ export const DirectorCalendarView: React.FC = () => {
 
       {/* Week View */}
       {viewMode === 'week' && (
-        <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <h2 className="text-base font-bold text-white">Semaine du 02 au 08 Novembre 2026</h2>
-            <span className="text-xs text-slate-400">Trimestre 1 · Semaine 6</span>
+        <div className="p-6 rounded-2xl bg-white border border-blue-100 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+            <h2 className="text-base font-bold text-blue-950">Semaine du 02 au 08 Novembre 2026</h2>
+            <span className="text-xs text-slate-500">Trimestre 1 · Semaine 6</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
@@ -185,8 +185,8 @@ export const DirectorCalendarView: React.FC = () => {
               const dayEvents = calendarEvents.filter(e => e.startDate === dateStr);
 
               return (
-                <div key={day} className="p-3 rounded-xl bg-slate-800/50 border border-slate-800 space-y-2">
-                  <div className="text-xs font-bold text-slate-300 pb-1 border-b border-slate-700">
+                <div key={day} className="p-3 rounded-xl bg-blue-50/60 border border-blue-100 space-y-2">
+                  <div className="text-xs font-bold text-slate-700 pb-1 border-b border-slate-200">
                     {day}
                   </div>
                   {dayEvents.length === 0 ? (
@@ -194,12 +194,12 @@ export const DirectorCalendarView: React.FC = () => {
                   ) : (
                     dayEvents.map(ev => (
                       <div key={ev.id} className={`p-2 rounded-lg text-xs border ${getEventBadgeColor(ev.type)}`}>
-                        <div className="font-bold text-white">{ev.title}</div>
-                        <div className="text-[10px] text-slate-300 mt-1 flex items-center gap-1">
+                        <div className="font-bold text-blue-950">{ev.title}</div>
+                        <div className="text-[10px] text-slate-700 mt-1 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           <span>{ev.startTime} - {ev.endTime}</span>
                         </div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">{ev.location}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">{ev.location}</div>
                       </div>
                     ))
                   )}
@@ -212,10 +212,10 @@ export const DirectorCalendarView: React.FC = () => {
 
       {/* Day View */}
       {viewMode === 'day' && (
-        <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <h2 className="text-base font-bold text-white">Programme de la Journée : Jeudi 05 Novembre 2026</h2>
-            <span className="text-xs text-purple-400 font-mono">1 Conseil Pédagogique au planning</span>
+        <div className="p-6 rounded-2xl bg-white border border-blue-100 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+            <h2 className="text-base font-bold text-blue-950">Programme de la Journée : Jeudi 05 Novembre 2026</h2>
+            <span className="text-xs text-purple-600 font-mono">1 Conseil Pédagogique au planning</span>
           </div>
 
           <div className="space-y-3">
@@ -224,13 +224,13 @@ export const DirectorCalendarView: React.FC = () => {
               { time: '14h00 - 16h00', title: 'Permanence du Directeur des Études & Réception des Délégués', loc: 'Bureau du Directeur', type: 'Permanence' },
               { time: '16h00 - 18h30', title: 'Conseil Pédagogique de Mi-Trimestre (Harmonisation des barèmes)', loc: 'Salle Polyvalente A', type: 'Formation Pedagogique' }
             ].map((slot, idx) => (
-              <div key={idx} className="p-4 rounded-xl bg-slate-800/80 border border-slate-700 flex items-start gap-4">
-                <div className="px-3 py-1.5 rounded-lg bg-slate-900 text-xs font-mono font-bold text-purple-400 border border-slate-700 shrink-0">
+              <div key={idx} className="p-4 rounded-xl bg-blue-50/60 border border-slate-200 flex items-start gap-4">
+                <div className="px-3 py-1.5 rounded-lg bg-white text-xs font-mono font-bold text-purple-600 border border-slate-200 shrink-0">
                   {slot.time}
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white">{slot.title}</h4>
-                  <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+                  <h4 className="text-sm font-bold text-blue-950">{slot.title}</h4>
+                  <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
                     <MapPin className="w-3 h-3" />
                     <span>{slot.loc}</span>
                   </p>
@@ -243,10 +243,10 @@ export const DirectorCalendarView: React.FC = () => {
 
       {/* Year View */}
       {viewMode === 'year' && (
-        <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <h2 className="text-base font-bold text-white">Grand Calendrier Annuel · 2026-2027</h2>
-            <span className="text-xs text-slate-400">Ministère de l'Éducation Nationale</span>
+        <div className="p-6 rounded-2xl bg-white border border-blue-100 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+            <h2 className="text-base font-bold text-blue-950">Grand Calendrier Annuel · 2026-2027</h2>
+            <span className="text-xs text-slate-500">Ministère de l'Éducation Nationale</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -264,9 +264,9 @@ export const DirectorCalendarView: React.FC = () => {
               { name: 'Juillet 2027', desc: 'Proclamation des résultats & Cérémonie' },
               { name: 'Août 2027', desc: 'Vacances d\'été & Travaux d\'infrastructure' }
             ].map(m => (
-              <div key={m.name} className="p-4 rounded-xl bg-slate-800/60 border border-slate-800 space-y-1">
-                <div className="text-xs font-bold text-white">{m.name}</div>
-                <div className="text-[11px] text-slate-400">{m.desc}</div>
+              <div key={m.name} className="p-4 rounded-xl bg-blue-50/60 border border-blue-100 space-y-1">
+                <div className="text-xs font-bold text-blue-950">{m.name}</div>
+                <div className="text-[11px] text-slate-500">{m.desc}</div>
               </div>
             ))}
           </div>
@@ -275,38 +275,38 @@ export const DirectorCalendarView: React.FC = () => {
 
       {/* Creation Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
               <div className="flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5 text-purple-400" />
-                <h3 className="text-base font-bold text-white">Planifier un Événement Académique</h3>
+                <CalendarIcon className="w-5 h-5 text-purple-600" />
+                <h3 className="text-base font-bold text-blue-950">Planifier un Événement Académique</h3>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-blue-950">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleCreate} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Titre de l'événement</label>
+                <label className="block font-semibold text-slate-700 mb-1">Titre de l'événement</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Ex: Réunion d'orientation des élèves de 10ème Année"
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-hidden focus:border-purple-500"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-hidden focus:border-purple-500"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Type d'événement</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Type d'événement</label>
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
                   >
                     <option value="Reunion Parents">Réunion Parents</option>
                     <option value="Conseil de Classe">Conseil de Classe</option>
@@ -319,12 +319,12 @@ export const DirectorCalendarView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Date</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Date</label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
                     required
                   />
                 </div>
@@ -332,64 +332,64 @@ export const DirectorCalendarView: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Heure Début</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Heure Début</label>
                   <input
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Heure Fin</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Heure Fin</label>
                   <input
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Lieu</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Lieu</label>
                   <input
                     type="text"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     placeholder="Ex: Amphithéâtre Principal"
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Public Cible</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Public Cible</label>
                   <input
                     type="text"
                     value={targetAudience}
                     onChange={(e) => setTargetAudience(e.target.value)}
                     placeholder="Ex: Parents d'élèves de Terminale"
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Ordre du jour / Description</label>
+                <label className="block font-semibold text-slate-700 mb-1">Ordre du jour / Description</label>
                 <textarea
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Détails du programme..."
-                  className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-hidden focus:border-purple-500"
+                  className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-hidden focus:border-purple-500"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-blue-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-slate-400 hover:text-white"
+                  className="px-4 py-2 rounded-lg text-slate-500 hover:text-blue-950"
                 >
                   Annuler
                 </button>

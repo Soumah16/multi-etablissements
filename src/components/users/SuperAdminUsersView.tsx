@@ -261,19 +261,19 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Top Banner & Title */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-blue-100 shadow-xl">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
               Autorité Centrale d'Authentification MEPU-A
             </span>
-            <span className="text-xs text-slate-400">Gouvernance Super Admin</span>
+            <span className="text-xs text-slate-500">Gouvernance Super Admin</span>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-            <ShieldCheck className="w-7 h-7 text-blue-400" />
+          <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2.5">
+            <ShieldCheck className="w-7 h-7 text-blue-600" />
             <span>Gestion des Comptes & Authentification</span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1 max-w-3xl">
+          <p className="text-xs text-slate-500 mt-1 max-w-3xl">
             Conformément aux directives de sécurité, l'ensemble des comptes (Directeurs, Secrétaires, Enseignants, Surveillants, Comptables, Bibliothécaires, Parents, Élèves et Admins) sont exclusivement créés et habilités par le Super Administrateur.
           </p>
         </div>
@@ -282,29 +282,29 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
           <button
             type="button"
             onClick={() => setShowMasterPasswordsModal(true)}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold text-amber-200 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-50 border border-amber-200 transition-colors shadow-xs cursor-pointer"
             title="Consulter et exporter la liste intégrale des comptes et mots de passe"
           >
-            <Key className="w-4 h-4 text-amber-400" />
+            <Key className="w-4 h-4 text-amber-700" />
             <span>Liste de Tous les Comptes & Mots de Passe</span>
           </button>
 
           <button
             type="button"
             onClick={exportAllAccountsCsv}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-900 bg-slate-50 hover:bg-blue-100 border border-slate-200 transition-colors shadow-xs cursor-pointer"
             title="Télécharger fichier CSV complet"
           >
-            <Download className="w-4 h-4 text-blue-400" />
+            <Download className="w-4 h-4 text-blue-600" />
             <span>CSV</span>
           </button>
 
           <button
             type="button"
             onClick={() => triggerPrint('master-users-list-printable', 'Registre_National_Comptes_Utilisateurs')}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-900 bg-slate-50 hover:bg-blue-100 border border-slate-200 transition-colors shadow-xs cursor-pointer"
           >
-            <Printer className="w-4 h-4 text-slate-400" />
+            <Printer className="w-4 h-4 text-slate-500" />
             <span>Imprimer</span>
           </button>
 
@@ -321,59 +321,59 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
 
       {/* Statistics Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Comptes Enregistrés</div>
-          <div className="text-2xl font-black text-white mt-1 font-mono">{accounts.length}</div>
-          <div className="text-[10px] text-emerald-400 mt-0.5">100% Vérifiés & Actifs</div>
+        <div className="p-4 rounded-xl bg-white border border-blue-100">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Comptes Enregistrés</div>
+          <div className="text-2xl font-black text-blue-950 mt-1 font-mono">{accounts.length}</div>
+          <div className="text-[10px] text-emerald-600 mt-0.5">100% Vérifiés & Actifs</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Directeurs & Secrétariat</div>
-          <div className="text-2xl font-black text-amber-400 mt-1 font-mono">
+        <div className="p-4 rounded-xl bg-white border border-blue-100">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Directeurs & Secrétariat</div>
+          <div className="text-2xl font-black text-amber-700 mt-1 font-mono">
             {accounts.filter(a => a.role === 'director' || a.role === 'secretary' || a.role === 'school_admin').length}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Administration souveraine</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Administration souveraine</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Corps Enseignant & Vie Scolaire</div>
-          <div className="text-2xl font-black text-indigo-400 mt-1 font-mono">
+        <div className="p-4 rounded-xl bg-white border border-blue-100">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Corps Enseignant & Vie Scolaire</div>
+          <div className="text-2xl font-black text-indigo-600 mt-1 font-mono">
             {accounts.filter(a => a.role === 'teacher' || a.role === 'supervisor' || a.role === 'librarian').length}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Pédagogie & Encadrement</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Pédagogie & Encadrement</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Parents & Élèves</div>
-          <div className="text-2xl font-black text-pink-400 mt-1 font-mono">
+        <div className="p-4 rounded-xl bg-white border border-blue-100">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Parents & Élèves</div>
+          <div className="text-2xl font-black text-pink-600 mt-1 font-mono">
             {accounts.filter(a => a.role === 'parent' || a.role === 'student').length}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Portails Famille & Apprenant</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Portails Famille & Apprenant</div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-3 p-4 rounded-xl bg-slate-900/90 border border-slate-800">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-3 p-4 rounded-xl bg-white border border-blue-100">
         <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             placeholder="Rechercher par nom, email, matricule..."
-            className="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:border-blue-500"
+            className="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950 placeholder-slate-400 focus:outline-hidden focus:border-blue-500"
           />
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
+          <div className="flex items-center gap-1.5 text-xs text-slate-500">
             <Filter className="w-3.5 h-3.5" />
             <span>Rôle :</span>
           </div>
           <select
             value={roleFilter}
             onChange={e => setRoleFilter(e.target.value)}
-            className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white focus:outline-hidden focus:border-blue-500"
+            className="px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950 focus:outline-hidden focus:border-blue-500"
           >
             <option value="all">Tous les Rôles ({accounts.length})</option>
             <option value="super_admin">Super Administrateurs</option>
@@ -391,7 +391,7 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
           <select
             value={schoolFilter}
             onChange={e => setSchoolFilter(e.target.value)}
-            className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white focus:outline-hidden focus:border-blue-500 max-w-[200px]"
+            className="px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950 focus:outline-hidden focus:border-blue-500 max-w-[200px]"
           >
             <option value="all">Toutes les Écoles</option>
             {schools.map(s => (
@@ -402,10 +402,10 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
       </div>
 
       {/* Master Users Register Table */}
-      <div id="master-users-list-printable" className="rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden shadow-2xl">
+      <div id="master-users-list-printable" className="rounded-2xl border border-blue-100 bg-white overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-950/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+            <thead className="bg-blue-50/70 text-slate-500 uppercase text-[10px] tracking-wider border-b border-blue-100">
               <tr>
                 <th className="py-3 px-4">Utilisateur & Rôle</th>
                 <th className="py-3 px-3">Matricule Officiel</th>
@@ -416,22 +416,22 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                 <th className="py-3 px-4 text-right">Actions Super Admin</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-blue-100">
               {filteredAccounts.map((acc, idx) => {
                 const IconComponent = acc.icon || getIconForRole(acc.role);
                 const isPasswordShown = !!visiblePasswords[acc.email];
 
                 return (
-                  <tr key={`${acc.email}-${idx}`} className="hover:bg-slate-800/40 transition-colors">
+                  <tr key={`${acc.email}-${idx}`} className="hover:bg-blue-50 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <img 
                           src={acc.photo} 
                           alt="" 
-                          className="w-9 h-9 rounded-full object-cover border border-slate-700 shrink-0" 
+                          className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0" 
                         />
                         <div className="min-w-0">
-                          <div className="font-bold text-white text-xs truncate flex items-center gap-1.5">
+                          <div className="font-bold text-blue-950 text-xs truncate flex items-center gap-1.5">
                             <span>{acc.name}</span>
                           </div>
                           <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border mt-0.5 ${acc.badgeColor}`}>
@@ -441,45 +441,45 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                       </div>
                     </td>
 
-                    <td className="py-3 px-3 font-mono font-bold text-slate-200">
+                    <td className="py-3 px-3 font-mono font-bold text-slate-900">
                       {acc.matricule}
                     </td>
 
-                    <td className="py-3 px-3 text-slate-300">
+                    <td className="py-3 px-3 text-slate-700">
                       <div className="truncate max-w-[180px]" title={acc.schoolName}>
                         {acc.schoolName}
                       </div>
                       <div className="text-[10px] text-slate-500 font-sans">Délivré par Super Admin</div>
                     </td>
 
-                    <td className="py-3 px-3 text-slate-300">
-                      <div className="font-mono text-[11px] text-blue-400">{acc.email}</div>
+                    <td className="py-3 px-3 text-slate-700">
+                      <div className="font-mono text-[11px] text-blue-600">{acc.email}</div>
                     </td>
 
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-1.5 font-mono text-[11px]">
-                        <span className="bg-slate-950 px-2 py-1 rounded border border-slate-800 text-slate-200">
+                        <span className="bg-[#F0F5FA] px-2 py-1 rounded border border-blue-100 text-slate-900">
                           {isPasswordShown ? acc.password : '••••••••••••'}
                         </span>
                         <button
                           onClick={() => togglePasswordVisibility(acc.email)}
-                          className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition-colors"
+                          className="p-1 text-slate-500 hover:text-blue-950 rounded hover:bg-blue-50 transition-colors"
                           title={isPasswordShown ? "Masquer" : "Afficher"}
                         >
                           {isPasswordShown ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                         </button>
                         <button
                           onClick={() => handleCopy(acc.password, `pass-${acc.email}`)}
-                          className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition-colors"
+                          className="p-1 text-slate-500 hover:text-blue-950 rounded hover:bg-blue-50 transition-colors"
                           title="Copier le mot de passe"
                         >
-                          {copiedKey === `pass-${acc.email}` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                          {copiedKey === `pass-${acc.email}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       </div>
                     </td>
 
                     <td className="py-3 px-3">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         Actif
                       </span>
@@ -490,10 +490,10 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                         {/* Imprimer Fiche d'Accès Officielle */}
                         <button
                           onClick={() => setSelectedAccountForSlip(acc)}
-                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-50 border border-amber-200 transition-colors cursor-pointer"
                           title="Imprimer la Fiche d'Accès & Identifiants Officiels"
                         >
-                          <Printer className="w-3.5 h-3.5 text-amber-400" />
+                          <Printer className="w-3.5 h-3.5 text-amber-700" />
                           <span>Fiche d'Accès</span>
                         </button>
 
@@ -503,17 +503,17 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                             setPasswordResetAccount(acc);
                             setNewPasswordValue('');
                           }}
-                          className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                          className="p-1.5 text-slate-500 hover:text-blue-950 rounded-lg hover:bg-blue-50 transition-colors"
                           title="Réinitialiser le mot de passe"
                         >
-                          <Key className="w-3.5 h-3.5 text-blue-400" />
+                          <Key className="w-3.5 h-3.5 text-blue-600" />
                         </button>
 
                         {/* Supprimer (si non maître) */}
                         {acc.email !== 'superadmin@smartschool.gn' && (
                           <button
                             onClick={() => handleDeleteAccount(acc)}
-                            className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-blue-50 transition-colors"
                             title="Révoquer et supprimer ce compte"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -531,35 +531,35 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
 
       {/* Modal: Créer un Compte Utilisateur */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full max-h-[92vh] overflow-y-auto p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-xl w-full max-h-[92vh] overflow-y-auto p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
               <div className="flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-blue-400" />
-                <h3 className="text-base font-bold text-white">
+                <UserPlus className="w-5 h-5 text-blue-600" />
+                <h3 className="text-base font-bold text-blue-950">
                   Création d'un Compte Utilisateur
                 </h3>
               </div>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+                className="p-1 text-slate-500 hover:text-blue-950 rounded-lg hover:bg-blue-50"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleCreateAccount} className="space-y-4 text-xs">
-              <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-200 text-xs">
+              <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs">
                 <strong>Habilitation Super Admin :</strong> Ce compte sera immédiatement actif et enregistré dans la base des utilisateurs. Une fiche d'accès officielle imprimable avec QR Code sera automatiquement générée.
               </div>
 
               {/* Rôle */}
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Rôle et Niveau d'Habilitation *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Rôle et Niveau d'Habilitation *</label>
                 <select
                   value={newRole}
                   onChange={e => setNewRole(e.target.value as WorkspaceMode)}
-                  className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white font-medium"
+                  className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-medium"
                 >
                   <option value="director">Directeur des Études (Pédagogie & Validation Examens)</option>
                   <option value="secretary">Secrétaire Générale (Inscriptions & Dossiers)</option>
@@ -576,11 +576,11 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
 
               {/* Établissement */}
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Établissement Scolaire Assigné *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Établissement Scolaire Assigné *</label>
                 <select
                   value={newSchoolName}
                   onChange={e => setNewSchoolName(e.target.value)}
-                  className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white font-medium"
+                  className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-medium"
                 >
                   {schools.map(s => (
                     <option key={s.id} value={s.name}>{s.name} ({s.city})</option>
@@ -591,25 +591,25 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
               {/* Nom & Prénom */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Prénom *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Prénom *</label>
                   <input
                     type="text"
                     required
                     value={newFirstName}
                     onChange={e => setNewFirstName(e.target.value)}
                     placeholder="ex. Mariama"
-                    className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Nom de Famille *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Nom de Famille *</label>
                   <input
                     type="text"
                     required
                     value={newLastName}
                     onChange={e => setNewLastName(e.target.value)}
                     placeholder="ex. Camara"
-                    className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
                   />
                 </div>
               </div>
@@ -617,24 +617,24 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
               {/* Email & Matricule */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Email / Identifiant *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Email / Identifiant *</label>
                   <input
                     type="email"
                     required
                     value={newEmail}
                     onChange={e => setNewEmail(e.target.value)}
                     placeholder="m.camara@smartschool.gn"
-                    className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white font-mono"
+                    className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Matricule Officiel (Auto-Généré) *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Matricule Officiel (Auto-Généré) *</label>
                   <input
                     type="text"
                     required
                     value={newMatricule}
                     onChange={e => setNewMatricule(e.target.value)}
-                    className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-amber-300 font-mono font-bold"
+                    className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-amber-700 font-mono font-bold"
                   />
                 </div>
               </div>
@@ -642,14 +642,14 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
               {/* Mot de Passe Temporaire */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-slate-300 font-semibold">Mot de Passe Initial *</label>
+                  <label className="block text-slate-700 font-semibold">Mot de Passe Initial *</label>
                   <button
                     type="button"
                     onClick={() => {
                       const pass = `Smart${Math.floor(1000 + Math.random() * 9000)}!`;
                       setNewPassword(pass);
                     }}
-                    className="text-[11px] text-blue-400 hover:text-blue-300 underline cursor-pointer"
+                    className="text-[11px] text-blue-600 hover:text-blue-700 underline cursor-pointer"
                   >
                     Générer un mot de passe aléatoire
                   </button>
@@ -659,15 +659,15 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                   required
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
-                  className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white font-mono font-semibold"
+                  className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono font-semibold"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-blue-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
+                  className="px-4 py-2 rounded-lg bg-slate-50 text-slate-700 hover:text-blue-950"
                 >
                   Annuler
                 </button>
@@ -686,13 +686,13 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
 
       {/* Modal: Fiche d'Accès Officielle Imprimable */}
       {selectedAccountForSlip && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
             {/* Header controls */}
-            <div className="p-4 bg-slate-800/80 border-b border-slate-700 flex items-center justify-between">
+            <div className="p-4 bg-blue-50/60 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Printer className="w-5 h-5 text-amber-400" />
-                <h3 className="text-sm font-bold text-white">
+                <Printer className="w-5 h-5 text-amber-700" />
+                <h3 className="text-sm font-bold text-blue-950">
                   Fiche d'Accès Officielle & Identifiants · {selectedAccountForSlip.matricule}
                 </h3>
               </div>
@@ -706,7 +706,7 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                 </button>
                 <button
                   onClick={() => setSelectedAccountForSlip(null)}
-                  className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700"
+                  className="p-1.5 text-slate-500 hover:text-blue-950 rounded-lg hover:bg-blue-100"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -814,7 +814,7 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                   <div className="font-bold text-slate-700 uppercase text-[10px]">
                     Le Titulaire du Compte (Signature)
                   </div>
-                  <div className="text-[10px] text-slate-400 italic">Lu et approuvé</div>
+                  <div className="text-[10px] text-slate-500 italic">Lu et approuvé</div>
                 </div>
 
                 <div className="space-y-12">
@@ -833,25 +833,25 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
 
       {/* Modal: Réinitialisation du mot de passe */}
       {passwordResetAccount && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Key className="w-4 h-4 text-blue-400" />
+              <h3 className="text-sm font-bold text-blue-950 flex items-center gap-2">
+                <Key className="w-4 h-4 text-blue-600" />
                 <span>Réinitialiser le Mot de Passe</span>
               </h3>
-              <button onClick={() => setPasswordResetAccount(null)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setPasswordResetAccount(null)} className="text-slate-500 hover:text-blue-950">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="text-xs text-slate-300">
-              Utilisateur : <strong className="text-white">{passwordResetAccount.name}</strong> ({passwordResetAccount.title})
+            <div className="text-xs text-slate-700">
+              Utilisateur : <strong className="text-blue-950">{passwordResetAccount.name}</strong> ({passwordResetAccount.title})
             </div>
 
             <form onSubmit={handleResetPassword} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Nouveau mot de passe *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Nouveau mot de passe *</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -859,12 +859,12 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                     value={newPasswordValue}
                     onChange={e => setNewPasswordValue(e.target.value)}
                     placeholder="Saisissez ou générez un mot de passe..."
-                    className="flex-1 p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white font-mono"
+                    className="flex-1 p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono"
                   />
                   <button
                     type="button"
                     onClick={() => setNewPasswordValue(`Smart${Math.floor(1000 + Math.random() * 9000)}!`)}
-                    className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs font-semibold"
+                    className="px-3 py-2 rounded-lg bg-slate-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold"
                   >
                     Générer
                   </button>
@@ -875,7 +875,7 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                 <button
                   type="button"
                   onClick={() => setPasswordResetAccount(null)}
-                  className="px-3 py-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
+                  className="px-3 py-2 rounded-lg bg-slate-50 text-slate-700 hover:text-blue-950"
                 >
                   Annuler
                 </button>
@@ -893,24 +893,24 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
 
       {/* Modal: Liste Complète de Tous les Comptes & Mots de Passe */}
       {showMasterPasswordsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
             {/* Modal Header */}
-            <div className="p-5 sm:p-6 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900">
+            <div className="p-5 sm:p-6 border-b border-blue-100 flex items-center justify-between shrink-0 bg-white">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center font-bold">
                   <Key className="w-5 h-5" />
                 </div>
                 <div className="text-left">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-black text-white">
+                    <h3 className="text-base font-black text-blue-950">
                       Répertoire des Comptes & Mots de Passe
                     </h3>
-                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold border border-amber-500/30">
+                    <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-mono font-bold border border-amber-200">
                       SUPER ADMIN CONFIDENTIEL
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 mt-0.5">
                     {accounts.length} comptes enregistrés avec leurs identifiants de connexion et mots de passe.
                   </p>
                 </div>
@@ -920,15 +920,15 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                 <button
                   type="button"
                   onClick={exportAllAccountsCsv}
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 cursor-pointer"
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-blue-100 text-xs font-semibold text-slate-900 border border-slate-200 cursor-pointer"
                 >
-                  <Download className="w-3.5 h-3.5 text-blue-400" />
+                  <Download className="w-3.5 h-3.5 text-blue-600" />
                   <span>Exporter CSV</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowMasterPasswordsModal(false)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                  className="p-1.5 rounded-xl text-slate-500 hover:text-blue-950 hover:bg-blue-50 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -937,63 +937,63 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
 
             {/* Modal Body: Table of all accounts */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-              <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs flex items-start gap-2.5">
-                <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                 <span>
                   <strong>Avis de sécurité ministériel :</strong> Ce registre contient les identifiants et mots de passe d'accès initiaux. Toute modification ou réinitialisation effectuée est tracée dans le journal d'audit de sécurité.
                 </span>
               </div>
 
-              <div className="rounded-2xl border border-slate-800 overflow-hidden">
+              <div className="rounded-2xl border border-blue-100 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left">
-                    <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] font-mono border-b border-slate-800">
+                    <thead className="bg-[#F0F5FA] text-slate-500 uppercase text-[10px] font-mono border-b border-blue-100">
                       <tr>
                         <th className="p-3">Utilisateur / Fonction</th>
                         <th className="p-3">Rôle</th>
                         <th className="p-3">Établissement</th>
                         <th className="p-3">Identifiant / Email</th>
                         <th className="p-3">Matricule</th>
-                        <th className="p-3 text-amber-400">Mot de Passe</th>
+                        <th className="p-3 text-amber-700">Mot de Passe</th>
                         <th className="p-3 text-right">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/80 bg-slate-900/60 font-sans">
+                    <tbody className="divide-y divide-blue-100 bg-white/90 font-sans">
                       {accounts.map(acc => {
                         const pass = acc.plainPassword || acc.password || 'Smart@2026';
                         return (
-                          <tr key={acc.id} className="hover:bg-slate-800/40 transition-colors">
+                          <tr key={acc.id} className="hover:bg-blue-50 transition-colors">
                             <td className="p-3">
-                              <div className="font-bold text-white text-xs">{acc.name}</div>
-                              <div className="text-[10px] text-slate-400">{acc.title}</div>
+                              <div className="font-bold text-blue-950 text-xs">{acc.name}</div>
+                              <div className="text-[10px] text-slate-500">{acc.title}</div>
                             </td>
                             <td className="p-3">
-                              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-50 text-slate-700 border border-slate-200">
                                 {acc.role}
                               </span>
                             </td>
-                            <td className="p-3 text-slate-300 text-xs">
+                            <td className="p-3 text-slate-700 text-xs">
                               {acc.schoolName}
                             </td>
-                            <td className="p-3 font-mono text-[11px] text-blue-300">
+                            <td className="p-3 font-mono text-[11px] text-blue-700">
                               {acc.email}
                             </td>
-                            <td className="p-3 font-mono text-[11px] text-slate-400">
+                            <td className="p-3 font-mono text-[11px] text-slate-500">
                               {acc.matricule}
                             </td>
-                            <td className="p-3 font-mono text-xs text-amber-300 font-bold bg-amber-500/5">
+                            <td className="p-3 font-mono text-xs text-amber-700 font-bold bg-amber-50">
                               <code>{pass}</code>
                             </td>
                             <td className="p-3 text-right">
                               <button
                                 type="button"
                                 onClick={() => handleCopy(pass, `pass-${acc.id}`)}
-                                className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold border border-slate-700 cursor-pointer inline-flex items-center gap-1"
+                                className="px-2 py-1 rounded bg-slate-50 hover:bg-blue-100 text-slate-700 text-[10px] font-semibold border border-slate-200 cursor-pointer inline-flex items-center gap-1"
                               >
                                 {copiedKey === `pass-${acc.id}` ? (
                                   <>
-                                    <Check className="w-3 h-3 text-emerald-400" />
-                                    <span className="text-emerald-400">Copié</span>
+                                    <Check className="w-3 h-3 text-emerald-600" />
+                                    <span className="text-emerald-600">Copié</span>
                                   </>
                                 ) : (
                                   <>
@@ -1013,15 +1013,15 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-900/95 flex items-center justify-between shrink-0">
-              <span className="text-xs text-slate-400 font-mono">
+            <div className="p-4 sm:p-5 border-t border-blue-100 bg-white flex items-center justify-between shrink-0">
+              <span className="text-xs text-slate-500 font-mono">
                 Total : {accounts.length} comptes certifiés MEPU-A
               </span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={exportAllAccountsCsv}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 cursor-pointer sm:hidden"
+                  className="px-4 py-2 rounded-xl bg-slate-50 hover:bg-blue-100 text-slate-900 text-xs font-bold border border-slate-200 cursor-pointer sm:hidden"
                 >
                   Télécharger CSV
                 </button>

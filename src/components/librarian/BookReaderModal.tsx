@@ -81,50 +81,50 @@ export const BookReaderModal: React.FC<BookReaderModalProps> = ({ book, onClose 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-xs">
-      <div className="w-full max-w-5xl h-[94vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+      <div className="w-full max-w-5xl h-[94vh] rounded-2xl bg-white border border-blue-100 shadow-2xl flex flex-col overflow-hidden">
         {/* Top Control Bar */}
-        <header className="p-3.5 border-b border-slate-800 bg-slate-900 flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="p-3 sm:p-3.5 border-b border-blue-100 bg-white flex items-center justify-between gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-950 transition-colors cursor-pointer shrink-0"
               title="Afficher la table des matières"
             >
               <List className="w-4 h-4" />
             </button>
 
             <div className="min-w-0">
-              <h2 className="text-sm font-black text-white truncate max-w-sm sm:max-w-md">
+              <h2 className="text-sm font-black text-blue-950 truncate max-w-[160px] sm:max-w-md">
                 {book.title}
               </h2>
-              <div className="text-[11px] text-slate-400 truncate">
-                Par <strong className="text-slate-300">{book.author}</strong> · Chapitre {selectedChapterIndex + 1} / {chapters.length}
+              <div className="text-[11px] text-slate-500 truncate">
+                Par <strong className="text-slate-700">{book.author}</strong> · Chapitre {selectedChapterIndex + 1} / {chapters.length}
               </div>
             </div>
           </div>
 
           {/* Reader Preferences & Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Theme selector */}
-            <div className="hidden sm:flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700">
+            <div className="hidden sm:flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200">
               <button
                 onClick={() => setTheme('light')}
-                className={`px-2 py-1 rounded text-xs font-bold transition-all ${theme === 'light' ? 'bg-amber-100 text-slate-900 shadow-xs' : 'text-slate-400 hover:text-white'}`}
+                className={`px-2 py-1 rounded text-xs font-bold transition-all ${theme === 'light' ? 'bg-amber-100 text-slate-900 shadow-xs' : 'text-slate-600 hover:text-blue-950'}`}
                 title="Thème Papier Blanc"
               >
                 Clair
               </button>
               <button
                 onClick={() => setTheme('sepia')}
-                className={`px-2 py-1 rounded text-xs font-bold transition-all ${theme === 'sepia' ? 'bg-[#e8d5b5] text-[#433422] shadow-xs' : 'text-slate-400 hover:text-white'}`}
+                className={`px-2 py-1 rounded text-xs font-bold transition-all ${theme === 'sepia' ? 'bg-[#e8d5b5] text-[#433422] shadow-xs' : 'text-slate-600 hover:text-blue-950'}`}
                 title="Thème Sépia (Confort de lecture)"
               >
                 Sépia
               </button>
               <button
                 onClick={() => setTheme('dark')}
-                className={`px-2 py-1 rounded text-xs font-bold transition-all ${theme === 'dark' ? 'bg-slate-950 text-white shadow-xs' : 'text-slate-400 hover:text-white'}`}
+                className={`px-2 py-1 rounded text-xs font-bold transition-all ${theme === 'dark' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:text-blue-950'}`}
                 title="Thème Nuit Sombre"
               >
                 Nuit
@@ -132,17 +132,17 @@ export const BookReaderModal: React.FC<BookReaderModalProps> = ({ book, onClose 
             </div>
 
             {/* Font size adjustments */}
-            <div className="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700 text-xs">
+            <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200 text-xs">
               <button
                 onClick={() => setFontSize(prev => prev === 'xl' ? 'lg' : prev === 'lg' ? 'base' : 'sm')}
-                className="px-2 py-1 text-slate-400 hover:text-white font-bold"
+                className="px-2 py-1 text-slate-700 hover:text-blue-950 font-bold"
                 title="Réduire la police"
               >
                 A-
               </button>
               <button
                 onClick={() => setFontSize(prev => prev === 'sm' ? 'base' : prev === 'base' ? 'lg' : 'xl')}
-                className="px-2 py-1 text-slate-400 hover:text-white font-bold"
+                className="px-2 py-1 text-slate-700 hover:text-blue-950 font-bold"
                 title="Agrandir la police"
               >
                 A+
@@ -152,16 +152,16 @@ export const BookReaderModal: React.FC<BookReaderModalProps> = ({ book, onClose 
             {/* Print / Export Chapter */}
             <button
               onClick={handlePrintChapter}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors cursor-pointer"
               title="Imprimer / Exporter ce chapitre"
             >
-              <Printer className="w-4 h-4 text-emerald-400" />
+              <Printer className="w-4 h-4" />
             </button>
 
             {/* Close */}
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-blue-950 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -172,17 +172,17 @@ export const BookReaderModal: React.FC<BookReaderModalProps> = ({ book, onClose 
         <div className="flex-1 flex min-h-0 relative">
           {/* Collapsible Chapters Sidebar */}
           {sidebarOpen && (
-            <aside className="w-72 bg-slate-900 border-r border-slate-800 flex flex-col z-20 shrink-0 animate-in slide-in-from-left duration-200">
-              <div className="p-3 border-b border-slate-800 flex items-center justify-between">
-                <span className="text-xs font-bold text-white uppercase tracking-wider">
+            <aside className="absolute md:static inset-y-0 left-0 w-72 max-w-[85vw] bg-white border-r border-blue-100 flex flex-col z-20 shrink-0 shadow-xl md:shadow-none animate-in slide-in-from-left duration-200">
+              <div className="p-3 border-b border-blue-100 flex items-center justify-between">
+                <span className="text-xs font-bold text-blue-950 uppercase tracking-wider">
                   Table des Matières
                 </span>
-                <span className="text-[10px] text-slate-400 font-mono">
+                <span className="text-[10px] text-slate-500 font-mono">
                   {chapters.length} chapitres
                 </span>
               </div>
 
-              <div className="p-2 border-b border-slate-800">
+              <div className="p-2 border-b border-blue-100">
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
@@ -190,7 +190,7 @@ export const BookReaderModal: React.FC<BookReaderModalProps> = ({ book, onClose 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Chercher un chapitre..."
-                    className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-800 text-xs text-white placeholder-slate-500 border border-slate-700 focus:outline-hidden"
+                    className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 text-xs text-slate-900 placeholder-slate-400 border border-slate-200 focus:outline-hidden"
                   />
                 </div>
               </div>
@@ -210,7 +210,7 @@ export const BookReaderModal: React.FC<BookReaderModalProps> = ({ book, onClose 
                         className={`w-full text-left p-2.5 rounded-xl text-xs transition-all cursor-pointer ${
                           isCurrent 
                             ? 'bg-blue-600 text-white font-bold shadow-xs' 
-                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                            : 'text-slate-700 hover:bg-blue-50 hover:text-blue-950'
                         }`}
                       >
                         <div className="text-[10px] opacity-75 mb-0.5">Chapitre {idx + 1}</div>
@@ -223,7 +223,7 @@ export const BookReaderModal: React.FC<BookReaderModalProps> = ({ book, onClose 
           )}
 
           {/* Reading Viewport */}
-          <main className={`flex-1 overflow-y-auto p-6 md:p-12 transition-colors ${getThemeClasses()} flex flex-col items-center`}>
+          <main className={`flex-1 overflow-y-auto p-4 sm:p-6 md:p-12 transition-colors ${getThemeClasses()} flex flex-col items-center`}>
             <article className={`max-w-2xl w-full mx-auto space-y-6 font-serif ${getFontSizeClass()}`}>
               {/* Chapter Header */}
               <header className="border-b pb-4 mb-6 border-current/20 text-center space-y-2">
