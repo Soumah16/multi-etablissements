@@ -71,9 +71,9 @@
     visibility: hidden !important;
   }
 
-  /* Make sure printable container expands cleanly */
-  .printable-document,
-  #printable-area,
+  /* Make sure standard printable container expands cleanly without distorting PVC cards */
+  .printable-document:not(.pvc-card):not(.pvc-card-portrait),
+  #printable-area:not(.pvc-card):not(.pvc-card-portrait),
   .print-only {
     display: block !important;
     visibility: visible !important;
@@ -86,6 +86,35 @@
     box-shadow: none !important;
     border: none !important;
     page-break-inside: avoid;
+  }
+
+  /* Preserve ISO/IEC 7810 ID-1 (CR-80) physical PVC dimensions during print */
+  .pvc-card {
+    width: 85.6mm !important;
+    height: 53.98mm !important;
+    min-width: 85.6mm !important;
+    max-width: 85.6mm !important;
+    min-height: 53.98mm !important;
+    max-height: 53.98mm !important;
+    aspect-ratio: auto !important;
+    flex: none !important;
+    border-radius: 3.18mm !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+  }
+
+  .pvc-card-portrait {
+    width: 53.98mm !important;
+    height: 85.6mm !important;
+    min-width: 53.98mm !important;
+    max-width: 53.98mm !important;
+    min-height: 85.6mm !important;
+    max-height: 85.6mm !important;
+    aspect-ratio: auto !important;
+    flex: none !important;
+    border-radius: 3.18mm !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
   }
 
   /* Preserve colors and borders for badges, report cards, and receipts */

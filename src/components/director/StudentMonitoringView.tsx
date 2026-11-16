@@ -15,8 +15,10 @@ import {
   CheckCircle2, 
   X,
   FileText,
-  UserCheck
+  UserCheck,
+  MessageCircle
 } from 'lucide-react';
+import { buildWhatsAppUrl } from '../../utils/whatsapp';
 
 export const StudentMonitoringView: React.FC = () => {
   const { studentRecords } = useDirector();
@@ -279,19 +281,36 @@ export const StudentMonitoringView: React.FC = () => {
               <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
                 Coordonnées du Responsable Légal
               </span>
-              <div className="flex items-center justify-between text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                 <span className="text-slate-700 font-semibold">{selectedStudentForDossier.parentName}</span>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  {buildWhatsAppUrl(
+                    selectedStudentForDossier.parentPhone,
+                    `Bonjour ${selectedStudentForDossier.parentName}, Direction des Études concernant ${selectedStudentForDossier.firstName} ${selectedStudentForDossier.lastName} (${selectedStudentForDossier.className}).`
+                  ) && (
+                    <a
+                      href={buildWhatsAppUrl(
+                        selectedStudentForDossier.parentPhone,
+                        `Bonjour ${selectedStudentForDossier.parentName}, Direction des Études concernant ${selectedStudentForDossier.firstName} ${selectedStudentForDossier.lastName} (${selectedStudentForDossier.className}).`
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-500 font-semibold"
+                    >
+                      <MessageCircle className="w-3 h-3" />
+                      <span>WhatsApp</span>
+                    </a>
+                  )}
                   <a 
                     href={`tel:${selectedStudentForDossier.parentPhone}`}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-50 border border-blue-200"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200"
                   >
                     <Phone className="w-3 h-3" />
                     <span>Appeler</span>
                   </a>
                   <a 
                     href={`mailto:${selectedStudentForDossier.parentEmail}`}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-blue-100"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-blue-100 border border-slate-200"
                   >
                     <Mail className="w-3 h-3" />
                     <span>Email</span>

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useStudent } from '../../context/StudentContext';
+import { useSchoolAdmin } from '../../context/SchoolAdminContext';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { StudentNavTab } from '../../types/student';
 import { StudentDashboardView } from './StudentDashboardView';
 import { StudentProfileCardView } from './StudentProfileCardView';
@@ -27,7 +29,8 @@ import {
   ChevronDown, 
   ArrowLeftRight,
   QrCode,
-  LogOut
+  LogOut,
+  MessageCircle
 } from 'lucide-react';
 
 interface StudentLayoutProps {
@@ -56,6 +59,12 @@ export const StudentLayout: React.FC<StudentLayoutProps> = ({
   onSwitchToParent
 }) => {
   const { activeStudentTab, setActiveStudentTab, profile, homeworks, toastMessage } = useStudent();
+  const { currentSchool } = useSchoolAdmin();
+  const schoolWaPhone = getSchoolWhatsAppNumber(currentSchool);
+  const schoolWaUrl = buildWhatsAppUrl(
+    schoolWaPhone,
+    `Bonjour ${currentSchool.name}, élève ${profile.firstName} ${profile.lastName} (${profile.matricule}).`
+  );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
 
@@ -341,6 +350,19 @@ export const StudentLayout: React.FC<StudentLayoutProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {schoolWaUrl && (
+              <a
+                href={schoolWaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition-colors"
+                title={`Contacter ${currentSchool.name} sur WhatsApp (${schoolWaPhone})`}
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">WhatsApp {currentSchool.code || 'École'}</span>
+              </a>
+            )}
+
             <button
               onClick={() => setActiveStudentTab('profile')}
               className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-xs font-mono font-semibold hover:bg-blue-100 transition-colors"

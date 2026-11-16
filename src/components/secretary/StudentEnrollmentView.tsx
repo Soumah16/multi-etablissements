@@ -64,6 +64,7 @@ export const StudentEnrollmentView: React.FC = () => {
   const [className, setClassName] = useState('Terminale Sciences Mathématiques 1');
   const [bloodGroup, setBloodGroup] = useState('O+');
   const [medicalNotes, setMedicalNotes] = useState('Aucune allergie connue. Apte au sport.');
+  const [selectedParentId, setSelectedParentId] = useState('');
   const [parentName, setParentName] = useState('Elhadj Amadou Diallo');
   const [parentPhone, setParentPhone] = useState('+224 622 11 22 33');
   const [parentEmail, setParentEmail] = useState('parent@gmail.com');
@@ -97,6 +98,7 @@ export const StudentEnrollmentView: React.FC = () => {
     setClassName(classList[0]);
     setBloodGroup('O+');
     setMedicalNotes('R.A.S.');
+    setSelectedParentId('');
     setParentName('');
     setParentPhone('+224 62');
     setParentEmail('');
@@ -119,6 +121,7 @@ export const StudentEnrollmentView: React.FC = () => {
     setClassName(st.className);
     setBloodGroup(st.bloodGroup);
     setMedicalNotes(st.medicalNotes);
+    setSelectedParentId(st.parentId || '');
     setParentName(st.parentName);
     setParentPhone(st.parentPhone);
     setParentEmail(st.parentEmail);
@@ -149,6 +152,7 @@ export const StudentEnrollmentView: React.FC = () => {
         className,
         bloodGroup,
         medicalNotes,
+        parentId: selectedParentId,
         parentName,
         parentPhone,
         parentEmail,
@@ -170,7 +174,7 @@ export const StudentEnrollmentView: React.FC = () => {
         className,
         bloodGroup,
         medicalNotes,
-        parentId: '',
+        parentId: selectedParentId,
         parentName,
         parentPhone,
         parentEmail,
@@ -336,11 +340,27 @@ export const StudentEnrollmentView: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-3 px-3">
-                      <div className="text-slate-900 font-medium">{student.parentName}</div>
-                      <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
-                        <Phone className="w-2.5 h-2.5" />
-                        <span>{student.parentPhone}</span>
-                      </div>
+                      {(() => {
+                        const linkedParent = parents.find(
+                          p => p.id === student.parentId || p.childrenIds.includes(student.id)
+                        );
+                        return (
+                          <div>
+                            <div className="text-slate-900 font-medium">{student.parentName || (linkedParent ? `${linkedParent.firstName} ${linkedParent.lastName}` : 'Non renseigné')}</div>
+                            <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
+                              <Phone className="w-2.5 h-2.5" />
+                              <span>{student.parentPhone || linkedParent?.phone || '—'}</span>
+                            </div>
+                            <span className={`inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold border ${
+                              linkedParent
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : 'bg-slate-50 text-slate-500 border-slate-200'
+                            }`}>
+                              {linkedParent ? 'Lié · Compte Parent ✓' : 'Tuteur manuel'}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="py-3 px-3">
                       {student.dossierStatus === 'complet' ? (
@@ -576,6 +596,34 @@ export const StudentEnrollmentView: React.FC = () => {
                 <span className="font-bold text-slate-900 block text-xs">
                   Informations du Tuteur Légal / Parent Responsable
                 </span>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-blue-900 mb-1">
+                    Lier à un compte Parent existant (optionnel)
+                  </label>
+                  <select
+                    value={selectedParentId}
+                    onChange={(e) => {
+                      const pid = e.target.value;
+                      setSelectedParentId(pid);
+                      const found = parents.find(p => p.id === pid);
+                      if (found) {
+                        setParentName(`${found.firstName} ${found.lastName}`);
+                        setParentPhone(found.phone);
+                        setParentEmail(found.email);
+                      }
+                    }}
+                    className="w-full px-2.5 py-2 rounded-lg bg-white border border-blue-200 text-blue-950"
+                  >
+                    <option value="">-- Saisie manuelle ou choisir un parent déjà enregistré --</option>
+                    {parents.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.firstName} {p.lastName} · {p.phone} ({p.childrenIds.length} enfant{p.childrenIds.length > 1 ? 's' : ''})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[11px] text-slate-500 mb-1">Nom complet du tuteur *</label>

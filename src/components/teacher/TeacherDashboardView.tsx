@@ -27,6 +27,10 @@ export const TeacherDashboardView: React.FC = () => {
   const { 
     profile, 
     classes, 
+    students,
+    getSubjectsForClass,
+    getStudentsByClass,
+    setSelectedClassId,
     subjects,
     courses,
     evaluations, 
@@ -41,7 +45,7 @@ export const TeacherDashboardView: React.FC = () => {
 
   // 8 KPIs
   const totalClassesCount = classes.length;
-  const totalStudentsCount = classes.reduce((acc, c) => acc + c.studentsCount, 0);
+  const totalStudentsCount = students.length;
   const totalSubjectsCount = subjects.length;
   const totalCoursesPublished = courses.filter(c => c.isPublished).length;
   const totalHomeworkPublished = homeworkList.length;
@@ -191,6 +195,104 @@ export const TeacherDashboardView: React.FC = () => {
             <div className="text-xl font-black text-blue-950">{totalEvaluationsCount}</div>
             <div className="text-[10px] text-indigo-600 font-medium mt-0.5 truncate">Sessions créées</div>
           </div>
+        </div>
+      </div>
+
+      {/* Tableau de ma classe, mes matières et mes élèves (périmètre strict) */}
+      <div className="rounded-2xl bg-white border border-blue-100 overflow-hidden shadow-xs">
+        <div className="px-5 py-3.5 bg-blue-50/60 border-b border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-black text-blue-950 flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-blue-600" />
+              <span>Mon Tableau : Mes Classes, Mes Matières & Tous Mes Élèves</span>
+            </h2>
+            <p className="text-[11px] text-slate-500">
+              Vous visualisez exclusivement vos classes attribuées, les matières que vous y enseignez et l'ensemble de leurs élèves inscrits.
+            </p>
+          </div>
+          <button
+            onClick={() => setActiveTeacherTab('students')}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-xs transition-colors shrink-0 cursor-pointer"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Voir tous mes élèves ({students.length})</span>
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-[10px] uppercase text-slate-500 border-b border-blue-100">
+              <tr>
+                <th className="py-2.5 px-4">Classe Assignée</th>
+                <th className="py-2.5 px-4">Matière(s) Enseignée(s)</th>
+                <th className="py-2.5 px-3 text-center">Élèves</th>
+                <th className="py-2.5 px-3 text-center">Moyenne</th>
+                <th className="py-2.5 px-3 text-center">Présence</th>
+                <th className="py-2.5 px-4 text-right">Accès Rapide</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-blue-100">
+              {classes.map(cls => {
+                const clsSubs = getSubjectsForClass(cls.name);
+                const clsCount = getStudentsByClass(cls.id).length || cls.studentsCount;
+                return (
+                  <tr key={cls.id} className="hover:bg-blue-50/40">
+                    <td className="py-3 px-4">
+                      <div className="font-bold text-blue-950 flex items-center gap-2">
+                        <span>{cls.name}</span>
+                        {cls.isMainTeacher && (
+                          <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[9px] font-bold">
+                            Prof. Principal
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-500 font-mono">{cls.room}</div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-wrap gap-1">
+                        {clsSubs.map(sub => (
+                          <span key={sub.id} className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-800 border border-indigo-200 text-[11px] font-semibold">
+                            {sub.name} (Coef {sub.coefficient})
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 text-center font-black text-blue-950 font-mono">
+                      {clsCount}
+                    </td>
+                    <td className="py-3 px-3 text-center font-bold text-emerald-600 font-mono">
+                      {cls.averageGrade}/20
+                    </td>
+                    <td className="py-3 px-3 text-center font-bold text-blue-600 font-mono">
+                      {cls.attendanceRate}%
+                    </td>
+                    <td className="py-3 px-4 text-right whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          onClick={() => { setSelectedClassId(cls.id); setActiveTeacherTab('students'); }}
+                          className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold cursor-pointer"
+                        >
+                          Liste élèves ({clsCount})
+                        </button>
+                        <button
+                          onClick={() => { setSelectedClassId(cls.id); setActiveTeacherTab('attendance'); }}
+                          className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[11px] font-semibold cursor-pointer"
+                        >
+                          Appel
+                        </button>
+                        <button
+                          onClick={() => { setSelectedClassId(cls.id); setActiveTeacherTab('gradebook'); }}
+                          className="px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-blue-100 text-slate-800 border border-slate-200 text-[11px] font-semibold cursor-pointer"
+                        >
+                          Notes
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 

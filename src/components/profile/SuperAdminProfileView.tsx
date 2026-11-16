@@ -35,6 +35,8 @@ export const SuperAdminProfileView: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfile({
@@ -52,12 +54,15 @@ export const SuperAdminProfileView: React.FC = () => {
 
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError(null);
     if (newPassword.length < 8) {
-      alert("Le mot de passe doit comporter au moins 8 caractères.");
+      setPasswordError("Le mot de passe doit comporter au moins 8 caractères.");
+      showToast("Le mot de passe doit comporter au moins 8 caractères.");
       return;
     }
     if (newPassword !== confirmPassword) {
-      alert("Les deux mots de passe ne correspondent pas.");
+      setPasswordError("Les deux mots de passe ne correspondent pas.");
+      showToast("Les deux mots de passe ne correspondent pas.");
       return;
     }
     setIsPasswordModalOpen(false);
@@ -313,6 +318,11 @@ export const SuperAdminProfileView: React.FC = () => {
             </div>
 
             <form onSubmit={handleChangePassword} className="mt-4 space-y-3.5 text-xs">
+              {passwordError && (
+                <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-medium">
+                  {passwordError}
+                </div>
+              )}
               <div className="space-y-1">
                 <label className="text-slate-700 font-medium">Mot de passe actuel</label>
                 <input

@@ -17,6 +17,7 @@ import {
   Type
 } from 'lucide-react';
 import { triggerPrint, exportPrintableDocument } from '../../utils/printHelper';
+import { downloadLibraryResourcePdf } from '../../utils/exportDocuments';
 
 interface BookReaderModalProps {
   book: BookItem | EbookItem;
@@ -148,6 +149,26 @@ export const BookReaderModal: React.FC<BookReaderModalProps> = ({ book, onClose 
                 A+
               </button>
             </div>
+
+            {/* Download PDF */}
+            <button
+              onClick={() =>
+                downloadLibraryResourcePdf({
+                  title: book.title,
+                  author: book.author,
+                  subject: 'subject' in book ? book.subject : book.category,
+                  level: 'level' in book ? book.level : undefined,
+                  description: book.description,
+                  content: book.chapters?.map(ch => `${ch.title}\n\n${ch.content}`).join('\n\n---\n\n') || book.content,
+                  fileUrl: 'url' in book ? book.url : undefined
+                })
+              }
+              className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-colors cursor-pointer"
+              title="Télécharger le document PDF"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">PDF</span>
+            </button>
 
             {/* Print / Export Chapter */}
             <button

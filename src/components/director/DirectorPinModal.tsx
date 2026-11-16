@@ -1,60 +1,79 @@
 import React, { useState } from 'react';
 import { useDirector } from '../../context/DirectorContext';
-import { ShieldCheck, Lock, KeyRound, AlertCircle, CheckCircle2, X } from 'lucide-react';
+import {
+  ShieldCheck,
+  Lock,
+  KeyRound,
+  AlertCircle,
+  CheckCircle2,
+  X,
+  HelpCircle,
+  Send,
+  Smartphone,
+  Mail,
+  Settings
+} from 'lucide-react';
 
 export const DirectorPinModal: React.FC = () => {
-  const { 
-    pinModalOpen, 
-    currentPinPrompt, 
-    closePinModal, 
+  const {
+    pinModalOpen,
+    currentPinPrompt,
+    closePinModal,
     submitPinVerification,
-    directorPin,
-    profile 
+    profile,
+    sendVerificationOtp,
+    lastSentOtpInfo,
+    setActiveDirectorTab
   } = useDirector();
 
   const [enteredPin, setEnteredPin] = useState('');
   const [entered2FA, setEntered2FA] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   if (!pinModalOpen || !currentPinPrompt) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (enteredPin.length !== 6) {
-      setError('Veuillez saisir votre code PIN à 6 chiffres.');
+      setError('Veuillez saisir votre code PIN Directeur à 6 chiffres.');
       return;
     }
 
-    if (enteredPin !== directorPin) {
-      setError('Code PIN incorrect. Veuillez réessayer.');
+    if (entered2FA.length !== 6) {
+      setError('Veuillez saisir le code de vérification 2FA à 6 chiffres.');
       return;
     }
 
-    if (!entered2FA || entered2FA.length < 4) {
-      setError('Veuillez saisir le code de vérification 2FA reçu.');
-      return;
-    }
-
-    const ok = submitPinVerification(enteredPin, entered2FA);
-    if (!ok) {
-      setError('Échec de la validation de sécurité. Vérifiez vos identifiants.');
-    } else {
-      setSuccess(true);
-      setTimeout(() => {
-        setSuccess(false);
-        setEnteredPin('');
-        setEntered2FA('');
-      }, 500);
+    setVerifying(true);
+    try {
+      const result = await submitPinVerification(enteredPin, entered2FA);
+      if (!result.ok) {
+        setError(result.error || 'Échec de la validation de sécurité. Vérifiez vos codes.');
+      } else {
+        setSuccess(true);
+        setTimeout(() => {
+          setSuccess(false);
+          setEnteredPin('');
+          setEntered2FA('');
+        }, 400);
+      }
+    } finally {
+      setVerifying(false);
     }
   };
 
-  const handleFillDemoCode = () => {
-    setEnteredPin(directorPin);
-    setEntered2FA('849201');
+  const handleGoToSecuritySetup = () => {
+    closePinModal();
+    setActiveDirectorTab('security');
+  };
+
+  const handleSendOtp = (channel: 'sms' | 'email') => {
     setError(null);
+    sendVerificationOtp(channel);
   };
 
   return (
@@ -73,7 +92,7 @@ export const DirectorPinModal: React.FC = () => {
                   PIN + 2FA
                 </span>
               </h3>
-              <p className="text-xs text-slate-500">Action sensible du Directeur Pédagogique</p>
+              <p className="text-xs text-slate-500">Signature cryptographique du Directeur des Études</p>
             </div>
           </div>
           <button
@@ -85,15 +104,39 @@ export const DirectorPinModal: React.FC = () => {
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
           <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800 leading-relaxed">
-            <p className="font-semibold text-amber-700 mb-1">{currentPinPrompt.title}</p>
+            <p className="font-semibold text-amber-800 mb-1">{currentPinPrompt.title}</p>
             <p className="text-[11px] text-slate-700">{currentPinPrompt.description}</p>
           </div>
 
+          {/* Clear "Who gives these codes?" guidance */}
+          <div className="p-3 rounded-xl bg-blue-50/80 border border-blue-200 text-[11px] text-slate-700 space-y-1.5 leading-relaxed">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-bold text-blue-950 flex items-center gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span>Qui fournit ces 2 codes ?</span>
+              </span>
+              <button
+                type="button"
+                onClick={handleGoToSecuritySetup}
+                className="text-[10px] font-bold text-blue-700 hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <Settings className="w-3 h-3" />
+                <span>Configurer / Voir QR</span>
+              </button>
+            </div>
+            <p>
+              <strong>1. PIN Directeur :</strong> Défini par le Directeur dans <em>Sécurité &amp; Code PIN</em> (initial par défaut : <code className="px-1 py-0.5 rounded bg-white border border-blue-200 font-mono font-bold text-amber-800">654321</code>).
+            </p>
+            <p>
+              <strong>2. Code 2FA Authenticator :</strong> Généré par votre application <strong>Google / Microsoft Authenticator</strong> (QR Code dans <em>Sécurité &amp; Code PIN</em>) ou envoyé par SMS / Email ci-dessous.
+            </p>
+          </div>
+
           {error && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs animate-in shake">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs animate-in shake">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
@@ -101,7 +144,7 @@ export const DirectorPinModal: React.FC = () => {
           {success && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>Autorisation accordée ! Exécution en cours...</span>
+              <span>Autorisation accordée ! Signature électronique en cours...</span>
             </div>
           )}
 
@@ -112,19 +155,13 @@ export const DirectorPinModal: React.FC = () => {
                 <Lock className="w-3.5 h-3.5 text-amber-700" />
                 Code PIN Directeur (6 chiffres)
               </span>
-              <button
-                type="button"
-                onClick={handleFillDemoCode}
-                className="text-[10px] text-amber-700 hover:text-amber-700 underline"
-              >
-                Auto-remplir démo ({directorPin})
-              </button>
+              <span className="text-[10px] text-slate-500">Personnel Direction</span>
             </label>
             <input
               type="password"
               maxLength={6}
               value={enteredPin}
-              onChange={(e) => setEnteredPin(e.target.value.replace(/\D/g, ''))}
+              onChange={e => setEnteredPin(e.target.value.replace(/\D/g, ''))}
               placeholder="••••••"
               className="w-full text-center tracking-[0.5em] text-lg font-mono px-4 py-2.5 rounded-lg bg-blue-50/60 border border-slate-200 text-blue-950 placeholder-slate-400 focus:outline-hidden focus:border-amber-500 transition-colors"
               autoFocus
@@ -132,22 +169,62 @@ export const DirectorPinModal: React.FC = () => {
           </div>
 
           {/* 2FA Code Field */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold text-slate-700 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
                 <KeyRound className="w-3.5 h-3.5 text-blue-600" />
-                Code 2FA Authenticator ({profile.twoFactorMethod === 'app' ? 'Application TOTP' : 'SMS'})
+                Code 2FA (
+                {profile.twoFactorMethod === 'app'
+                  ? 'Application Authenticator TOTP'
+                  : profile.twoFactorMethod === 'sms'
+                  ? 'SMS Téléphone'
+                  : 'Email Institutionnel'}
+                )
               </span>
-              <span className="text-[10px] text-slate-500 font-mono">Ex: 849201</span>
             </label>
             <input
               type="text"
               maxLength={6}
               value={entered2FA}
-              onChange={(e) => setEntered2FA(e.target.value.replace(/\D/g, ''))}
-              placeholder="000000"
+              onChange={e => setEntered2FA(e.target.value.replace(/\D/g, ''))}
+              placeholder="Code à 6 chiffres"
               className="w-full text-center tracking-[0.3em] text-base font-mono px-4 py-2.5 rounded-lg bg-blue-50/60 border border-slate-200 text-blue-950 placeholder-slate-400 focus:outline-hidden focus:border-blue-500 transition-colors"
             />
+
+            {/* Dispatch SMS / Email OTP option */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => handleSendOtp('sms')}
+                className="flex items-center gap-1 text-[11px] font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-lg cursor-pointer"
+              >
+                <Smartphone className="w-3 h-3" />
+                <span>Recevoir code par SMS</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendOtp('email')}
+                className="flex items-center gap-1 text-[11px] font-semibold text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-lg cursor-pointer"
+              >
+                <Mail className="w-3 h-3" />
+                <span>Recevoir par Email</span>
+              </button>
+            </div>
+
+            {lastSentOtpInfo && (
+              <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <Send className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>
+                    Envoyé ({lastSentOtpInfo.method.toUpperCase()}) à{' '}
+                    <strong>{lastSentOtpInfo.destination}</strong> à {lastSentOtpInfo.sentAt}
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 rounded bg-white border border-emerald-300 font-mono font-black text-emerald-800">
+                  {lastSentOtpInfo.code}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="pt-2 flex items-center justify-end gap-3">
@@ -160,10 +237,11 @@ export const DirectorPinModal: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 shadow-lg shadow-amber-500/20 transition-all"
+              disabled={verifying}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 shadow-lg shadow-amber-500/20 transition-all disabled:opacity-50 cursor-pointer"
             >
               <ShieldCheck className="w-4 h-4" />
-              <span>Valider & Signer</span>
+              <span>{verifying ? 'Vérification...' : 'Valider & Signer'}</span>
             </button>
           </div>
         </form>

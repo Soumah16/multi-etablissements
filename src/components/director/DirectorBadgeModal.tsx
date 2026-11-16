@@ -11,15 +11,43 @@ import {
   Sparkles, 
   Smartphone,
   Eye,
-  Camera
+  Camera,
+  Download
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
+import { downloadPvcBadgePdf, downloadPvcBadgeA4Pdf, PvcRenderData } from '../../utils/pvcCardRenderer';
 
 export const DirectorBadgeModal: React.FC = () => {
   const { profile, updateProfile, showToast } = useDirector();
   const [photoEditOpen, setPhotoEditOpen] = useState(false);
   const [newPhotoUrl, setNewPhotoUrl] = useState(profile.photo);
   const [isScanTested, setIsScanTested] = useState(false);
+
+  const qrPayload = `DIRECTOR|${profile.matricule}|${profile.badgeNumber}|${profile.name}|${profile.schoolName || 'SmartSchool'}`;
+
+  const getPvcData = (): PvcRenderData => ({
+    schoolName: profile.schoolName || "Lycée d'Excellence de Conakry",
+    schoolCode: 'DIR',
+    categoryLabel: 'DIRECTION',
+    fullName: profile.name,
+    title: profile.title,
+    matricule: profile.matricule,
+    nationalUid: profile.badgeNumber,
+    bloodGroup: 'N/A',
+    validityPeriod: '2026 - 2027',
+    photoUrl: profile.photo,
+    phone: profile.phone,
+    themeColor: '#1e3a8a',
+    accentBg: '',
+    isDarkTheme: true,
+    showNationalArms: true,
+    showTricolorBanner: true,
+    showOfficialStamp: true,
+    showMicrotext: true,
+    showWatermark: true,
+    showBarcode: true
+  });
 
   const handleSavePhoto = () => {
     updateProfile({ photo: newPhotoUrl });
@@ -28,7 +56,7 @@ export const DirectorBadgeModal: React.FC = () => {
   };
 
   const handlePrint = () => {
-    triggerPrint('director-badge-printable-area', `Badge_Directeur_${profile.name.replace(/\s+/g, '_')}`);
+    triggerPrint('director-badge-printable-area', `Badge_Directeur_${profile.name.replace(/\s+/g, '_')}`, 'landscape');
   };
 
   return (
@@ -51,31 +79,66 @@ export const DirectorBadgeModal: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <button
+            type="button"
             onClick={() => setPhotoEditOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-blue-50 border border-slate-200 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-blue-50 border border-slate-200 transition-colors cursor-pointer"
           >
             <Camera className="w-4 h-4 text-blue-600" />
-            <span>Modifier la Photo</span>
+            <span>Modifier Photo</span>
           </button>
           <button
+            type="button"
+            onClick={async () => {
+              await downloadQrCodePng(qrPayload, `QR_Directeur_${profile.matricule}`, '#0f172a');
+              showToast('Code QR du Directeur téléchargé (PNG).');
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-blue-950 bg-slate-100 hover:bg-blue-50 border border-slate-200 transition-colors cursor-pointer"
+          >
+            <QrCode className="w-4 h-4 text-blue-600" />
+            <span>QR PNG</span>
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              const fn = await downloadPvcBadgePdf(getPvcData(), 'both', `Badge_Directeur_${profile.matricule}`);
+              showToast(`PDF PVC CR-80 (85.6 × 53.98 mm) téléchargé : ${fn}`);
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm cursor-pointer"
+          >
+            <Download className="w-4 h-4" />
+            <span>PDF PVC (CR-80)</span>
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              const fn = await downloadPvcBadgeA4Pdf(getPvcData(), 'both', `Planche_A4_Directeur_${profile.matricule}`);
+              showToast(`PDF A4 taille PVC 100% téléchargé : ${fn}`);
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-blue-950 bg-slate-100 hover:bg-blue-50 border border-slate-200 cursor-pointer"
+          >
+            <Download className="w-4 h-4 text-indigo-600" />
+            <span>PDF A4 (100%)</span>
+          </button>
+          <button
+            type="button"
             onClick={handlePrint}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 transition-all cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Imprimer le Badge</span>
+            <span>Imprimer PVC</span>
           </button>
         </div>
       </div>
 
       {/* Badge Rendering Area */}
-      <div id="director-badge-printable-area" className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-start">
+      <div id="director-badge-printable-area" className="pvc-print-grid grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-start">
         {/* Front of Badge */}
         <div className="space-y-2">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Recto de la Carte Professionnelle</span>
           
-          <div className="w-full max-w-[420px] aspect-[85.6/53.98] rounded-2xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 border-2 border-amber-500/50 p-5 shadow-2xl relative overflow-hidden flex flex-col justify-between text-white print:border-black">
+          <div className="pvc-card w-full max-w-[420px] aspect-[85.6/53.98] rounded-2xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 border-2 border-amber-500/50 p-5 shadow-2xl relative overflow-hidden flex flex-col justify-between text-white print:border-black">
             {/* Watermark logo */}
             <div className="absolute -right-6 -bottom-6 w-40 h-40 rounded-full bg-blue-600/10 pointer-events-none blur-xl" />
             <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-red-500 via-yellow-400 to-green-500" />
@@ -137,7 +200,7 @@ export const DirectorBadgeModal: React.FC = () => {
         <div className="space-y-2">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Verso de la Carte (QR Code de Contrôle)</span>
           
-          <div className="w-full max-w-[420px] aspect-[85.6/53.98] rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-slate-700 p-5 shadow-2xl relative overflow-hidden flex flex-col justify-between text-white">
+          <div className="pvc-card w-full max-w-[420px] aspect-[85.6/53.98] rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-slate-700 p-5 shadow-2xl relative overflow-hidden flex flex-col justify-between text-white">
             {/* Magnetic Stripe simulation */}
             <div className="absolute top-4 left-0 right-0 h-8 bg-slate-950 border-y border-slate-800" />
 
@@ -153,8 +216,8 @@ export const DirectorBadgeModal: React.FC = () => {
               </div>
 
               {/* QR Code Container */}
-              <div className="p-2 rounded-xl bg-white text-black shrink-0 shadow-lg text-center flex flex-col items-center">
-                <QrCode className="w-16 h-16" />
+              <div className="p-1.5 rounded-xl bg-white text-black shrink-0 shadow-lg text-center flex flex-col items-center">
+                <RealQrCode value={qrPayload} size={64} fgColor="#0f172a" alt={`QR ${profile.matricule}`} />
                 <span className="text-[7px] font-mono font-bold mt-0.5">AUTH-DIR-QR</span>
               </div>
             </div>

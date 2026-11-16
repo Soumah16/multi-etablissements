@@ -22,6 +22,7 @@ export const SchoolFormModal: React.FC<SchoolFormModalProps> = ({ schoolToEdit, 
   const [prefecture, setPrefecture] = useState('Kaloum');
   const [country, setCountry] = useState('Guinée');
   const [phone, setPhone] = useState('+224 ');
+  const [whatsappNumber, setWhatsappNumber] = useState('+224 ');
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('https://');
   const [currency, setCurrency] = useState('GNF');
@@ -42,6 +43,7 @@ export const SchoolFormModal: React.FC<SchoolFormModalProps> = ({ schoolToEdit, 
       setPrefecture(schoolToEdit.prefecture);
       setCountry(schoolToEdit.country);
       setPhone(schoolToEdit.phone);
+      setWhatsappNumber(schoolToEdit.whatsappNumber || schoolToEdit.phone || '');
       setEmail(schoolToEdit.email);
       setWebsite(schoolToEdit.website);
       setCurrency(schoolToEdit.currency);
@@ -75,6 +77,7 @@ export const SchoolFormModal: React.FC<SchoolFormModalProps> = ({ schoolToEdit, 
         prefecture,
         country,
         phone,
+        whatsappNumber: whatsappNumber.trim() || phone.trim(),
         email,
         website,
         currency,
@@ -95,6 +98,7 @@ export const SchoolFormModal: React.FC<SchoolFormModalProps> = ({ schoolToEdit, 
         prefecture,
         country,
         phone,
+        whatsappNumber: whatsappNumber.trim() || phone.trim(),
         email,
         website,
         currency,
@@ -270,7 +274,7 @@ export const SchoolFormModal: React.FC<SchoolFormModalProps> = ({ schoolToEdit, 
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-700">Téléphone</label>
                 <input
@@ -279,6 +283,17 @@ export const SchoolFormModal: React.FC<SchoolFormModalProps> = ({ schoolToEdit, 
                   onChange={e => setPhone(e.target.value)}
                   placeholder="+224 621 ..."
                   className="w-full px-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-emerald-800">Numéro WhatsApp dédié à l'école</label>
+                <input
+                  type="text"
+                  value={whatsappNumber}
+                  onChange={e => setWhatsappNumber(e.target.value)}
+                  placeholder="+224 622 ..."
+                  className="w-full px-3 py-2 text-xs rounded-lg bg-emerald-50/70 border border-emerald-200 text-emerald-950 font-mono focus:outline-none focus:border-emerald-600"
                 />
               </div>
 

@@ -19,11 +19,13 @@ import {
   Printer,
   Upload,
   FileText,
-  Eye
+  Eye,
+  Download
 } from 'lucide-react';
+import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
 
 export const BooksCatalogView: React.FC = () => {
-  const { books, addBook, updateBook, deleteBook, registerLoan } = useLibrarian();
+  const { books, addBook, updateBook, deleteBook, registerLoan, canManageLibrary } = useLibrarian();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [modalOpen, setModalOpen] = useState(false);
@@ -68,6 +70,7 @@ export const BooksCatalogView: React.FC = () => {
   });
 
   const handleOpenAdd = () => {
+    if (!canManageLibrary) return;
     setEditingBook(null);
     setFormData({
       title: '',
@@ -86,6 +89,7 @@ export const BooksCatalogView: React.FC = () => {
   };
 
   const handleOpenEdit = (b: BookItem) => {
+    if (!canManageLibrary) return;
     setEditingBook(b);
     setFormData({
       title: b.title,
@@ -98,13 +102,15 @@ export const BooksCatalogView: React.FC = () => {
       availableQuantity: b.availableQuantity,
       shelfLocation: b.shelfLocation,
       state: b.state,
-      yearPublished: b.yearPublished
+      yearPublished: b.yearPublished,
+      content: b.content
     });
     setModalOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManageLibrary) return;
     if (editingBook) {
       updateBook(editingBook.id, formData);
     } else {
@@ -115,7 +121,7 @@ export const BooksCatalogView: React.FC = () => {
 
   const handleQuickLoanSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loanModalBook) return;
+    if (!canManageLibrary || !loanModalBook) return;
     registerLoan({
       bookId: loanModalBook.id,
       bookTitle: loanModalBook.title,
@@ -139,16 +145,20 @@ export const BooksCatalogView: React.FC = () => {
         <div>
           <h1 className="text-xl md:text-2xl font-black text-blue-950">Catalogue des Ouvrages Physiques</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Inventaire des manuels scolaires, romans, revues, rayonnage et génération des étiquettes QR Code.
+            {canManageLibrary
+              ? 'Inventaire des manuels scolaires, romans, revues, rayonnage et génération des étiquettes QR Code.'
+              : 'Consultation et lecture des ouvrages de la bibliothèque (modifications réservées à l’Admin de la Bibliothèque).'}
           </p>
         </div>
-        <button
-          onClick={handleOpenAdd}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/20 transition-all cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Ajouter un Ouvrage</span>
-        </button>
+        {canManageLibrary && (
+          <button
+            onClick={handleOpenAdd}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/20 transition-all cursor-pointer self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Ajouter un Ouvrage</span>
+          </button>
+        )}
       </div>
 
       {/* Filter and Search Bar */}
@@ -187,9 +197,9 @@ export const BooksCatalogView: React.FC = () => {
           <table className="w-full text-xs text-left">
             <thead>
               <tr className="border-b border-blue-100 text-[11px] text-slate-500 uppercase font-semibold bg-blue-50/60">
-                <th className="py-3 px-4">Titre & Auteur</th>
+                <th className="py-3 px-4">Titre &amp; Auteur</th>
                 <th className="py-3 px-4">Catégorie</th>
-                <th className="py-3 px-4">ISBN & QR Code</th>
+                <th className="py-3 px-4">ISBN &amp; QR Code</th>
                 <th className="py-3 px-4">Localisation Rayon</th>
                 <th className="py-3 px-4 text-center">Stock</th>
                 <th className="py-3 px-4">État</th>
@@ -254,32 +264,36 @@ export const BooksCatalogView: React.FC = () => {
                           <BookOpen className="w-3.5 h-3.5" />
                           <span>Lire</span>
                         </button>
-                        <button
-                          onClick={() => {
-                            setLoanModalBook(book);
-                            setBorrowerName('');
-                            setBorrowerMatricule('');
-                          }}
-                          disabled={isOutOfStock}
-                          title="Enregistrer un emprunt"
-                          className="px-2 py-1 rounded bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 text-[11px] font-semibold disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
-                        >
-                          Prêter
-                        </button>
-                        <button
-                          onClick={() => handleOpenEdit(book)}
-                          className="p-1.5 rounded text-slate-500 hover:text-blue-950 hover:bg-blue-50 transition-colors"
-                          title="Modifier la fiche"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => deleteBook(book.id)}
-                          className="p-1.5 rounded text-slate-500 hover:text-rose-600 hover:bg-blue-50 transition-colors"
-                          title="Supprimer du catalogue"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {canManageLibrary && (
+                          <>
+                            <button
+                              onClick={() => {
+                                setLoanModalBook(book);
+                                setBorrowerName('');
+                                setBorrowerMatricule('');
+                              }}
+                              disabled={isOutOfStock}
+                              title="Enregistrer un emprunt"
+                              className="px-2 py-1 rounded bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 text-[11px] font-semibold disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                            >
+                              Prêter
+                            </button>
+                            <button
+                              onClick={() => handleOpenEdit(book)}
+                              className="p-1.5 rounded text-slate-500 hover:text-blue-950 hover:bg-blue-50 transition-colors cursor-pointer"
+                              title="Modifier la fiche"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => deleteBook(book.id)}
+                              className="p-1.5 rounded text-slate-500 hover:text-rose-600 hover:bg-blue-50 transition-colors cursor-pointer"
+                              title="Supprimer du catalogue"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -290,8 +304,8 @@ export const BooksCatalogView: React.FC = () => {
         </div>
       </div>
 
-      {/* Add / Edit Book Modal */}
-      {modalOpen && (
+      {/* Add / Edit Book Modal (Librarian Admin only) */}
+      {canManageLibrary && modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
           <div className="w-full max-w-xl max-h-[90vh] flex flex-col rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
             {/* Pinned Modal Header */}
@@ -483,8 +497,8 @@ export const BooksCatalogView: React.FC = () => {
         </div>
       )}
 
-      {/* Quick Loan Modal */}
-      {loanModalBook && (
+      {/* Quick Loan Modal (Librarian Admin only) */}
+      {canManageLibrary && loanModalBook && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
           <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-4 max-h-[92vh] overflow-y-auto">
             <h3 className="text-base font-bold text-blue-950">
@@ -585,30 +599,35 @@ export const BooksCatalogView: React.FC = () => {
               Imprimable pour collage sur la 1ère de couverture ou la tranche de l'ouvrage.
             </p>
 
-            <div className="p-4 rounded-xl bg-white text-slate-950 inline-block mx-auto border-2 border-slate-200 shadow-md">
+            <div id="printable-qr-tag" className="p-4 rounded-xl bg-white text-slate-950 inline-block mx-auto border-2 border-slate-200 shadow-md">
               <div className="text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
                 BIBLIOTHÈQUE LYCÉE D'EXCELLENCE
               </div>
-              <div className="w-36 h-36 mx-auto bg-slate-100 p-2 flex items-center justify-center border border-slate-300 my-2">
-                <div className="w-full h-full border-2 border-dashed border-blue-100 flex flex-col items-center justify-center text-[11px] font-mono">
-                  <QrCode className="w-12 h-12 text-slate-800 mb-1" />
-                  <span className="font-bold">{qrModalBook.qrCodeId}</span>
-                </div>
+              <div className="w-36 h-36 mx-auto bg-white p-2 flex flex-col items-center justify-center border border-slate-300 my-2 rounded-lg">
+                <RealQrCode value={qrModalBook.qrCodeId} size={96} fgColor="#0f172a" />
+                <span className="text-[10px] font-mono font-bold mt-1">{qrModalBook.qrCodeId}</span>
               </div>
               <div className="text-xs font-bold truncate max-w-[200px] mx-auto">{qrModalBook.title}</div>
               <div className="text-[10px] text-slate-600 font-mono mt-0.5">{qrModalBook.shelfLocation}</div>
             </div>
 
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <button
                 onClick={() => setQrModalBook(null)}
-                className="px-4 py-2 rounded-lg bg-slate-50 hover:bg-blue-100 text-slate-700 text-xs font-semibold"
+                className="px-3.5 py-2 rounded-lg bg-slate-50 hover:bg-blue-100 text-slate-700 text-xs font-semibold cursor-pointer"
               >
                 Fermer
               </button>
               <button
+                onClick={() => downloadQrCodePng(qrModalBook.qrCodeId, `QR_Livre_${qrModalBook.qrCodeId}`, '#0f172a')}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-800 border border-slate-200 text-xs font-semibold cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-indigo-600" />
+                <span>QR PNG</span>
+              </button>
+              <button
                 onClick={() => {
-                  triggerPrint('printable-qr-tag');
+                  triggerPrint('printable-qr-tag', `Etiquette_QR_${qrModalBook.qrCodeId}`);
                 }}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer"
               >

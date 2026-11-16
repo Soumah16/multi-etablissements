@@ -28,6 +28,8 @@ export const TeacherGradebookView: React.FC = () => {
     submitEvaluationToDirector,
     togglePublishProvisionalGrades,
     classes,
+    getStudentsByClass,
+    getSubjectsForClass,
     addEvaluation 
   } = useTeacher();
 
@@ -38,7 +40,7 @@ export const TeacherGradebookView: React.FC = () => {
 
   // New evaluation form state
   const [newEvalTitle, setNewEvalTitle] = useState('');
-  const [newEvalClassId, setNewEvalClassId] = useState('cls-tsm');
+  const [newEvalClassId, setNewEvalClassId] = useState(classes[0]?.id || 'cls-tsm');
   const [newEvalSubject, setNewEvalSubject] = useState('Mathématiques');
   const [newEvalTerm, setNewEvalTerm] = useState<'Trimestre 1' | 'Trimestre 2' | 'Trimestre 3'>('Trimestre 1');
   const [newEvalType, setNewEvalType] = useState<'controle_continu' | 'examen' | 'test' | 'quiz'>('controle_continu');
@@ -47,20 +49,31 @@ export const TeacherGradebookView: React.FC = () => {
 
   const currentEval = evaluations.find(e => e.id === selectedEvalId) || evaluations[0];
 
+  const targetClassForNewEval = classes.find(c => c.id === newEvalClassId) || classes[0];
+  const validSubjectsForClass = targetClassForNewEval ? getSubjectsForClass(targetClassForNewEval.name) : [];
+  const fullClassRosterForNewEval = getStudentsByClass(newEvalClassId);
+
+  const handleClassChangeForEval = (clsId: string) => {
+    setNewEvalClassId(clsId);
+    const clsObj = classes.find(c => c.id === clsId);
+    if (clsObj) {
+      const subs = getSubjectsForClass(clsObj.name);
+      if (subs.length > 0 && !subs.some(s => s.name === newEvalSubject)) {
+        setNewEvalSubject(subs[0].name);
+      }
+    }
+  };
+
   const handleCreateEval = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEvalTitle.trim()) return;
 
     const targetClass = classes.find(c => c.id === newEvalClassId);
-    
-    // Default student list based on class
-    const sampleStudents = [
-      { id: 'std-001', matricule: 'LEC-2026-001', fullName: 'Mamadou Alpha Diallo' },
-      { id: 'std-002', matricule: 'LEC-2026-002', fullName: 'Fatoumata Binta Bah' },
-      { id: 'std-003', matricule: 'LEC-2026-003', fullName: 'Ibrahima Sory Bangoura' },
-      { id: 'std-004', matricule: 'LEC-2026-004', fullName: 'Mariama Camara' },
-      { id: 'std-005', matricule: 'LEC-2026-005', fullName: 'Ousmane Barry' }
-    ];
+    const rosterStudents = getStudentsByClass(newEvalClassId).map(s => ({
+      id: s.id,
+      matricule: s.matricule,
+      fullName: s.fullName
+    }));
 
     addEvaluation({
       title: newEvalTitle,
@@ -73,7 +86,7 @@ export const TeacherGradebookView: React.FC = () => {
       durationMinutes: newEvalDuration,
       type: newEvalType,
       date: new Date().toISOString().substring(0, 10),
-      students: sampleStudents
+      students: rosterStudents
     });
 
     setNewEvalModalOpen(false);
@@ -430,17 +443,36 @@ export const TeacherGradebookView: React.FC = () => {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Classe concernée *</label>
-                <select 
-                  value={newEvalClassId}
-                  onChange={e => setNewEvalClassId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
-                >
-                  {classes.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Classe concernée *</label>
+                  <select 
+                    value={newEvalClassId}
+                    onChange={e => handleClassChangeForEval(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
+                  >
+                    {classes.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Matière enseignée *</label>
+                  <select
+                    value={newEvalSubject}
+                    onChange={e => setNewEvalSubject(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
+                  >
+                    {validSubjectsForClass.map(sub => (
+                      <option key={sub.id} value={sub.name}>{sub.name} (Coef {sub.coefficient})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-medium">
+                ✓ Tous les <strong>{fullClassRosterForNewEval.length} élèves</strong> inscrits dans cette classe seront automatiquement chargés dans la grille de saisie.
               </div>
 
               <div className="grid grid-cols-2 gap-3">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTeacher } from '../../context/TeacherContext';
 import { CourseModuleItem, CourseResource } from '../../types/teacher';
+import { downloadCourseResourceFile } from '../../utils/exportDocuments';
 import { 
   BookOpen, 
   Plus, 
@@ -223,8 +224,21 @@ export const TeacherCoursesView: React.FC = () => {
                       <div className="flex items-center gap-2 shrink-0">
                         <span className="text-[10px] text-slate-500 font-mono">{res.size}</span>
                         <button 
-                          onClick={() => triggerToast(`Téléchargement de ${res.name}...`)}
-                          className="p-1 hover:text-blue-950 text-slate-500"
+                          onClick={() => {
+                            const file = downloadCourseResourceFile({
+                              title: course.title,
+                              subject: course.subject,
+                              className: course.className,
+                              date: course.publishedDate,
+                              description: course.description,
+                              objectives: course.objectives,
+                              resourceName: res.name,
+                              resourceType: res.type,
+                              fileUrl: res.url
+                            });
+                            triggerToast(`Support téléchargé : ${file}`);
+                          }}
+                          className="p-1 hover:text-blue-950 text-slate-500 cursor-pointer"
                           title="Télécharger"
                         >
                           <Download className="w-3.5 h-3.5" />
@@ -404,25 +418,54 @@ export const TeacherCoursesView: React.FC = () => {
                   </select>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <input 
                     type="text"
-                    placeholder="URL directe du document ou laisser vide pour fichier simulé"
+                    placeholder="URL directe du document ou importer depuis l'appareil"
                     value={resourceUrl}
                     onChange={e => setResourceUrl(e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
+                    className="flex-1 min-w-[180px] px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   />
+                  <label className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-blue-100 border border-slate-200 text-blue-950 font-semibold cursor-pointer">
+                    <UploadCloud className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Fichier local</span>
+                    <input
+                      type="file"
+                      accept=".pdf,.docx,.pptx,.xlsx,.zip,image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const sizeLabel = file.size > 1024 * 1024
+                          ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+                          : `${(file.size / 1024).toFixed(1)} KB`;
+                        setResourceName(file.name);
+                        setResourceSize(sizeLabel);
+                        const ext = file.name.split('.').pop()?.toLowerCase() || '';
+                        if (ext === 'pdf' || ext === 'docx' || ext === 'pptx' || ext === 'xlsx' || ext === 'zip' || ext === 'jpg' || ext === 'png') {
+                          setResourceType(ext);
+                        }
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          if (typeof reader.result === 'string') {
+                            setResourceUrl(reader.result);
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                  </label>
                   <input 
                     type="text"
                     placeholder="Taille (ex: 3.5 MB)"
                     value={resourceSize}
                     onChange={e => setResourceSize(e.target.value)}
-                    className="w-28 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
+                    className="w-24 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={handleAddResource}
-                    className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold"
+                    className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold cursor-pointer"
                   >
                     Joindre
                   </button>

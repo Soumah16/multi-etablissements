@@ -13,9 +13,12 @@ import {
   GraduationCap, 
   Briefcase,
   Layers,
-  Palette
+  Palette,
+  Download
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
+import { downloadPvcBadgePdf, downloadPvcBadgeA4Pdf, PvcRenderData } from '../../utils/pvcCardRenderer';
 
 export const BadgeDesignerModal: React.FC = () => {
   const { badgeTemplate, updateBadgeTemplate, schools, showToast, t } = useApp();
@@ -31,6 +34,58 @@ export const BadgeDesignerModal: React.FC = () => {
   const [selectedSchoolPreviewId, setSelectedSchoolPreviewId] = useState(schools[0]?.id || '');
 
   const previewSchool = schools.find(s => s.id === selectedSchoolPreviewId) || schools[0];
+  const specimenMatricule = `${previewSchool?.code || 'LEC'}-2026-9042`;
+  const specimenName =
+    templateType === 'student'
+      ? 'DIALLO Alpha Oumar'
+      : templateType === 'teacher'
+      ? 'Pr. Sékou CONDÉ'
+      : 'Mme BARRY Aissatou';
+  const specimenRole =
+    templateType === 'student'
+      ? 'Terminale Sciences Mathématiques'
+      : templateType === 'teacher'
+      ? 'Professeur de Physique-Chimie'
+      : 'Secrétaire Générale';
+
+  const qrValue =
+    qrPayloadType === 'verification_url'
+      ? `https://verify.smartschool.gn/qr/${specimenMatricule}`
+      : qrPayloadType === 'vcard'
+      ? `BEGIN:VCARD\nFN:${specimenName}\nORG:${previewSchool?.name || 'SmartSchool'}\nTITLE:${specimenRole}\nEND:VCARD`
+      : `MEPU-A|${previewSchool?.code || 'GN'}|${specimenMatricule}|${specimenName}`;
+
+  const getSpecimenPvcData = (): PvcRenderData => ({
+    schoolName: previewSchool?.name || "Lycée d'Excellence de Conakry",
+    schoolCode: previewSchool?.code || 'LEC',
+    categoryLabel:
+      templateType === 'student'
+        ? 'CARTE SCOLAIRE OFFICIELLE'
+        : templateType === 'teacher'
+        ? 'BADGE CORPS PROFESSORAL'
+        : 'CARTE PERSONNEL ADMIN',
+    fullName: specimenName,
+    title: specimenRole,
+    matricule: specimenMatricule,
+    nationalUid: `UID-${specimenMatricule}`,
+    bloodGroup: 'O+',
+    validityPeriod: validityYear,
+    photoUrl:
+      templateType === 'student'
+        ? 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&auto=format&fit=crop&q=80'
+        : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
+    themeColor,
+    accentBg: 'bg-blue-700',
+    isDarkTheme: false,
+    showNationalArms: true,
+    showTricolorBanner: true,
+    showOfficialStamp: true,
+    showMicrotext: true,
+    showWatermark: true,
+    showBarcode,
+    qrValue,
+    orientation: 'portrait'
+  });
 
   const handleSaveTemplate = () => {
     updateBadgeTemplate({
@@ -69,11 +124,32 @@ export const BadgeDesignerModal: React.FC = () => {
 
         <div className="flex items-center gap-2 flex-wrap">
           <button
-            onClick={() => triggerPrint('badge-designer-printable-card', 'Badge_Officiel_SmartSchool')}
+            onClick={() => downloadQrCodePng(qrValue, `QR_Specimen_${specimenMatricule}`, themeColor)}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-blue-50 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+          >
+            <QrCode className="w-4 h-4 text-blue-600" />
+            <span>QR PNG</span>
+          </button>
+          <button
+            onClick={() => downloadPvcBadgePdf(getSpecimenPvcData(), 'recto', 'Badge_Officiel')}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer"
+          >
+            <Download className="w-4 h-4" />
+            <span>PDF PVC (CR-80)</span>
+          </button>
+          <button
+            onClick={() => downloadPvcBadgeA4Pdf(getSpecimenPvcData(), 'recto', 'Planche_Badge_Officiel')}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-blue-50 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+          >
+            <Download className="w-4 h-4" />
+            <span>PDF A4 (100%)</span>
+          </button>
+          <button
+            onClick={() => triggerPrint('badge-designer-printable-card', 'Badge_Officiel_SmartSchool', 'portrait')}
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors shadow-xs cursor-pointer"
           >
             <Printer className="w-4 h-4 text-white" />
-            <span>{t.badges.printCard}</span>
+            <span>{t.badges.printCard} (PVC)</span>
           </button>
 
           <button
@@ -270,7 +346,7 @@ export const BadgeDesignerModal: React.FC = () => {
             <div 
               id="badge-designer-printable-card"
               style={{ borderColor: themeColor }}
-              className="w-72 sm:w-80 h-[440px] sm:h-[480px] rounded-2xl bg-white text-slate-900 shadow-2xl border-4 overflow-hidden flex flex-col justify-between relative select-none shrink-0"
+              className="pvc-card-portrait w-72 sm:w-80 h-[440px] sm:h-[480px] rounded-2xl bg-white text-slate-900 shadow-2xl border-4 overflow-hidden flex flex-col justify-between relative select-none shrink-0"
             >
               {/* Header Header Brand */}
               <div 
@@ -325,17 +401,7 @@ export const BadgeDesignerModal: React.FC = () => {
                   {showQrCode && (
                     <div className="flex flex-col items-center">
                       <div className="p-1 rounded bg-white border border-slate-300">
-                        {/* SVG QR code specimen */}
-                        <svg className="w-14 h-14" viewBox="0 0 100 100">
-                          <rect width="100" height="100" fill="white" />
-                          <path d="M10,10 h30 v30 h-30 z M15,15 h20 v20 h-20 z M20,20 h10 v10 h-10 z" fill={themeColor} />
-                          <path d="M60,10 h30 v30 h-30 z M65,15 h20 v20 h-20 z M70,20 h10 v10 h-10 z" fill={themeColor} />
-                          <path d="M10,60 h30 v30 h-30 z M15,65 h20 v20 h-20 z M20,70 h10 v10 h-10 z" fill={themeColor} />
-                          <rect x="45" y="45" width="10" height="10" fill={themeColor} />
-                          <rect x="65" y="65" width="15" height="15" fill={themeColor} />
-                          <rect x="45" y="75" width="10" height="15" fill={themeColor} />
-                          <rect x="75" y="45" width="15" height="10" fill={themeColor} />
-                        </svg>
+                        <RealQrCode value={qrValue} size={56} fgColor={themeColor} />
                       </div>
                       <span className="text-[9px] font-mono text-slate-400 mt-0.5">Scan Certifié</span>
                     </div>

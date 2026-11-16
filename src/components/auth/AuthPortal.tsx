@@ -10,13 +10,11 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  GraduationCap,
-  MapPin,
   ArrowUpRight,
   Code2,
-  CheckCircle2,
-  BookOpen,
-  Users
+  Smartphone,
+  Send,
+  CheckCircle2
 } from 'lucide-react';
 import { 
   DemoAccount, 
@@ -24,6 +22,9 @@ import {
 } from '../../data/accountsData';
 import { useApp } from '../../context/AppContext';
 import { PWAInstallButton } from '../common/PWAInstallButton';
+import { getCanonicalSchoolId, loadSchoolSecurityConfig, appendSchoolLoginLog } from '../../context/SchoolAdminContext';
+import { loadSuperAdminSecurityConfig } from '../security/SecurityView';
+import { verifyTotpCode } from '../../utils/totp';
 import heroImg from '../../assets/images/guinea_school_hero_1794497471323.jpg';
 import classroomImg from '../../assets/images/students_modern_classroom_1794497472286.jpg';
 import teacherImg from '../../assets/images/teacher_excellence_portrait_1794497472066.jpg';
@@ -56,7 +57,7 @@ interface AuthPortalProps {
 }
 
 export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
-  const { settings } = useApp();
+  const { settings, schools } = useApp();
   const customPhotos = settings.homepagePhotos;
   const activePhotos = {
     hero: customPhotos?.hero?.trim() || IMAGES.hero,
@@ -80,13 +81,38 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordChangeError, setPasswordChangeError] = useState<string | null>(null);
 
+  // Mandatory 2FA challenge modal for Admin Ecole & Super Admin
+  const [pending2faUser, setPending2faUser] = useState<DemoAccount | null>(null);
+  const [twoFactorMethodLabel, setTwoFactorMethodLabel] = useState<'authenticator' | 'sms' | 'email'>('authenticator');
+  const [twoFactorSecret, setTwoFactorSecret] = useState<string>('');
+  const [login2faCode, setLogin2faCode] = useState('');
+  const [login2faError, setLogin2faError] = useState<string | null>(null);
+  const [login2faVerifying, setLogin2faVerifying] = useState(false);
+  const [dispatchedLoginOtp, setDispatchedLoginOtp] = useState<{ method: 'sms' | 'email'; destination: string; code: string } | null>(null);
+
   // Ref to scroll to login box
   const loginSectionRef = useRef<HTMLDivElement>(null);
 
+  const primaryIds = ['sch-gn-ck-001', 'sch-gn-kd-003', 'sch-gn-ck-005'];
+  const extraSchools = schools.filter(s => !primaryIds.includes(s.id) && s.status !== 'archived');
+
   const schoolsList = [
-    { id: 'ECOLE-001', name: 'Lycée d\'Excellence de Conakry', city: 'Kaloum, Conakry' },
-    { id: 'ECOLE-002', name: 'Collège & Lycée Sainte-Marie', city: 'Dixinn, Conakry' },
-    { id: 'ECOLE-003', name: 'Groupe Scolaire Hadja Mafory Bangoura', city: 'Matam, Conakry' },
+    {
+      id: 'ECOLE-001',
+      name: schools.find(s => s.id === 'sch-gn-ck-001')?.name || "Lycée d'Excellence de Conakry",
+      city: schools.find(s => s.id === 'sch-gn-ck-001')?.city || 'Kaloum, Conakry'
+    },
+    {
+      id: 'ECOLE-002',
+      name: schools.find(s => s.id === 'sch-gn-kd-003')?.name || 'Collège & Lycée Sainte-Marie',
+      city: schools.find(s => s.id === 'sch-gn-kd-003')?.city || 'Dixinn, Conakry'
+    },
+    {
+      id: 'ECOLE-003',
+      name: schools.find(s => s.id === 'sch-gn-ck-005')?.name || 'Groupe Scolaire Hadja Mafory Bangoura',
+      city: schools.find(s => s.id === 'sch-gn-ck-005')?.city || 'Matam, Conakry'
+    },
+    ...extraSchools.map(s => ({ id: s.id, name: s.name, city: s.city })),
     { id: 'NATIONAL', name: 'Direction Nationale MEPU-A (Niveau Central)', city: 'Conakry' }
   ];
 
@@ -110,6 +136,109 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
       status: user.status,
       mustChangePassword: user.mustChangePassword
     });
+  };
+
+  const proceedAfterPasswordCheck = (user: DemoAccount) => {
+    if (user.role === 'school_admin') {
+      const cfg = loadSchoolSecurityConfig(user.ecoleId || schoolId);
+      if (cfg.twoFactorEnabled) {
+        setTwoFactorMethodLabel(cfg.twoFactorMethod);
+        setTwoFactorSecret(cfg.totpSecret);
+        setLogin2faCode('');
+        setLogin2faError(null);
+        setDispatchedLoginOtp(null);
+        setPending2faUser(user);
+        return;
+      }
+    }
+    if (user.role === 'super_admin') {
+      const superCfg = loadSuperAdminSecurityConfig();
+      if (superCfg.twoFactorEnabled) {
+        setTwoFactorMethodLabel('authenticator');
+        setTwoFactorSecret(superCfg.totpSecret);
+        setLogin2faCode('');
+        setLogin2faError(null);
+        setDispatchedLoginOtp(null);
+        setPending2faUser(user);
+        return;
+      }
+    }
+    handleCompleteLogin(user);
+  };
+
+  const handleSendLogin2faOtp = (channel: 'sms' | 'email') => {
+    if (!pending2faUser) return;
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const destination =
+      channel === 'email'
+        ? pending2faUser.email
+        : schools.find(s => s.id === pending2faUser.ecoleId || s.code === pending2faUser.ecoleId)?.phone || '+224 622 00 00 00';
+    setDispatchedLoginOtp({ method: channel, destination, code });
+    setLogin2faError(null);
+  };
+
+  const handleVerifyLogin2fa = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pending2faUser) return;
+    setLogin2faError(null);
+
+    const clean = login2faCode.trim();
+    if (!/^\d{6}$/.test(clean)) {
+      setLogin2faError('Veuillez saisir un code 2FA valide à 6 chiffres.');
+      return;
+    }
+
+    setLogin2faVerifying(true);
+    try {
+      let ok = false;
+      if (twoFactorMethodLabel === 'authenticator') {
+        const totpOk = await verifyTotpCode(twoFactorSecret, clean, 1);
+        const otpOk = dispatchedLoginOtp !== null && clean === dispatchedLoginOtp.code;
+        ok = totpOk || otpOk;
+      } else {
+        ok = dispatchedLoginOtp !== null && clean === dispatchedLoginOtp.code;
+      }
+
+      if (!ok) {
+        if (pending2faUser.role === 'school_admin') {
+          const resolvedId = getCanonicalSchoolId(pending2faUser.ecoleId || schoolId);
+          appendSchoolLoginLog(resolvedId, {
+            schoolId: resolvedId,
+            userName: `${pending2faUser.name} (Échec 2FA Connexion)`,
+            role: 'Admin École',
+            ip: '197.149.214.33',
+            device: 'Navigateur Web · Connexion Portail',
+            location: 'Conakry, Guinée',
+            status: 'echec'
+          });
+        }
+        setLogin2faError(
+          twoFactorMethodLabel === 'authenticator'
+            ? 'Code Authenticator incorrect ou expiré. Vérifiez votre application ou demandez un code SMS / Email.'
+            : 'Code OTP incorrect. Cliquez d’abord sur « Envoyer un code par SMS / Email ».'
+        );
+        return;
+      }
+
+      if (pending2faUser.role === 'school_admin') {
+        const resolvedId = getCanonicalSchoolId(pending2faUser.ecoleId || schoolId);
+        appendSchoolLoginLog(resolvedId, {
+          schoolId: resolvedId,
+          userName: `${pending2faUser.name} (Connexion 2FA)`,
+          role: 'Admin École',
+          ip: '197.149.214.33',
+          device: 'Navigateur Web · Double Facteur Validé',
+          location: 'Conakry, Guinée',
+          status: 'succes'
+        });
+      }
+
+      const verifiedUser = pending2faUser;
+      setPending2faUser(null);
+      handleCompleteLogin(verifiedUser);
+    } finally {
+      setLogin2faVerifying(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -139,7 +268,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
         return;
       }
 
-      handleCompleteLogin(result.user);
+      proceedAfterPasswordCheck(result.user);
     }, 350);
   };
 
@@ -168,7 +297,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
         mustChangePassword: false
       };
       setPendingFirstLoginUser(null);
-      handleCompleteLogin(updatedUser);
+      proceedAfterPasswordCheck(updatedUser);
     }
   };
 
@@ -266,8 +395,6 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
                   <ShieldCheck className="w-4 h-4 text-blue-600" />
                   <span>Attribution des Comptes</span>
                 </button>
-
-                <PWAInstallButton variant="hero" />
               </div>
 
               {/* Trust Indicators */}
@@ -495,8 +622,12 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Feature 1: Classroom */}
-            <div className="rounded-3xl overflow-hidden bg-white border border-blue-100 hover:border-blue-200 transition-all shadow-md shadow-blue-900/5 flex flex-col group">
-              <div className="relative h-52 overflow-hidden">
+            <button
+              type="button"
+              onClick={scrollToLogin}
+              className="rounded-3xl overflow-hidden bg-white border border-blue-100 hover:border-blue-300 transition-all shadow-md shadow-blue-900/5 flex flex-col group text-left cursor-pointer"
+            >
+              <div className="relative h-52 w-full overflow-hidden">
                 <img
                   src={activePhotos.classroom}
                   alt="Apprentissage et technologie en classe"
@@ -514,7 +645,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
                   Élèves & Pédagogie
                 </div>
               </div>
-              <div className="p-5 flex-1 flex flex-col justify-between space-y-3 text-left">
+              <div className="p-5 flex-1 w-full flex flex-col justify-between space-y-3 text-left">
                 <div>
                   <h3 className="text-base font-bold text-blue-950 group-hover:text-blue-700 transition-colors">
                     Saisie des Notes & Bulletins Officiels
@@ -525,14 +656,18 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
                 </div>
                 <div className="pt-3 border-t border-slate-100 text-xs font-semibold text-blue-600 flex items-center justify-between">
                   <span>Suivi continu des compétences</span>
-                  <ArrowUpRight className="w-4 h-4" />
+                  <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </div>
               </div>
-            </div>
+            </button>
 
             {/* Feature 2: Teachers */}
-            <div className="rounded-3xl overflow-hidden bg-white border border-blue-100 hover:border-blue-200 transition-all shadow-md shadow-blue-900/5 flex flex-col group">
-              <div className="relative h-52 overflow-hidden">
+            <button
+              type="button"
+              onClick={scrollToLogin}
+              className="rounded-3xl overflow-hidden bg-white border border-blue-100 hover:border-amber-300 transition-all shadow-md shadow-blue-900/5 flex flex-col group text-left cursor-pointer"
+            >
+              <div className="relative h-52 w-full overflow-hidden">
                 <img
                   src={activePhotos.teacher}
                   alt="Enseignants d'excellence"
@@ -550,7 +685,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
                   Corps Enseignant
                 </div>
               </div>
-              <div className="p-5 flex-1 flex flex-col justify-between space-y-3 text-left">
+              <div className="p-5 flex-1 w-full flex flex-col justify-between space-y-3 text-left">
                 <div>
                   <h3 className="text-base font-bold text-blue-950 group-hover:text-amber-700 transition-colors">
                     Cartes Scolaires PVC & Emplois du Temps
@@ -561,14 +696,18 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
                 </div>
                 <div className="pt-3 border-t border-slate-100 text-xs font-semibold text-amber-700 flex items-center justify-between">
                   <span>Conforme aux normes PVC ISO</span>
-                  <ArrowUpRight className="w-4 h-4" />
+                  <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </div>
               </div>
-            </div>
+            </button>
 
             {/* Feature 3: Library */}
-            <div className="rounded-3xl overflow-hidden bg-white border border-blue-100 hover:border-blue-200 transition-all shadow-md shadow-blue-900/5 flex flex-col group">
-              <div className="relative h-52 overflow-hidden">
+            <button
+              type="button"
+              onClick={scrollToLogin}
+              className="rounded-3xl overflow-hidden bg-white border border-blue-100 hover:border-emerald-300 transition-all shadow-md shadow-blue-900/5 flex flex-col group text-left cursor-pointer"
+            >
+              <div className="relative h-52 w-full overflow-hidden">
                 <img
                   src={activePhotos.library}
                   alt="Bibliothèque scolaire et lecture"
@@ -586,7 +725,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
                   Bibliothèque & Savoir
                 </div>
               </div>
-              <div className="p-5 flex-1 flex flex-col justify-between space-y-3 text-left">
+              <div className="p-5 flex-1 w-full flex flex-col justify-between space-y-3 text-left">
                 <div>
                   <h3 className="text-base font-bold text-blue-950 group-hover:text-emerald-700 transition-colors">
                     Bibliothèque Numérique & Vrais Livres
@@ -597,53 +736,15 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
                 </div>
                 <div className="pt-3 border-t border-slate-100 text-xs font-semibold text-emerald-700 flex items-center justify-between">
                   <span>Liseuse intégrée sans publicité</span>
-                  <ArrowUpRight className="w-4 h-4" />
+                  <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </div>
               </div>
-            </div>
+            </button>
           </div>
         </section>
 
         {/* =========================================================================
-            SECTION 4: ÉTABLISSEMENTS PARTENAIRES DÉPLOYÉS
-        ========================================================================= */}
-        <section className="p-6 sm:p-8 rounded-3xl bg-white border border-blue-100 space-y-6 shadow-md shadow-blue-900/5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="text-left">
-              <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">Réseau d'Établissements Pilotes</span>
-              <h3 className="text-xl font-bold text-blue-950">Écoles Connectées au Réseau MEPU-A</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
-                ● 100% Connecté & Opérationnel
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {schoolsList.filter(s => s.id !== 'NATIONAL').map(school => (
-              <div key={school.id} className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 text-left space-y-2 hover:border-blue-200 transition-colors">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">
-                    {school.id}
-                  </span>
-                  <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-rose-500" />
-                    <span>{school.city}</span>
-                  </span>
-                </div>
-                <div className="font-bold text-sm text-blue-950">{school.name}</div>
-                <div className="text-[11px] text-slate-500 flex items-center gap-2">
-                  <GraduationCap className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Cycle Primaire, Collège & Lycée</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* =========================================================================
-            SECTION 5: SIGNATURE & CONTACT DU DÉVELOPPEUR SAÏD SOUMAH
+            SECTION 4: SIGNATURE & CONTACT DU DÉVELOPPEUR SAÏD SOUMAH
         ========================================================================= */}
         <section className="rounded-3xl bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white p-6 sm:p-8 shadow-xl">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-left">
@@ -831,6 +932,114 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
                 Fermer
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Mandatory 2FA Second Factor Challenge Modal */}
+      {pending2faUser && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md rounded-3xl bg-white border border-blue-100 shadow-2xl p-6 space-y-4 text-left">
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+              <div className="w-10 h-10 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-blue-950">Double Authentification (2FA) Requise</h3>
+                <p className="text-[11px] text-slate-500">
+                  {pending2faUser.name} · {pending2faUser.schoolName || 'Administration'}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-blue-50 border border-blue-200 text-xs text-slate-700 space-y-1">
+              <div className="font-bold text-blue-950">
+                Canal configuré :{' '}
+                {twoFactorMethodLabel === 'authenticator'
+                  ? 'Google / Microsoft Authenticator (TOTP)'
+                  : twoFactorMethodLabel === 'sms'
+                  ? 'SMS Sécurisé'
+                  : 'Code temporaire par Email'}
+              </div>
+              <p className="text-[11px]">
+                Saisissez le code à 6 chiffres de votre application Authenticator ou recevez un code temporaire par SMS / Email ci-dessous.
+              </p>
+            </div>
+
+            {login2faError && (
+              <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+                <span>{login2faError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleVerifyLogin2fa} className="space-y-3 text-xs">
+              <div className="space-y-1">
+                <label className="font-semibold text-slate-700">Code de vérification 2FA (6 chiffres) *</label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  autoFocus
+                  required
+                  value={login2faCode}
+                  onChange={e => setLogin2faCode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="000000"
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 font-mono text-center text-lg font-black tracking-[0.35em] focus:outline-hidden focus:border-blue-600 focus:bg-white"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSendLogin2faOtp('sms')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-semibold text-[11px] cursor-pointer"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>Recevoir code par SMS</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendLogin2faOtp('email')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-semibold text-[11px] cursor-pointer"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Recevoir par Email</span>
+                </button>
+              </div>
+
+              {dispatchedLoginOtp && (
+                <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-[11px] flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-1.5 truncate">
+                    <Send className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Code envoyé ({dispatchedLoginOtp.method.toUpperCase()}) à {dispatchedLoginOtp.destination}</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-white border border-emerald-300 font-mono font-black text-emerald-800">
+                    {dispatchedLoginOtp.code}
+                  </span>
+                </div>
+              )}
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPending2faUser(null);
+                    setLogin2faCode('');
+                    setDispatchedLoginOtp(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={login2faVerifying || login2faCode.length !== 6}
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-blue-600/20 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{login2faVerifying ? 'Vérification...' : 'Valider & Entrer'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

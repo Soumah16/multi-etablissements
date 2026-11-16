@@ -27,7 +27,7 @@ import { AccountantProvider } from './context/AccountantContext';
 import { AccountantLayout } from './components/accountant/AccountantLayout';
 import { SupervisorProvider } from './context/SupervisorContext';
 import { SupervisorLayout } from './components/supervisor/SupervisorLayout';
-import { LibrarianProvider } from './context/LibrarianContext';
+import { LibrarianProvider, useLibrarian } from './context/LibrarianContext';
 import { LibrarianLayout } from './components/librarian/LibrarianLayout';
 import { ParentProvider } from './context/ParentContext';
 import { ParentLayout } from './components/parent/ParentLayout';
@@ -54,6 +54,11 @@ export type WorkspaceMode =
 const MainLayout: React.FC = () => {
   const { activeTab, toastMessage, isRtl, schools, showToast } = useApp();
   const { setCurrentSchoolId, currentSchool } = useSchoolAdmin();
+  const {
+    setActiveSchoolId,
+    authorizeLibrarianSession,
+    logoutFromLibrary
+  } = useLibrarian();
 
   // Authentication gate state
   const [currentUser, setCurrentUser] = useState<AuthenticatedUser | null>(() => {
@@ -82,6 +87,12 @@ const MainLayout: React.FC = () => {
     setWorkspaceMode(user.role);
     if (user.ecoleId && user.ecoleId !== 'NATIONAL') {
       setCurrentSchoolId(user.ecoleId);
+      setActiveSchoolId(user.ecoleId);
+    }
+    if (user.role === 'librarian') {
+      authorizeLibrarianSession(user);
+    } else {
+      logoutFromLibrary();
     }
     try {
       sessionStorage.setItem('smartschool_current_user', JSON.stringify(user));
@@ -90,14 +101,18 @@ const MainLayout: React.FC = () => {
     }
   };
 
-  // Keep school synchronized with logged-in user
+  // Keep school synchronized with logged-in user and selected school
   React.useEffect(() => {
     if (currentUser?.ecoleId && currentUser.ecoleId !== 'NATIONAL') {
       setCurrentSchoolId(currentUser.ecoleId);
+      setActiveSchoolId(currentUser.ecoleId);
+    } else if (currentSchool?.id) {
+      setActiveSchoolId(currentSchool.id);
     }
-  }, [currentUser?.ecoleId, setCurrentSchoolId]);
+  }, [currentUser?.ecoleId, currentSchool?.id, setCurrentSchoolId, setActiveSchoolId]);
 
   const handleLogout = () => {
+    logoutFromLibrary();
     setCurrentUser(null);
     setPendingRoleSwitch(null);
     try {
@@ -126,11 +141,20 @@ const MainLayout: React.FC = () => {
   };
 
   const handleRoleSwitchSuccess = (newUser: AuthenticatedUser) => {
-    if (pendingRoleSwitch?.schoolId) {
-      setCurrentSchoolId(pendingRoleSwitch.schoolId);
+    const nextSchoolId =
+      pendingRoleSwitch?.schoolId ||
+      (newUser.ecoleId && newUser.ecoleId !== 'NATIONAL' ? newUser.ecoleId : undefined);
+    if (nextSchoolId) {
+      setCurrentSchoolId(nextSchoolId);
+      setActiveSchoolId(nextSchoolId);
     }
     setCurrentUser(newUser);
     setWorkspaceMode(newUser.role);
+    if (newUser.role === 'librarian') {
+      authorizeLibrarianSession(newUser);
+    } else {
+      logoutFromLibrary();
+    }
     try {
       sessionStorage.setItem('smartschool_current_user', JSON.stringify(newUser));
     } catch {
@@ -153,7 +177,16 @@ const MainLayout: React.FC = () => {
   const handleSwitchToTeacher = () => requestRoleSwitch('teacher');
   const handleSwitchToAccountant = () => requestRoleSwitch('accountant');
   const handleSwitchToSupervisor = () => requestRoleSwitch('supervisor');
-  const handleSwitchToLibrarian = () => requestRoleSwitch('librarian');
+  const handleSwitchToLibrarian = () => {
+    // Every visitor entering the library must connect with their personal account;
+    // only an already-signed-in school librarian keeps direct admin access.
+    if (currentUser.role === 'librarian') {
+      authorizeLibrarianSession(currentUser);
+    } else {
+      logoutFromLibrary();
+    }
+    setWorkspaceMode('librarian');
+  };
   const handleSwitchToParent = () => requestRoleSwitch('parent');
   const handleSwitchToStudent = () => requestRoleSwitch('student');
 
@@ -194,8 +227,14 @@ const MainLayout: React.FC = () => {
 
     if (workspaceMode === 'librarian') {
       return (
-        <LibrarianLayout 
+        <LibrarianLayout
           onLogout={handleLogout}
+          onExitLibrary={() => {
+            if (currentUser.role !== 'librarian') {
+              logoutFromLibrary();
+            }
+            setWorkspaceMode(currentUser.role);
+          }}
           onReturnToSuperAdmin={handleSwitchToSuperAdmin}
           onReturnToSchoolAdmin={handleSwitchToSchoolAdmin}
           onSwitchToDirector={handleSwitchToDirector}

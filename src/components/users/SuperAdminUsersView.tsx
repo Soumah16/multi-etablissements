@@ -31,9 +31,12 @@ import {
   X, 
   ExternalLink,
   Download,
-  AlertCircle
+  AlertCircle,
+  FileSpreadsheet
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { RealQrCode } from '../common/RealQrCode';
+import { downloadUsersExcel } from '../../utils/exportDocuments';
 
 interface SuperAdminUsersViewProps {
   onSwitchToUser?: (user: any) => void;
@@ -229,9 +232,18 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
     if (showToast) showToast('Exportation CSV des comptes et mots de passe réussie !');
     if (addLog) {
       addLog('Exportation CSV du registre confidentiel de tous les comptes et mots de passe', 'Direction Nationale MEPU-A', 'securite', 'warning');
+    }
+  };
+
+  const exportAllAccountsExcel = (list: DemoAccount[] = accounts) => {
+    const filename = downloadUsersExcel(list);
+    if (showToast) showToast(`Exportation Excel (.xlsx) réussie : ${filename}`);
+    if (addLog) {
+      addLog('Exportation Excel (.xlsx) du registre confidentiel des comptes', 'Direction Nationale MEPU-A', 'securite', 'warning');
     }
   };
 
@@ -287,6 +299,16 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
           >
             <Key className="w-4 h-4 text-amber-700" />
             <span>Liste de Tous les Comptes & Mots de Passe</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => exportAllAccountsExcel(filteredAccounts)}
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors shadow-xs cursor-pointer"
+            title="Télécharger fichier Excel (.xlsx)"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span>Excel (.xlsx)</span>
           </button>
 
           <button
@@ -802,9 +824,9 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                     Vous pouvez également présenter ce QR Code sur le portail d'identification SmartSchool ERP pour une authentification automatique sans saisie manuelle.
                   </p>
                 </div>
-                <div className="p-2 bg-white rounded-lg border border-slate-300 text-center">
-                  <QrCode className="w-16 h-16 text-slate-900" />
-                  <span className="text-[8px] font-mono text-slate-500">AUTH-{selectedAccountForSlip.matricule}</span>
+                <div className="p-2 bg-white rounded-lg border border-slate-300 text-center flex flex-col items-center">
+                  <RealQrCode value={`AUTH|${selectedAccountForSlip.matricule}|${selectedAccountForSlip.email}`} size={64} fgColor="#0f172a" />
+                  <span className="text-[8px] font-mono text-slate-500 mt-1">AUTH-{selectedAccountForSlip.matricule}</span>
                 </div>
               </div>
 
@@ -917,6 +939,14 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => exportAllAccountsExcel(accounts)}
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-xs font-semibold text-emerald-800 border border-emerald-200 cursor-pointer"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Exporter Excel</span>
+                </button>
                 <button
                   type="button"
                   onClick={exportAllAccountsCsv}

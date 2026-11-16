@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useDirector } from '../../context/DirectorContext';
+import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { DirectorNewsItem } from '../../types/director';
 import { ImageUploadField } from '../common/ImageUploadField';
+import { downloadArticlePdf } from '../../utils/exportDocuments';
 import { 
   Newspaper, 
   Plus, 
@@ -10,15 +12,15 @@ import {
   Download, 
   Trash2, 
   Calendar, 
-  User, 
   X, 
   Check, 
   Paperclip,
-  Share2
+  Upload
 } from 'lucide-react';
 
 export const DirectorNewsView: React.FC = () => {
-  const { newsItems, createNews, deleteNews, profile } = useDirector();
+  const { newsItems, createNews, deleteNews, profile, showToast } = useDirector();
+  const { currentSchool } = useSchoolAdmin();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Form
@@ -53,6 +55,39 @@ export const DirectorNewsView: React.FC = () => {
     setPdfFilename('');
     setPdfUrl('');
     setIsModalOpen(false);
+  };
+
+  const handleDownloadArticlePdf = (item: DirectorNewsItem) => {
+    if (item.pdfUrl && (item.pdfUrl.startsWith('data:') || item.pdfUrl.startsWith('blob:'))) {
+      const a = document.createElement('a');
+      a.href = item.pdfUrl;
+      a.download = item.pdfFilename || `${item.title.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast(`Pièce jointe PDF téléchargée : ${a.download}`);
+      return;
+    }
+    const filename = downloadArticlePdf(item, currentSchool?.name || profile.schoolName);
+    showToast(`Document PDF généré et téléchargé : ${filename}`);
+  };
+
+  const handlePdfFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      showToast('Le fichier PDF ne doit pas dépasser 4 Mo.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setPdfUrl(reader.result);
+        setPdfFilename(file.name);
+        showToast(`PDF « ${file.name} » chargé avec succès.`);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -126,23 +161,30 @@ export const DirectorNewsView: React.FC = () => {
                   {item.summary}
                 </p>
 
-                {item.pdfFilename && (
+                {item.pdfFilename ? (
                   <div className="p-2 rounded-lg bg-blue-50/60 border border-slate-200 flex items-center justify-between text-xs mt-3">
                     <div className="flex items-center gap-2 truncate">
                       <FileText className="w-4 h-4 text-rose-600 shrink-0" />
                       <span className="font-medium text-slate-900 truncate">{item.pdfFilename}</span>
                     </div>
-                    <a
-                      href={item.pdfUrl || '#'}
-                      download={item.pdfFilename}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="p-1 text-slate-500 hover:text-blue-950 shrink-0"
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadArticlePdf(item)}
+                      className="p-1 text-blue-600 hover:text-blue-800 shrink-0 cursor-pointer"
                       title="Télécharger la pièce jointe PDF"
                     >
-                      <Download className="w-4 h-4 text-blue-600" />
-                    </a>
+                      <Download className="w-4 h-4" />
+                    </button>
                   </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadArticlePdf(item)}
+                    className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200 cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Exporter l'article en PDF</span>
+                  </button>
                 )}
               </div>
             </div>
@@ -259,11 +301,23 @@ export const DirectorNewsView: React.FC = () => {
 
               {/* PDF Attachment Fields */}
               <div className="p-3.5 rounded-xl bg-blue-50/60 border border-slate-200 space-y-3">
-                <span className="font-semibold text-slate-700 flex items-center gap-1.5">
-                  <Paperclip className="w-4 h-4 text-purple-600" />
-                  Pièce Jointe PDF (Optionnelle)
-                </span>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+                    <Paperclip className="w-4 h-4 text-purple-600" />
+                    Pièce Jointe PDF (Optionnelle)
+                  </span>
+                  <label className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-blue-200 text-blue-700 font-semibold cursor-pointer">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Importer un PDF depuis l'appareil</span>
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={handlePdfFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] text-slate-500 mb-1">Nom du fichier PDF affiché</label>
                     <input
@@ -275,12 +329,12 @@ export const DirectorNewsView: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] text-slate-500 mb-1">Lien / URL du document PDF</label>
+                    <label className="block text-[11px] text-slate-500 mb-1">Lien / URL du document PDF (ou auto-généré)</label>
                     <input
                       type="text"
-                      value={pdfUrl}
+                      value={pdfUrl.startsWith('data:') ? 'Fichier PDF local chargé ✓' : pdfUrl}
                       onChange={(e) => setPdfUrl(e.target.value)}
-                      placeholder="https://.../document.pdf"
+                      placeholder="Laissez vide pour génération PDF automatique"
                       className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 text-xs"
                     />
                   </div>

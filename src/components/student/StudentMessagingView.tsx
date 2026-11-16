@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useStudent } from '../../context/StudentContext';
+import { useSchoolAdmin } from '../../context/SchoolAdminContext';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { 
   MessageSquare, 
   Send, 
@@ -7,11 +9,19 @@ import {
   CheckCheck, 
   Paperclip, 
   Smile, 
-  Sparkles 
+  Sparkles,
+  MessageCircle,
+  ExternalLink
 } from 'lucide-react';
 
 export const StudentMessagingView: React.FC = () => {
   const { messages, sendMessage, profile } = useStudent();
+  const { currentSchool } = useSchoolAdmin();
+  const schoolWaPhone = getSchoolWhatsAppNumber(currentSchool);
+  const schoolWaUrl = buildWhatsAppUrl(
+    schoolWaPhone,
+    `Bonjour ${currentSchool.name}, élève ${profile.firstName} ${profile.lastName} (${profile.matricule}).`
+  );
   const [inputText, setInputText] = useState('');
   const [selectedRecipient, setSelectedRecipient] = useState('M. Mamadou Lamarana Diallo (Maths)');
 
@@ -33,11 +43,26 @@ export const StudentMessagingView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-xl md:text-2xl font-black text-blue-950">Messagerie Pédagogique</h1>
-        <p className="text-xs text-slate-500 mt-0.5">
-          Posez vos questions de cours, demandez des éclaircissements sur un exercice ou échangez avec vos professeurs.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl md:text-2xl font-black text-blue-950">Messagerie Pédagogique</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Posez vos questions de cours, demandez des éclaircissements sur un exercice ou contactez votre établissement sur WhatsApp.
+          </p>
+        </div>
+
+        {schoolWaUrl && (
+          <a
+            href={schoolWaUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all shrink-0 self-start sm:self-auto"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>WhatsApp {currentSchool.code || 'École'} ({schoolWaPhone})</span>
+            <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+          </a>
+        )}
       </div>
 
       <div className="rounded-2xl bg-white border border-blue-100 overflow-hidden flex flex-col h-[650px]">

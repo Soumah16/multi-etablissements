@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useParent } from '../../context/ParentContext';
+import { useSchoolAdmin } from '../../context/SchoolAdminContext';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { ParentNavTab } from '../../types/parent';
 import { ParentDashboardView } from './ParentDashboardView';
 import { ChildrenProfileView } from './ChildrenProfileView';
@@ -25,7 +27,8 @@ import {
   ChevronDown, 
   ArrowLeftRight,
   ShieldCheck,
-  LogOut
+  LogOut,
+  MessageCircle
 } from 'lucide-react';
 
 interface ParentLayoutProps {
@@ -62,6 +65,12 @@ export const ParentLayout: React.FC<ParentLayoutProps> = ({
     setSelectedChildId, 
     toastMessage 
   } = useParent();
+  const { currentSchool } = useSchoolAdmin();
+  const schoolWaPhone = getSchoolWhatsAppNumber(currentSchool);
+  const schoolWaUrl = buildWhatsAppUrl(
+    schoolWaPhone,
+    `Bonjour ${currentSchool.name}, je suis ${profile.name} (Parent d'élève).`
+  );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
 
@@ -340,6 +349,19 @@ export const ParentLayout: React.FC<ParentLayoutProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {schoolWaUrl && (
+              <a
+                href={schoolWaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition-colors"
+                title={`Contacter ${currentSchool.name} sur WhatsApp (${schoolWaPhone})`}
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">WhatsApp {currentSchool.code || 'École'}</span>
+              </a>
+            )}
+
             {/* Read-Only Notice Badge */}
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-xs font-medium">
               <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />

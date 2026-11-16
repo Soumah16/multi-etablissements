@@ -215,7 +215,7 @@ export const ParentManagementView: React.FC = () => {
               {/* Children Linked */}
               <div className="p-3 rounded-xl bg-blue-50/60 border border-blue-100 space-y-1.5">
                 <div className="flex items-center justify-between text-[10px] uppercase font-bold text-slate-500">
-                  <span>Enfants inscrits ({parent.childrenNames.length})</span>
+                  <span>Enfants inscrits ({Math.max(parent.childrenIds.length, parent.childrenNames.length)})</span>
                   <button
                     onClick={() => {
                       setLinkingParent(parent);
@@ -228,15 +228,42 @@ export const ParentManagementView: React.FC = () => {
                   </button>
                 </div>
 
-                {parent.childrenNames.length === 0 ? (
+                {parent.childrenIds.length === 0 && parent.childrenNames.length === 0 ? (
                   <div className="text-[11px] text-slate-500 italic">Aucun élève lié pour l'instant</div>
                 ) : (
                   <div className="flex flex-wrap gap-1.5 pt-0.5">
-                    {parent.childrenNames.map((c, idx) => (
-                      <span key={idx} className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                        {c}
-                      </span>
-                    ))}
+                    {parent.childrenIds.length > 0 ? (
+                      parent.childrenIds.map((cid, idx) => {
+                        const child = students.find(s => s.id === cid);
+                        const fallbackName = parent.childrenNames[idx] || 'Élève';
+                        return (
+                          <span
+                            key={cid}
+                            className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-800 border border-blue-200"
+                          >
+                            {child
+                              ? `${child.firstName} ${child.lastName} · ${child.matricule} · ${child.className}`
+                              : fallbackName}
+                          </span>
+                        );
+                      })
+                    ) : (
+                      parent.childrenNames.map((name, idx) => {
+                        const child = students.find(
+                          s => `${s.firstName} ${s.lastName}`.toLowerCase() === name.toLowerCase()
+                        );
+                        return (
+                          <span
+                            key={idx}
+                            className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-800 border border-blue-200"
+                          >
+                            {child
+                              ? `${child.firstName} ${child.lastName} · ${child.matricule} · ${child.className}`
+                              : name}
+                          </span>
+                        );
+                      })
+                    )}
                   </div>
                 )}
               </div>

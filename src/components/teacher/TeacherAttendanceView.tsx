@@ -17,6 +17,10 @@ import { triggerPrint } from '../../utils/printHelper';
 
 export const TeacherAttendanceView: React.FC = () => {
   const { 
+    classes,
+    selectedClassId,
+    setSelectedClassId,
+    getStudentsByClass,
     attendanceSession, 
     updateAttendanceStatus, 
     completeAttendanceSession 
@@ -74,6 +78,27 @@ export const TeacherAttendanceView: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Class Selector Tabs (all assigned classes, full roster) */}
+      <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-blue-100">
+        {classes.map(cls => {
+          const isActive = attendanceSession.classId === cls.id || selectedClassId === cls.id;
+          const count = getStudentsByClass(cls.id).length || cls.studentsCount;
+          return (
+            <button
+              key={cls.id}
+              onClick={() => setSelectedClassId(cls.id)}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                  : 'bg-white text-slate-600 border border-blue-100 hover:text-blue-950'
+              }`}
+            >
+              {cls.name.split('(')[0].trim()} ({count} élèves)
+            </button>
+          );
+        })}
       </div>
 
       {/* Session Information Card */}

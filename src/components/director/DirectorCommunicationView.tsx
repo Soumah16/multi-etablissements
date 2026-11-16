@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useDirector } from '../../context/DirectorContext';
+import { useSchoolAdmin } from '../../context/SchoolAdminContext';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { 
   Megaphone, 
   Send, 
@@ -12,11 +14,15 @@ import {
   Filter, 
   Search,
   Sparkles,
-  Share2
+  Share2,
+  MessageCircle,
+  ExternalLink
 } from 'lucide-react';
 
 export const DirectorCommunicationView: React.FC = () => {
   const { announcements, createAnnouncement, profile } = useDirector();
+  const { currentSchool } = useSchoolAdmin();
+  const schoolWaPhone = getSchoolWhatsAppNumber(currentSchool);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -63,6 +69,11 @@ export const DirectorCommunicationView: React.FC = () => {
     a.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const headerWaUrl = buildWhatsAppUrl(
+    schoolWaPhone,
+    `Bonjour, Direction des Études de ${currentSchool.name} (${profile.name}).`
+  );
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
@@ -79,17 +90,34 @@ export const DirectorCommunicationView: React.FC = () => {
             <span>Communication Omnicanale du Directeur</span>
           </h1>
           <p className="text-xs text-slate-700 mt-1">
-            Émission d'avis de service, notes de rentrée, alertes parents et communiqués officiels sur In-App, Email, SMS et WhatsApp.
+            Émission d'avis de service, notes de rentrée, alertes parents et communiqués officiels sur In-App, Email, SMS et WhatsApp ({schoolWaPhone || 'Non configuré'}).
           </p>
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30 transition-all shrink-0"
-        >
-          <Send className="w-4 h-4" />
-          <span>Rédiger un Communiqué</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {headerWaUrl && (
+            <a
+              href={headerWaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-600/20 transition-all"
+              title={`Ouvrir WhatsApp de ${currentSchool.name} (${schoolWaPhone})`}
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>WhatsApp {currentSchool.code || 'École'}</span>
+              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+            </a>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30 transition-all cursor-pointer"
+          >
+            <Send className="w-4 h-4" />
+            <span>Rédiger un Communiqué</span>
+          </button>
+        </div>
       </div>
 
       {/* Announcements List */}
@@ -106,56 +134,72 @@ export const DirectorCommunicationView: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 gap-4">
-          {filteredAnnouncements.map(ann => (
-            <div 
-              key={ann.id}
-              className="p-5 rounded-2xl bg-white border border-blue-100 hover:border-slate-200 transition-all space-y-3"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
-                    ann.priority === 'urgent' ? 'bg-rose-50 text-rose-700 border-rose-200' :
-                    ann.priority === 'officiel' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                    'bg-blue-50 text-blue-700 border-blue-200'
-                  }`}>
-                    {ann.priority === 'officiel' ? 'Communiqué Officiel' : ann.priority.toUpperCase()}
-                  </span>
-                  <span className="text-xs text-slate-500">Destinataires : </span>
-                  <span className="text-xs font-semibold text-slate-900">
-                    {ann.targetAudience === 'teachers' ? 'Enseignants' :
-                     ann.targetAudience === 'parents' ? 'Parents d\'élèves' :
-                     ann.targetAudience === 'students' ? 'Élèves' :
-                     ann.targetAudience === 'specific_class' ? ann.targetClassName : 'Toute la communauté'}
-                  </span>
+          {filteredAnnouncements.map(ann => {
+            const annWaUrl = ann.channels.includes('whatsapp')
+              ? buildWhatsAppUrl(schoolWaPhone, `[${currentSchool.name}] ${ann.title}\n\n${ann.content}`)
+              : '';
+            return (
+              <div 
+                key={ann.id}
+                className="p-5 rounded-2xl bg-white border border-blue-100 hover:border-slate-200 transition-all space-y-3"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                      ann.priority === 'urgent' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                      ann.priority === 'officiel' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                      'bg-blue-50 text-blue-700 border-blue-200'
+                    }`}>
+                      {ann.priority === 'officiel' ? 'Communiqué Officiel' : ann.priority.toUpperCase()}
+                    </span>
+                    <span className="text-xs text-slate-500">Destinataires : </span>
+                    <span className="text-xs font-semibold text-slate-900">
+                      {ann.targetAudience === 'teachers' ? 'Enseignants' :
+                       ann.targetAudience === 'parents' ? 'Parents d\'élèves' :
+                       ann.targetAudience === 'students' ? 'Élèves' :
+                       ann.targetAudience === 'specific_class' ? ann.targetClassName : 'Toute la communauté'}
+                    </span>
+                  </div>
+                  <span className="text-xs font-mono text-slate-500">{ann.createdAt}</span>
                 </div>
-                <span className="text-xs font-mono text-slate-500">{ann.createdAt}</span>
-              </div>
 
-              <div>
-                <h3 className="text-base font-bold text-blue-950">{ann.title}</h3>
-                <p className="text-xs text-slate-700 mt-1.5 leading-relaxed">{ann.content}</p>
-              </div>
+                <div>
+                  <h3 className="text-base font-bold text-blue-950">{ann.title}</h3>
+                  <p className="text-xs text-slate-700 mt-1.5 leading-relaxed">{ann.content}</p>
+                </div>
 
-              <div className="pt-3 border-t border-blue-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2 text-slate-500">
-                  <span>Diffusé via :</span>
-                  <div className="flex items-center gap-1.5">
-                    {ann.channels.map(ch => (
-                      <span key={ch} className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-50 text-slate-700 border border-slate-200">
-                        {ch === 'in_app' ? 'In-App' : ch === 'sms' ? 'SMS Guinée' : ch === 'whatsapp' ? 'WhatsApp' : 'Email'}
-                      </span>
-                    ))}
+                <div className="pt-3 border-t border-blue-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div className="flex flex-wrap items-center gap-2 text-slate-500">
+                    <span>Diffusé via :</span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {ann.channels.map(ch => (
+                        <span key={ch} className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-50 text-slate-700 border border-slate-200">
+                          {ch === 'in_app' ? 'In-App' : ch === 'sms' ? 'SMS Guinée' : ch === 'whatsapp' ? 'WhatsApp' : 'Email'}
+                        </span>
+                      ))}
+                      {annWaUrl && (
+                        <a
+                          href={annWaUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold transition-colors"
+                        >
+                          <MessageCircle className="w-3 h-3" />
+                          <span>Ouvrir WhatsApp ({schoolWaPhone})</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-slate-500 text-[11px]">
+                    <span>Signataire : <strong className="text-blue-950">{ann.author}</strong></span>
+                    <span>·</span>
+                    <span className="text-emerald-600 font-medium">{ann.readsCount} réceptions confirmées</span>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-3 text-slate-500 text-[11px]">
-                  <span>Signataire : <strong className="text-blue-950">{ann.author}</strong></span>
-                  <span>·</span>
-                  <span className="text-emerald-600 font-medium">{ann.readsCount} réceptions confirmées</span>
-                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -264,6 +308,22 @@ export const DirectorCommunicationView: React.FC = () => {
                     </button>
                   ))}
                 </div>
+                {channels.includes('whatsapp') && schoolWaPhone && (
+                  <div className="mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <span className="text-emerald-900">
+                      WhatsApp officiel de <strong>{currentSchool.name}</strong> : <strong className="font-mono">{schoolWaPhone}</strong>
+                    </span>
+                    <a
+                      href={buildWhatsAppUrl(schoolWaPhone, `[${currentSchool.name}] ${title || 'Communiqué Officiel'}\n\n${content}`)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px]"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>Envoyer via WhatsApp</span>
+                    </a>
+                  </div>
+                )}
               </div>
 
               <div>

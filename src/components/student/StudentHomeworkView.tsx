@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useStudent } from '../../context/StudentContext';
 import { StudentHomeworkSubmission } from '../../types/student';
+import { downloadHomeworkStatementPdf, downloadSubmittedHomeworkFile } from '../../utils/exportDocuments';
 import { 
   FileText, 
   Upload, 
@@ -20,7 +21,7 @@ import {
 } from 'lucide-react';
 
 export const StudentHomeworkView: React.FC = () => {
-  const { homeworks, submitHomework, showToast } = useStudent();
+  const { homeworks, submitHomework, showToast, profile } = useStudent();
   const [selectedHomework, setSelectedHomework] = useState<StudentHomeworkSubmission | null>(null);
   const [previewSubmissionHw, setPreviewSubmissionHw] = useState<StudentHomeworkSubmission | null>(null);
 
@@ -206,7 +207,21 @@ export const StudentHomeworkView: React.FC = () => {
               {/* Actions */}
               <div className="pt-3 border-t border-blue-100 flex items-center justify-between">
                 <button
-                  onClick={() => showToast(`Téléchargement de l'énoncé officiel « ${hw.title} »...`)}
+                  onClick={() => {
+                    const file = downloadHomeworkStatementPdf({
+                      title: hw.title,
+                      subject: hw.subject,
+                      teacherName: hw.teacherName,
+                      className: profile.className,
+                      assignedDate: hw.assignedDate,
+                      dueDate: hw.dueDate,
+                      maxScore: hw.maxScore,
+                      description: hw.description,
+                      schoolName: profile.schoolName,
+                      attachmentUrl: hw.subjectFileUrl
+                    });
+                    showToast(`Énoncé téléchargé : ${file}`);
+                  }}
                   className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-semibold cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -428,16 +443,27 @@ export const StudentHomeworkView: React.FC = () => {
                       <span className="text-slate-500 italic">{previewSubmissionHw.submissionNote}</span>
                     </div>
                   )}
-                  {previewSubmissionHw.submittedFileData && (
-                    <a
-                      href={previewSubmissionHw.submittedFileData}
-                      download={previewSubmissionHw.submittedFile}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold shadow-md cursor-pointer mt-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Télécharger le fichier original</span>
-                    </a>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const file = downloadSubmittedHomeworkFile({
+                        studentName: `${profile.firstName} ${profile.lastName}`,
+                        studentMatricule: profile.matricule,
+                        homeworkTitle: previewSubmissionHw.title,
+                        fileName: previewSubmissionHw.submittedFile || 'Copie_Devoir.pdf',
+                        fileUrl: previewSubmissionHw.submittedFileData,
+                        submittedAt: previewSubmissionHw.submissionDate || new Date().toLocaleDateString('fr-FR'),
+                        grade: previewSubmissionHw.score,
+                        maxScore: previewSubmissionHw.maxScore,
+                        teacherComment: previewSubmissionHw.teacherFeedback
+                      });
+                      showToast(`Copie téléchargée : ${file}`);
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold shadow-md cursor-pointer mt-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Télécharger ma copie</span>
+                  </button>
                 </div>
               )}
             </div>

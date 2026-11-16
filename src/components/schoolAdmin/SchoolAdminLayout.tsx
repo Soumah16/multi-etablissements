@@ -19,8 +19,10 @@ import {
   Menu,
   X,
   Lock,
-  Globe
+  Globe,
+  MessageCircle
 } from 'lucide-react';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { SchoolAdminDashboard } from './SchoolAdminDashboard';
 import { StaffManagementView } from './StaffManagementView';
 import { ClassesManagementView } from './ClassesManagementView';
@@ -65,6 +67,11 @@ export const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
   } = useSchoolAdmin();
   const { schools, admins } = useApp();
   const assignedAdmin = admins.find(a => a.schoolId === currentSchool.id);
+  const schoolWaPhone = getSchoolWhatsAppNumber(currentSchool);
+  const schoolWaUrl = buildWhatsAppUrl(
+    schoolWaPhone,
+    `Bonjour ${currentSchool.name}, administration de l'établissement.`
+  );
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
@@ -343,6 +350,20 @@ export const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
                 {currentSchool.code || currentSchool.id}
               </span>
             </div>
+
+            {/* School WhatsApp Button */}
+            {schoolWaUrl && (
+              <a
+                href={schoolWaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition-colors"
+                title={`Contacter ${currentSchool.name} sur WhatsApp (${schoolWaPhone})`}
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">WhatsApp {currentSchool.code || 'École'}</span>
+              </a>
+            )}
 
             {/* Admin identity badge */}
             <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-xs">

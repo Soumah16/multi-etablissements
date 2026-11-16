@@ -1,21 +1,63 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import QRCode from 'qrcode';
 import { useApp } from '../../context/AppContext';
+import { buildOtpAuthUri, generateTotpCode, generateTotpSecret, verifyTotpCode } from '../../utils/totp';
 import { 
   ShieldCheck, 
-  ShieldAlert, 
   Smartphone, 
   Laptop, 
   LogOut, 
   Ban, 
   CheckCircle2, 
-  AlertTriangle, 
-  KeyRound, 
   Lock, 
   Search,
-  Filter,
-  Plus,
-  X
+  Copy,
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
+
+const SUPERADMIN_2FA_STORAGE_KEY = 'smartschool_superadmin_security_v1';
+
+export interface SuperAdminSecurityStorage {
+  twoFactorEnabled: boolean;
+  totpSecret: string;
+}
+
+export function loadSuperAdminSecurityConfig(): SuperAdminSecurityStorage {
+  try {
+    const raw = localStorage.getItem(SUPERADMIN_2FA_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        twoFactorEnabled: typeof parsed.twoFactorEnabled === 'boolean' ? parsed.twoFactorEnabled : true,
+        totpSecret:
+          typeof parsed.totpSecret === 'string' && parsed.totpSecret.length >= 16
+            ? parsed.totpSecret
+            : generateTotpSecret(16)
+      };
+    }
+  } catch {
+    // ignore storage errors
+  }
+  const fresh: SuperAdminSecurityStorage = {
+    twoFactorEnabled: true,
+    totpSecret: generateTotpSecret(16)
+  };
+  try {
+    localStorage.setItem(SUPERADMIN_2FA_STORAGE_KEY, JSON.stringify(fresh));
+  } catch {
+    // ignore
+  }
+  return fresh;
+}
+
+export function saveSuperAdminSecurityConfig(cfg: SuperAdminSecurityStorage): void {
+  try {
+    localStorage.setItem(SUPERADMIN_2FA_STORAGE_KEY, JSON.stringify(cfg));
+  } catch {
+    // ignore
+  }
+}
 
 export const SecurityView: React.FC = () => {
   const { 
@@ -35,6 +77,49 @@ export const SecurityView: React.FC = () => {
   const [logSearch, setLogSearch] = useState('');
   const [newIpToBlock, setNewIpToBlock] = useState('');
 
+  // Persisted Super Admin 2FA state
+  const [totpSecret, setTotpSecret] = useState<string>(() => loadSuperAdminSecurityConfig().totpSecret);
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [liveTotpCode, setLiveTotpCode] = useState('------');
+  const [remainingSeconds, setRemainingSeconds] = useState(30);
+  const [testCode, setTestCode] = useState('');
+  const [testFeedback, setTestFeedback] = useState<{ text: string; error: boolean } | null>(null);
+
+  useEffect(() => {
+    saveSuperAdminSecurityConfig({
+      twoFactorEnabled: profile.twoFactorEnabled,
+      totpSecret
+    });
+  }, [profile.twoFactorEnabled, totpSecret]);
+
+  useEffect(() => {
+    const uri = buildOtpAuthUri(totpSecret, profile.email || 'superadmin@smartschool.gn', 'SmartSchool SuperAdmin');
+    QRCode.toDataURL(uri, { width: 170, margin: 1 })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(''));
+  }, [totpSecret, profile.email]);
+
+  useEffect(() => {
+    let mounted = true;
+    const tick = async () => {
+      try {
+        const res = await generateTotpCode(totpSecret);
+        if (mounted) {
+          setLiveTotpCode(res.code);
+          setRemainingSeconds(res.remainingSeconds);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+    };
+  }, [totpSecret]);
+
   const filteredLogs = auditLogs.filter(log => {
     const matchesSearch = 
       log.action.toLowerCase().includes(logSearch.toLowerCase()) ||
@@ -50,7 +135,24 @@ export const SecurityView: React.FC = () => {
   const handleToggle2fa = () => {
     const nextState = !profile.twoFactorEnabled;
     updateProfile({ twoFactorEnabled: nextState });
-    showToast(`2FA ${nextState ? 'activé' : 'désactivé'}`);
+    showToast(`Double Authentification (2FA) Super Admin ${nextState ? 'activée' : 'désactivée'}`);
+  };
+
+  const handleRegenerateSecret = () => {
+    setTotpSecret(generateTotpSecret(16));
+    setTestFeedback(null);
+    showToast('Nouvelle clé secrète 2FA générée.');
+  };
+
+  const handleVerifyTestCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const ok = await verifyTotpCode(totpSecret, testCode, 1);
+    if (ok) {
+      setTestFeedback({ text: 'Code 2FA Authenticator validé avec succès !', error: false });
+      setTestCode('');
+    } else {
+      setTestFeedback({ text: 'Code invalide ou expiré. Réessayez avec le code en direct.', error: true });
+    }
   };
 
   const handleAddBlockIp = (e: React.FormEvent) => {
@@ -82,10 +184,10 @@ export const SecurityView: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-blue-100 text-xs">
+      <div className="flex items-center gap-4 overflow-x-auto border-b border-blue-100 text-xs">
         <button
           onClick={() => setActiveTab('sessions')}
-          className={`pb-3 font-semibold transition-colors border-b-2 ${
+          className={`pb-3 font-semibold transition-colors border-b-2 whitespace-nowrap cursor-pointer ${
             activeTab === 'sessions'
               ? 'text-blue-600 border-blue-500'
               : 'text-slate-500 hover:text-slate-900 border-transparent'
@@ -96,7 +198,7 @@ export const SecurityView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('logs')}
-          className={`pb-3 font-semibold transition-colors border-b-2 ${
+          className={`pb-3 font-semibold transition-colors border-b-2 whitespace-nowrap cursor-pointer ${
             activeTab === 'logs'
               ? 'text-blue-600 border-blue-500'
               : 'text-slate-500 hover:text-slate-900 border-transparent'
@@ -107,7 +209,7 @@ export const SecurityView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('ip_blocklist')}
-          className={`pb-3 font-semibold transition-colors border-b-2 ${
+          className={`pb-3 font-semibold transition-colors border-b-2 whitespace-nowrap cursor-pointer ${
             activeTab === 'ip_blocklist'
               ? 'text-blue-600 border-blue-500'
               : 'text-slate-500 hover:text-slate-900 border-transparent'
@@ -118,7 +220,7 @@ export const SecurityView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('2fa')}
-          className={`pb-3 font-semibold transition-colors border-b-2 ${
+          className={`pb-3 font-semibold transition-colors border-b-2 whitespace-nowrap cursor-pointer ${
             activeTab === '2fa'
               ? 'text-blue-600 border-blue-500'
               : 'text-slate-500 hover:text-slate-900 border-transparent'
@@ -178,7 +280,7 @@ export const SecurityView: React.FC = () => {
                   {!sess.isCurrent && (
                     <button
                       onClick={() => terminateSession(sess.id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-50 hover:bg-rose-50 text-rose-600 border border-rose-200 transition-colors whitespace-nowrap self-end sm:self-auto"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-colors whitespace-nowrap self-end sm:self-auto cursor-pointer"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       <span>{t.security.forceLogout}</span>
@@ -289,7 +391,7 @@ export const SecurityView: React.FC = () => {
               />
               <button
                 type="submit"
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-colors cursor-pointer"
               >
                 <Ban className="w-3.5 h-3.5" />
                 <span>Bloquer l'IP</span>
@@ -306,7 +408,7 @@ export const SecurityView: React.FC = () => {
                   </div>
                   <button
                     onClick={() => toggleBlockIp(ip)}
-                    className="px-2.5 py-1 text-xs rounded bg-slate-100 hover:bg-slate-200 text-slate-900 transition-colors"
+                    className="px-2.5 py-1 text-xs rounded bg-slate-100 hover:bg-slate-200 text-slate-900 transition-colors cursor-pointer"
                   >
                     Débloquer
                   </button>
@@ -317,23 +419,24 @@ export const SecurityView: React.FC = () => {
         </div>
       )}
 
-      {/* Content 4: 2FA Settings */}
+      {/* Content 4: 2FA Settings (Full TOTP QR Code + Interactive Test) */}
       {activeTab === '2fa' && (
         <div className="p-5 rounded-xl bg-blue-50/60 border border-slate-200 space-y-4 text-xs">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200">
             <div>
               <h3 className="font-bold text-blue-950 text-sm">
                 Double Facteur d'Authentification (2FA TOTP)
               </h3>
               <p className="text-slate-500 mt-0.5">
-                Oblige la saisie d'un code à 6 chiffres généré par Google Authenticator ou Twilio Authy à chaque ouverture de session Super Admin.
+                Exige la saisie d'un code à 6 chiffres (Google / Microsoft Authenticator ou OTP) à chaque ouverture de session Super Admin.
               </p>
             </div>
             <button
+              type="button"
               onClick={handleToggle2fa}
-              className={`px-4 py-2 rounded-lg font-semibold text-xs transition-colors ${
+              className={`px-4 py-2 rounded-lg font-semibold text-xs transition-colors cursor-pointer ${
                 profile.twoFactorEnabled 
-                  ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-50' 
+                  ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100' 
                   : 'bg-emerald-600 text-white hover:bg-emerald-500'
               }`}
             >
@@ -342,27 +445,85 @@ export const SecurityView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 rounded-lg bg-white border border-slate-200 space-y-2">
-              <div className="font-semibold text-blue-950 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                Statut Actuel
+            <div className="p-4 rounded-lg bg-white border border-slate-200 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="font-semibold text-blue-950 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  Statut Actuel & Appairage QR
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRegenerateSecret}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-blue-700 hover:underline cursor-pointer"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Nouvelle clé</span>
+                </button>
               </div>
               <p className="text-slate-700">
-                La protection 2FA est actuellement <strong className={profile.twoFactorEnabled ? 'text-emerald-600' : 'text-rose-600'}>{profile.twoFactorEnabled ? 'ACTIVÉE' : 'DÉSACTIVÉE'}</strong> sur votre compte administrateur.
+                La protection 2FA est actuellement <strong className={profile.twoFactorEnabled ? 'text-emerald-600' : 'text-rose-600'}>{profile.twoFactorEnabled ? 'ACTIVÉE' : 'DÉSACTIVÉE'}</strong> sur votre compte Super Administrateur.
               </p>
-              <div className="text-[11px] text-slate-500 font-mono mt-1">
-                Méthode : Application d'authentification (TOTP RFC 6238)
+
+              <div className="flex flex-col sm:flex-row items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
+                {qrDataUrl && (
+                  <img src={qrDataUrl} alt="QR Code 2FA Super Admin" className="w-28 h-28 rounded-lg bg-white p-1 border border-slate-200 shrink-0" />
+                )}
+                <div className="flex-1 w-full space-y-2">
+                  <div className="flex items-center gap-1 bg-white border border-slate-200 rounded px-2 py-1">
+                    <code className="font-mono text-[10px] font-bold text-blue-950 flex-1 truncate">{totpSecret}</code>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(totpSecret);
+                        showToast('Clé secrète 2FA copiée.');
+                      }}
+                      className="text-blue-600 p-0.5 cursor-pointer"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="p-2 rounded bg-white border border-blue-200 text-center">
+                    <div className="text-[10px] text-slate-500">Code TOTP en direct ({remainingSeconds}s)</div>
+                    <div className="font-mono text-base font-black tracking-[0.25em] text-blue-950">{liveTotpCode}</div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="p-4 rounded-lg bg-white border border-slate-200 space-y-2">
+            <div className="p-4 rounded-lg bg-white border border-slate-200 space-y-3">
               <div className="font-semibold text-blue-950 flex items-center gap-2">
                 <Lock className="w-4 h-4 text-blue-600" />
-                Politique d'Expiration de Session
+                Tester & Vérifier votre Code 2FA
               </div>
               <p className="text-slate-700">
-                Déconnexion automatique après <strong className="text-blue-950">45 minutes</strong> d'inactivité continue sur le navigateur pour éviter tout accès indu.
+                Déconnexion automatique après <strong className="text-blue-950">45 minutes</strong> d'inactivité continue. Vérifiez votre application Authenticator ci-dessous :
               </p>
+
+              <form onSubmit={handleVerifyTestCode} className="space-y-2 pt-1">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={testCode}
+                    onChange={e => setTestCode(e.target.value.replace(/\D/g, ''))}
+                    placeholder="Code à 6 chiffres"
+                    className="flex-1 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 font-mono text-center tracking-[0.3em] font-bold text-blue-950"
+                  />
+                  <button
+                    type="submit"
+                    disabled={testCode.length !== 6}
+                    className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold cursor-pointer"
+                  >
+                    Vérifier
+                  </button>
+                </div>
+                {testFeedback && (
+                  <div className={`flex items-center gap-1.5 text-[11px] font-semibold ${testFeedback.error ? 'text-rose-600' : 'text-emerald-700'}`}>
+                    {testFeedback.error ? <AlertCircle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                    <span>{testFeedback.text}</span>
+                  </div>
+                )}
+              </form>
             </div>
           </div>
         </div>

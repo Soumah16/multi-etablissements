@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParent } from '../../context/ParentContext';
+import { downloadHomeworkStatementPdf } from '../../utils/exportDocuments';
 import { 
   FileText, 
   Calendar, 
@@ -126,6 +127,27 @@ export const ParentHomeworkView: React.FC = () => {
                 {hw.teacherComment}
               </div>
             )}
+
+            <div className="pt-2 border-t border-blue-100 flex items-center justify-end">
+              <button
+                onClick={() =>
+                  downloadHomeworkStatementPdf({
+                    title: hw.title,
+                    subject: hw.subject,
+                    teacherName: hw.teacher,
+                    className: selectedChild.className,
+                    assignedDate: hw.assignedDate,
+                    dueDate: hw.dueDate,
+                    maxScore: hw.maxScore || 20,
+                    description: hw.teacherComment || `Devoir assigné à ${selectedChild.firstName} ${selectedChild.lastName}.`
+                  })
+                }
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Énoncé PDF</span>
+              </button>
+            </div>
           </div>
         ))}
       </div>

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useSupervisor } from '../../context/SupervisorContext';
+import { useSchoolAdmin } from '../../context/SchoolAdminContext';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { SupervisorNavTab } from '../../types/supervisor';
 import { 
   LayoutDashboard, 
@@ -18,7 +20,8 @@ import {
   Building2,
   Sparkles,
   ArrowRightLeft,
-  LogOut
+  LogOut,
+  MessageCircle
 } from 'lucide-react';
 import { SupervisorDashboardView } from './SupervisorDashboardView';
 import { SupervisorAttendanceView } from './SupervisorAttendanceView';
@@ -58,6 +61,12 @@ export const SupervisorLayout: React.FC<SupervisorLayoutProps> = ({
     watchlist,
     toastMessage 
   } = useSupervisor();
+  const { currentSchool } = useSchoolAdmin();
+  const schoolWaPhone = getSchoolWhatsAppNumber(currentSchool);
+  const schoolWaUrl = buildWhatsAppUrl(
+    schoolWaPhone,
+    `Bonjour ${currentSchool.name}, Surveillance Générale (${profile.firstName} ${profile.lastName}).`
+  );
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
@@ -354,6 +363,19 @@ export const SupervisorLayout: React.FC<SupervisorLayoutProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {schoolWaUrl && (
+              <a
+                href={schoolWaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition-colors"
+                title={`WhatsApp ${currentSchool.name} (${schoolWaPhone})`}
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">WhatsApp {currentSchool.code || 'École'}</span>
+              </a>
+            )}
+
             <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium">
               <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
               <span>Vie Scolaire Active</span>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useStudent } from '../../context/StudentContext';
 import { StudentCourseResource } from '../../types/student';
 import { BookReaderModal } from '../librarian/BookReaderModal';
+import { downloadCourseResourceFile } from '../../utils/exportDocuments';
 import { 
   BookOpen, 
   Search, 
@@ -126,7 +127,19 @@ export const StudentCoursesView: React.FC = () => {
                   <span>Aperçu</span>
                 </button>
                 <button
-                  onClick={() => showToast(`Téléchargement lancé : « ${course.title} » (${course.fileSize})`)}
+                  onClick={() => {
+                    const file = downloadCourseResourceFile({
+                      title: course.title,
+                      subject: course.subject,
+                      teacherName: course.teacherName,
+                      date: course.date,
+                      description: course.description,
+                      resourceName: `${course.title}.${course.type === 'Word' ? 'docx' : course.type === 'PowerPoint' ? 'pptx' : 'pdf'}`,
+                      resourceType: course.type,
+                      fileUrl: course.downloadUrl
+                    });
+                    showToast(`Support téléchargé : ${file}`);
+                  }}
                   className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 transition-colors cursor-pointer"
                   title="Télécharger sur mon appareil"
                 >

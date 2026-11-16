@@ -2,24 +2,18 @@ import React, { useState } from 'react';
 import { useLibrarian } from '../../context/LibrarianContext';
 import { EbookItem } from '../../types/librarian';
 import { BookReaderModal } from './BookReaderModal';
-import { 
-  FileText, 
-  Search, 
-  Upload, 
-  Download, 
-  Eye, 
-  Video, 
-  Music, 
-  FileCheck, 
-  Layers, 
-  BookMarked,
-  X,
-  Play,
-  BookOpen
+import { downloadLibraryResourcePdf } from '../../utils/exportDocuments';
+import {
+  Search,
+  Upload,
+  Download,
+  Eye,
+  Trash2
 } from 'lucide-react';
 
 export const EbooksDigitalView: React.FC = () => {
-  const { ebooks, addEbook, showToast } = useLibrarian();
+  const { ebooks, addEbook, deleteEbook, incrementEbookDownload, showToast, canManageLibrary } =
+    useLibrarian();
   const [search, setSearch] = useState('');
   const [selectedFormat, setSelectedFormat] = useState<string>('all');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
@@ -55,6 +49,7 @@ export const EbooksDigitalView: React.FC = () => {
 
   const handleUploadSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManageLibrary) return;
     addEbook(formData);
     setUploadModalOpen(false);
   };
@@ -81,19 +76,23 @@ export const EbooksDigitalView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-black text-blue-950">E-Books & Bibliothèque Numérique</h1>
+          <h1 className="text-xl md:text-2xl font-black text-blue-950">E-Books &amp; Bibliothèque Numérique</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Manuels dématérialisés MEPU-A, cours interactifs, capsules vidéo et supports audio téléchargeables.
+            {canManageLibrary
+              ? 'Manuels dématérialisés MEPU-A, cours interactifs, capsules vidéo et supports audio téléchargeables.'
+              : 'Consultation et téléchargement des supports numériques (publication réservée à l’Admin de la Bibliothèque).'}
           </p>
         </div>
 
-        <button
-          onClick={() => setUploadModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-600/20 transition-all cursor-pointer self-start sm:self-auto"
-        >
-          <Upload className="w-4 h-4" />
-          <span>Téléverser une Ressource</span>
-        </button>
+        {canManageLibrary && (
+          <button
+            onClick={() => setUploadModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-600/20 transition-all cursor-pointer self-start sm:self-auto"
+          >
+            <Upload className="w-4 h-4" />
+            <span>Téléverser une Ressource</span>
+          </button>
+        )}
       </div>
 
       {/* Filter and Format Selectors */}
@@ -161,13 +160,13 @@ export const EbooksDigitalView: React.FC = () => {
               </p>
             </div>
 
-            <div className="pt-4 mt-4 border-t border-blue-100 flex items-center justify-between">
+            <div className="pt-4 mt-4 border-t border-blue-100 flex items-center justify-between gap-2">
               <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
                 <Download className="w-3.5 h-3.5 text-purple-600" />
                 <span>{eb.downloadCount} téléchargements</span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setPreviewEbook(eb)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-blue-100 text-slate-900 text-xs font-semibold transition-colors cursor-pointer"
@@ -176,20 +175,41 @@ export const EbooksDigitalView: React.FC = () => {
                   <span>Consulter</span>
                 </button>
                 <button
-                  onClick={() => showToast(`Téléchargement lancé : « ${eb.title} »`)}
+                  onClick={() => {
+                    incrementEbookDownload(eb.id);
+                    const file = downloadLibraryResourcePdf({
+                      title: eb.title,
+                      author: eb.author,
+                      subject: eb.subject,
+                      level: eb.level,
+                      description: eb.description,
+                      content: eb.content,
+                      fileUrl: eb.url
+                    });
+                    showToast(`Téléchargement terminé : « ${file} »`);
+                  }}
                   className="p-1.5 rounded-lg bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 transition-colors cursor-pointer"
                   title="Télécharger le fichier"
                 >
                   <Download className="w-4 h-4" />
                 </button>
+                {canManageLibrary && (
+                  <button
+                    onClick={() => deleteEbook(eb.id)}
+                    className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 transition-colors cursor-pointer"
+                    title="Supprimer cette ressource"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Upload E-book Modal */}
-      {uploadModalOpen && (
+      {/* Upload E-book Modal (Librarian Admin only) */}
+      {canManageLibrary && uploadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
           <div className="w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-4 max-h-[92vh] overflow-y-auto">
             <h3 className="text-base font-bold text-blue-950">Téléverser une Ressource Numérique</h3>
@@ -300,18 +320,26 @@ export const EbooksDigitalView: React.FC = () => {
                       onChange={(e) => {
                         if (e.target.files && e.target.files[0]) {
                           const file = e.target.files[0];
+                          const sizeLabel = file.size > 1024 * 1024
+                            ? `${(file.size / (1024 * 1024)).toFixed(2)} Mo`
+                            : `${(file.size / 1024).toFixed(1)} Ko`;
+                          const isTextFile = /\.(txt|md|csv)$/i.test(file.name);
                           const reader = new FileReader();
                           reader.onload = () => {
                             if (typeof reader.result === 'string') {
                               setFormData(prev => ({
                                 ...prev,
-                                content: reader.result as string,
-                                fileSize: `${(file.size / (1024 * 1024)).toFixed(1)} Mo`,
+                                ...(isTextFile ? { content: reader.result as string } : { url: reader.result as string }),
+                                fileSize: sizeLabel,
                                 description: prev.description || `Document numérique importé : ${file.name}`
                               }));
                             }
                           };
-                          reader.readAsText(file);
+                          if (isTextFile) {
+                            reader.readAsText(file);
+                          } else {
+                            reader.readAsDataURL(file);
+                          }
                         }
                       }}
                     />

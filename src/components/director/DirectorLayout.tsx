@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useDirector } from '../../context/DirectorContext';
+import { useSchoolAdmin } from '../../context/SchoolAdminContext';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { DirectorNavTab } from '../../types/director';
 import { 
   LayoutDashboard, 
@@ -25,7 +27,8 @@ import {
   Sparkles,
   ArrowRightLeft,
   ChevronDown,
-  LogOut
+  LogOut,
+  MessageCircle
 } from 'lucide-react';
 import { DirectorDashboardView } from './DirectorDashboardView';
 import { ReportCardValidationView } from './ReportCardValidationView';
@@ -77,6 +80,12 @@ export const DirectorLayout: React.FC<DirectorLayoutProps> = ({
     disciplineIncidents,
     toastMessage 
   } = useDirector();
+  const { currentSchool } = useSchoolAdmin();
+  const schoolWaPhone = getSchoolWhatsAppNumber(currentSchool);
+  const schoolWaUrl = buildWhatsAppUrl(
+    schoolWaPhone,
+    `Bonjour ${currentSchool.name}, Direction des Études (${profile.name}).`
+  );
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
@@ -401,6 +410,19 @@ export const DirectorLayout: React.FC<DirectorLayoutProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {schoolWaUrl && (
+              <a
+                href={schoolWaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition-colors"
+                title={`WhatsApp ${currentSchool.name} (${schoolWaPhone})`}
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">WhatsApp {currentSchool.code || 'École'}</span>
+              </a>
+            )}
+
             {/* PIN Indicator */}
             <button
               onClick={() => setActiveDirectorTab('security')}

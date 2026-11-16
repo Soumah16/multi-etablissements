@@ -12,8 +12,11 @@ import {
   Building2, 
   Users, 
   Calendar,
-  AlertTriangle
+  AlertTriangle,
+  ExternalLink,
+  MessageCircle
 } from 'lucide-react';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 
 export const CommunicationView: React.FC = () => {
   const { announcements, createAnnouncement, schools, t, showToast } = useApp();
@@ -47,7 +50,7 @@ export const CommunicationView: React.FC = () => {
     if (channelWhatsApp) channels.push('whatsapp');
 
     if (channels.length === 0) {
-      alert("Veuillez sélectionner au moins un canal de diffusion.");
+      showToast("Veuillez sélectionner au moins un canal de diffusion.");
       return;
     }
 
@@ -217,10 +220,47 @@ export const CommunicationView: React.FC = () => {
               />
             </div>
 
+            {channelWhatsApp && (
+              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2">
+                <div className="flex items-center gap-2 text-emerald-950 font-bold text-xs">
+                  <MessageCircle className="w-4 h-4 text-emerald-600" />
+                  <span>Redirection directe WhatsApp par École</span>
+                </div>
+                <p className="text-[11px] text-emerald-900/80">
+                  Cliquez sur une école ci-dessous pour ouvrir immédiatement WhatsApp vers le numéro propre configuré par son Admin École :
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {(target === 'selected_schools' && selectedSchoolIds.length > 0
+                    ? schools.filter(s => selectedSchoolIds.includes(s.id))
+                    : schools
+                  ).map(s => {
+                    const num = getSchoolWhatsAppNumber(s);
+                    const waUrl = buildWhatsAppUrl(
+                      num,
+                      `${title ? `${title}\n\n` : ''}${content || `Message officiel MEPU-A pour ${s.name}`}`
+                    );
+                    return waUrl ? (
+                      <a
+                        key={s.id}
+                        href={waUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-colors"
+                      >
+                        <MessageCircle className="w-3 h-3" />
+                        <span>{s.code || s.name} ({num})</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : null;
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="pt-2 flex justify-end">
               <button
                 type="submit"
-                className="flex items-center gap-2 px-5 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-sm transition-colors text-xs"
+                className="flex items-center gap-2 px-5 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-sm transition-colors text-xs cursor-pointer"
               >
                 <Send className="w-4 h-4" />
                 <span>Diffuser le Message Maintenant</span>

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useSecretary } from '../../context/SecretaryContext';
+import { useSchoolAdmin } from '../../context/SchoolAdminContext';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { SecretaryMessage } from '../../types/secretary';
 import { 
   Megaphone, 
@@ -13,11 +15,15 @@ import {
   Users, 
   User, 
   X, 
-  Check 
+  Check,
+  MessageCircle,
+  ExternalLink
 } from 'lucide-react';
 
 export const SecretaryCommunicationView: React.FC = () => {
   const { messages, sendMessage } = useSecretary();
+  const { currentSchool } = useSchoolAdmin();
+  const schoolWaPhone = getSchoolWhatsAppNumber(currentSchool);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -60,6 +66,11 @@ export const SecretaryCommunicationView: React.FC = () => {
     m.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const headerWaUrl = buildWhatsAppUrl(
+    schoolWaPhone,
+    `Bonjour, Secrétariat Général de ${currentSchool.name}.`
+  );
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
@@ -76,17 +87,32 @@ export const SecretaryCommunicationView: React.FC = () => {
             <span>Communication & Rappels aux Familles</span>
           </h1>
           <p className="text-xs text-slate-700 mt-1">
-            Envoi de rappels de dossiers incomplets, convocations pour retrait de cartes et notes administratives.
+            Envoi de rappels de dossiers incomplets, convocations pour retrait de cartes et notes administratives · WhatsApp École : {schoolWaPhone || 'Non configuré'}.
           </p>
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-teal-600 hover:bg-teal-500 shadow-lg shadow-teal-600/30 transition-all shrink-0"
-        >
-          <Send className="w-4 h-4" />
-          <span>Nouveau Message / Relance</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {headerWaUrl && (
+            <a
+              href={headerWaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-600/20 transition-all"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>WhatsApp {currentSchool.code || 'École'}</span>
+              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-teal-600 hover:bg-teal-500 shadow-lg shadow-teal-600/30 transition-all cursor-pointer"
+          >
+            <Send className="w-4 h-4" />
+            <span>Nouveau Message / Relance</span>
+          </button>
+        </div>
       </div>
 
       {/* Messages List */}
@@ -103,49 +129,65 @@ export const SecretaryCommunicationView: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 gap-4">
-          {filteredMessages.map(msg => (
-            <div 
-              key={msg.id}
-              className="p-5 rounded-2xl bg-white border border-blue-100 hover:border-slate-200 transition-all space-y-3"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200 uppercase tracking-wider">
-                    {msg.target === 'all_parents' ? 'Tous les Parents' :
-                     msg.target === 'class_parents' ? 'Parents d\'une classe' :
-                     msg.target === 'all_students' ? 'Tous les élèves' : 'Parent individuel'}
+          {filteredMessages.map(msg => {
+            const msgWaUrl = msg.channels.includes('whatsapp')
+              ? buildWhatsAppUrl(schoolWaPhone, `[${currentSchool.name} - Secrétariat] ${msg.title}\n\n${msg.content}`)
+              : '';
+            return (
+              <div 
+                key={msg.id}
+                className="p-5 rounded-2xl bg-white border border-blue-100 hover:border-slate-200 transition-all space-y-3"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200 uppercase tracking-wider">
+                      {msg.target === 'all_parents' ? 'Tous les Parents' :
+                       msg.target === 'class_parents' ? 'Parents d\'une classe' :
+                       msg.target === 'all_students' ? 'Tous les élèves' : 'Parent individuel'}
+                    </span>
+                    {msg.targetDetail && (
+                      <span className="text-xs font-semibold text-slate-700">
+                        ({msg.targetDetail})
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs font-mono text-slate-500">{msg.date}</span>
+                </div>
+
+                <div>
+                  <h3 className="text-base font-bold text-blue-950">{msg.title}</h3>
+                  <p className="text-xs text-slate-700 mt-1 leading-relaxed">{msg.content}</p>
+                </div>
+
+                <div className="pt-3 border-t border-blue-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span>Canaux utilisés :</span>
+                    {msg.channels.map(ch => (
+                      <span key={ch} className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-50 text-slate-700 border border-slate-200">
+                        {ch === 'app' ? 'In-App' : ch === 'sms' ? 'SMS Guinée' : ch === 'whatsapp' ? 'WhatsApp' : 'Email'}
+                      </span>
+                    ))}
+                    {msgWaUrl && (
+                      <a
+                        href={msgWaUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold transition-colors"
+                      >
+                        <MessageCircle className="w-3 h-3" />
+                        <span>Ouvrir WhatsApp ({schoolWaPhone})</span>
+                      </a>
+                    )}
+                  </div>
+
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Diffusé avec succès</span>
                   </span>
-                  {msg.targetDetail && (
-                    <span className="text-xs font-semibold text-slate-700">
-                      ({msg.targetDetail})
-                    </span>
-                  )}
                 </div>
-                <span className="text-xs font-mono text-slate-500">{msg.date}</span>
               </div>
-
-              <div>
-                <h3 className="text-base font-bold text-blue-950">{msg.title}</h3>
-                <p className="text-xs text-slate-700 mt-1 leading-relaxed">{msg.content}</p>
-              </div>
-
-              <div className="pt-3 border-t border-blue-100 flex items-center justify-between text-xs text-slate-500">
-                <div className="flex items-center gap-1.5">
-                  <span>Canaux utilisés :</span>
-                  {msg.channels.map(ch => (
-                    <span key={ch} className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-50 text-slate-700 border border-slate-200">
-                      {ch === 'app' ? 'In-App' : ch === 'sms' ? 'SMS Guinée' : ch === 'whatsapp' ? 'WhatsApp' : 'Email'}
-                    </span>
-                  ))}
-                </div>
-
-                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Diffusé avec succès</span>
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -232,6 +274,22 @@ export const SecretaryCommunicationView: React.FC = () => {
                     </button>
                   ))}
                 </div>
+                {channels.includes('whatsapp') && schoolWaPhone && (
+                  <div className="mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <span className="text-emerald-900">
+                      WhatsApp de <strong>{currentSchool.name}</strong> : <strong className="font-mono">{schoolWaPhone}</strong>
+                    </span>
+                    <a
+                      href={buildWhatsAppUrl(schoolWaPhone, `[${currentSchool.name} - Secrétariat] ${title || 'Information'}\n\n${content}`)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px]"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>Envoyer via WhatsApp</span>
+                    </a>
+                  </div>
+                )}
               </div>
 
               <div>

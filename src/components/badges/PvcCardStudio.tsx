@@ -5,8 +5,11 @@ import {
   buildPvcPrintSheetHtml, 
   drawPvcCardToCanvas, 
   downloadCanvasImage, 
+  downloadPvcBadgePdf,
+  downloadPvcBadgeA4Pdf,
   PvcRenderData 
 } from '../../utils/pvcCardRenderer';
+import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
 import { exportPrintableDocument } from '../../utils/printHelper';
 import { 
   CreditCard, 
@@ -203,43 +206,82 @@ export const PvcCardStudio: React.FC = () => {
     };
   };
 
-  const handlePrintPvcCards = () => {
+  const getQrValue = () =>
+    `MEPU-A|${selectedSchool?.code || 'EXC'}|${customMatricule}|${customUid}|${customName}|${validityPeriod}`;
+
+  const handlePrintPvcCards = async () => {
     const data = getRenderData();
-    const fullHtml = buildPvcPrintSheetHtml(data, activeFace);
-    const title = `Planche_PVC_CR80_${selectedSchool?.code}_${customMatricule}`;
-    
-    // Infallible export of self-contained print-ready file
-    exportPrintableDocument(title, fullHtml);
-
-    // Direct browser print modal trigger
+    setIsExporting(true);
     try {
-      let printFrame = document.getElementById('smartschool-pvc-print-frame') as HTMLIFrameElement;
-      if (printFrame) printFrame.remove();
-      
-      printFrame = document.createElement('iframe');
-      printFrame.id = 'smartschool-pvc-print-frame';
-      printFrame.setAttribute('style', 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:none;opacity:0.01;pointer-events:none;z-index:-999;');
-      document.body.appendChild(printFrame);
-      
-      const frameDoc = printFrame.contentWindow?.document;
-      if (frameDoc) {
-        frameDoc.open();
-        frameDoc.write(fullHtml);
-        frameDoc.close();
-        setTimeout(() => {
-          try {
-            printFrame.contentWindow?.focus();
-            printFrame.contentWindow?.print();
-          } catch (e) {
-            console.warn('Iframe print blocked, file downloaded.', e);
-          }
-        }, 400);
-      }
-    } catch (err) {
-      console.warn(err);
-    }
+      const fullHtml = await buildPvcPrintSheetHtml(data, activeFace);
+      const title = `Planche_PVC_CR80_${selectedSchool?.code}_${customMatricule}`;
 
-    showToast("Planche PVC A4 générée avec fidélité 100% des couleurs et dimensions !");
+      // Infallible export of self-contained print-ready file with exact 85.60 x 53.98 mm sizing
+      exportPrintableDocument(title, fullHtml, 'landscape');
+
+      // Direct browser print modal trigger
+      try {
+        let printFrame = document.getElementById('smartschool-pvc-print-frame') as HTMLIFrameElement;
+        if (printFrame) printFrame.remove();
+
+        printFrame = document.createElement('iframe');
+        printFrame.id = 'smartschool-pvc-print-frame';
+        printFrame.setAttribute('style', 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:none;opacity:0.01;pointer-events:none;z-index:-999;');
+        document.body.appendChild(printFrame);
+
+        const frameDoc = printFrame.contentWindow?.document;
+        if (frameDoc) {
+          frameDoc.open();
+          frameDoc.write(fullHtml);
+          frameDoc.close();
+          setTimeout(() => {
+            try {
+              printFrame.contentWindow?.focus();
+              printFrame.contentWindow?.print();
+            } catch (e) {
+              console.warn('Iframe print blocked, file downloaded.', e);
+            }
+          }, 400);
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+
+      showToast("Planche PVC CR-80 (85.60 × 53.98 mm) générée à taille réelle 100% !");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDownloadPdfCr80 = async () => {
+    setIsExporting(true);
+    try {
+      const filename = await downloadPvcBadgePdf(getRenderData(), activeFace, `Badge_PVC_${selectedSchool?.code || 'EC'}`);
+      showToast(`PDF PVC CR-80 exact (85.6 × 53.98 mm) téléchargé : ${filename}`);
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur lors de la génération du PDF PVC.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDownloadPdfA4 = async () => {
+    setIsExporting(true);
+    try {
+      const filename = await downloadPvcBadgeA4Pdf(getRenderData(), activeFace, `Planche_A4_PVC_${selectedSchool?.code || 'EC'}`);
+      showToast(`PDF A4 taille PVC 100% téléchargé : ${filename}`);
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur lors de la génération de la planche PDF A4.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDownloadQr = async () => {
+    await downloadQrCodePng(getQrValue(), `QR_Badge_${customMatricule}`, selectedTemplate.accentColor || '#0f172a');
+    showToast(`Code QR officiel téléchargé (QR_Badge_${customMatricule}.png)`);
   };
 
   const handleDownloadImage = async (format: 'png' | 'jpeg', face: 'recto' | 'verso') => {
@@ -295,7 +337,40 @@ export const PvcCardStudio: React.FC = () => {
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-blue-50 text-blue-950 text-xs font-semibold border border-blue-200 cursor-pointer shadow-xs"
           >
             <Eye className="w-4 h-4 text-cyan-600" />
-            <span>Tester Scan QR Code</span>
+            <span>Tester Scan QR</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDownloadQr}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-blue-50 text-blue-950 text-xs font-semibold border border-blue-200 cursor-pointer shadow-xs"
+            title="Télécharger uniquement le Code QR scannable (PNG)"
+          >
+            <QrCode className="w-4 h-4 text-blue-600" />
+            <span>QR PNG</span>
+          </button>
+
+          {/* Direct Exact CR-80 PDF Downloads */}
+          <button
+            type="button"
+            disabled={isExporting}
+            onClick={handleDownloadPdfCr80}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer disabled:opacity-50 shadow-xs"
+            title="Télécharger PDF format exact PVC CR-80 (85.60 × 53.98 mm)"
+          >
+            <Download className="w-4 h-4" />
+            <span>PDF PVC (CR-80)</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={isExporting}
+            onClick={handleDownloadPdfA4}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-blue-50 text-blue-950 text-xs font-semibold border border-blue-200 cursor-pointer disabled:opacity-50 shadow-xs"
+            title="Télécharger Planche PDF A4 avec taille PVC 100% et traits de découpe"
+          >
+            <Download className="w-4 h-4 text-indigo-600" />
+            <span>PDF A4 (100%)</span>
           </button>
 
           {/* High-Res Image Downloads (PNG 300 DPI) */}
@@ -307,7 +382,7 @@ export const PvcCardStudio: React.FC = () => {
             title="Télécharger l'image HD 300 DPI de la face Recto (Fidélité 100%)"
           >
             <Download className="w-4 h-4 text-emerald-600" />
-            <span>PNG HD Recto</span>
+            <span>PNG Recto</span>
           </button>
 
           <button
@@ -318,18 +393,19 @@ export const PvcCardStudio: React.FC = () => {
             title="Télécharger l'image HD 300 DPI de la face Verso (Fidélité 100%)"
           >
             <Download className="w-4 h-4 text-teal-600" />
-            <span>PNG HD Verso</span>
+            <span>PNG Verso</span>
           </button>
 
           {/* High-Fidelity Printable Sheet / PDF */}
           <button
             type="button"
+            disabled={isExporting}
             onClick={handlePrintPvcCards}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/20 cursor-pointer"
-            title="Imprimer ou enregistrer en PDF avec styles et dimensions exactes"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/20 cursor-pointer disabled:opacity-50"
+            title="Imprimer ou enregistrer en PDF à taille normale PVC (85.60 × 53.98 mm)"
           >
             <Printer className="w-4 h-4 text-white" />
-            <span>Imprimer Planche PVC A4</span>
+            <span>Imprimer PVC</span>
           </button>
         </div>
       </div>
@@ -622,9 +698,9 @@ export const PvcCardStudio: React.FC = () => {
                   Face Recto · Face Avant
                 </span>
 
-                {/* ISO/IEC 7810 ID-1 Card Layout (Aspect ratio 85.6 / 53.98 ~ 1.586) */}
+                {/* ISO/IEC 7810 ID-1 Card Layout (85.60 x 53.98 mm) */}
                 <div 
-                  className={`w-[300px] sm:w-[340px] h-[189px] sm:h-[214px] rounded-2xl ${selectedTemplate.primaryBg} ${selectedTemplate.borderColor} border-2 shadow-2xl relative overflow-hidden flex flex-col justify-between select-none print:shadow-none print:border`}
+                  className={`pvc-card w-[300px] sm:w-[340px] h-[189px] sm:h-[214px] rounded-2xl ${selectedTemplate.primaryBg} ${selectedTemplate.borderColor} border-2 shadow-2xl relative overflow-hidden flex flex-col justify-between select-none print:shadow-none print:border`}
                   style={{
                     boxShadow: '0 20px 30px -10px rgba(0, 0, 0, 0.4)'
                   }}
@@ -759,7 +835,7 @@ export const PvcCardStudio: React.FC = () => {
                 </span>
 
                 <div 
-                  className={`w-[300px] sm:w-[340px] h-[189px] sm:h-[214px] rounded-2xl ${selectedTemplate.primaryBg} ${selectedTemplate.borderColor} border-2 shadow-2xl relative overflow-hidden flex flex-col justify-between select-none print:shadow-none print:border`}
+                  className={`pvc-card w-[300px] sm:w-[340px] h-[189px] sm:h-[214px] rounded-2xl ${selectedTemplate.primaryBg} ${selectedTemplate.borderColor} border-2 shadow-2xl relative overflow-hidden flex flex-col justify-between select-none print:shadow-none print:border`}
                   style={{
                     boxShadow: '0 20px 30px -10px rgba(0, 0, 0, 0.4)'
                   }}
@@ -803,19 +879,8 @@ export const PvcCardStudio: React.FC = () => {
                     </div>
 
                     {/* QR Code and Barcode Box */}
-                    <div className="flex flex-col items-center justify-center shrink-0 space-y-1 bg-slate-50 p-2 rounded-xl border border-slate-200">
-                      {/* High-Resolution SVG QR Code */}
-                      <svg className="w-16 h-16" viewBox="0 0 100 100">
-                        <rect width="100" height="100" fill="white" />
-                        <path d="M10,10 h30 v30 h-30 z M15,15 h20 v20 h-20 z M20,20 h10 v10 h-10 z" fill="#0f172a" />
-                        <path d="M60,10 h30 v30 h-30 z M65,15 h20 v20 h-20 z M70,20 h10 v10 h-10 z" fill="#0f172a" />
-                        <path d="M10,60 h30 v30 h-30 z M15,65 h20 v20 h-20 z M20,70 h10 v10 h-10 z" fill="#0f172a" />
-                        <rect x="45" y="45" width="10" height="10" fill="#0f172a" />
-                        <rect x="65" y="65" width="15" height="15" fill="#0f172a" />
-                        <rect x="45" y="75" width="10" height="15" fill="#0f172a" />
-                        <rect x="75" y="45" width="15" height="10" fill="#0f172a" />
-                        <rect x="45" y="10" width="8" height="25" fill="#059669" />
-                      </svg>
+                    <div className="flex flex-col items-center justify-center shrink-0 space-y-1 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                      <RealQrCode value={getQrValue()} size={64} fgColor="#0f172a" alt={`QR ${customMatricule}`} />
 
                       <div className="text-[6px] font-mono font-bold text-slate-500 text-center leading-none">
                         SCAN MEPU-A

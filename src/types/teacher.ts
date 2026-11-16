@@ -1,6 +1,7 @@
 export type TeacherNavTab = 
   | 'dashboard'
   | 'classes'
+  | 'students'
   | 'subjects'
   | 'courses'
   | 'logbook'
@@ -49,6 +50,27 @@ export interface AssignedClass {
   classDelegate: string;
   averageGrade: number; // /20
   attendanceRate: number; // %
+}
+
+export interface TeacherStudentRosterItem {
+  id: string;
+  matricule: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  gender: 'M' | 'F';
+  classId: string;
+  className: string;
+  average: number;
+  attendanceRate: number;
+  absenceCount: number;
+  lateCount: number;
+  parentName: string;
+  parentPhone: string;
+  bloodGroup: string;
+  medicalNote: string;
+  observation: string;
+  status: 'actif' | 'suivi';
 }
 
 export interface TeacherSubject {

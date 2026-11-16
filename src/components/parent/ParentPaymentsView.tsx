@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParent } from '../../context/ParentContext';
 import { ParentPaymentItem } from '../../types/parent';
 import { triggerPrint, exportPrintableDocument } from '../../utils/printHelper';
+import { RealQrCode } from '../common/RealQrCode';
 import { 
   CreditCard, 
   Smartphone, 
@@ -204,8 +205,8 @@ export const ParentPaymentsView: React.FC = () => {
               </div>
 
               <div className="pt-2 flex items-center justify-between text-[10px] font-sans text-slate-500 border-t border-slate-200">
-                <div className="flex items-center gap-1.5">
-                  <QrCode className="w-8 h-8 text-slate-800" />
+                <div className="flex items-center gap-2">
+                  <RealQrCode value={receiptModalPayment.transactionRef || receiptModalPayment.receiptNumber} size={44} fgColor="#0f172a" />
                   <div>
                     <div className="font-mono text-slate-900">Réf : {receiptModalPayment.transactionRef}</div>
                     <div>Signature électronique horodatée</div>

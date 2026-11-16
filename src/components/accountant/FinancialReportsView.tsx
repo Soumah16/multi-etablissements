@@ -14,9 +14,10 @@ import {
   PieChart
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { downloadCsvWithBom, downloadAccountantFinanceExcel } from '../../utils/exportDocuments';
 
 export const FinancialReportsView: React.FC = () => {
-  const { payments, expenses, salaries, debtors, formatGnf, triggerToast } = useAccountant();
+  const { payments, expenses, salaries, debtors, formatGnf, triggerToast, profile } = useAccountant();
   const [period, setPeriod] = useState<'mois' | 'trimestre' | 'annee'>('mois');
 
   const totalCollected = payments.filter(p => p.status === 'valide').reduce((sum, p) => sum + p.amountPaidGnf, 0);
@@ -26,11 +27,47 @@ export const FinancialReportsView: React.FC = () => {
   const netSurplus = totalCollected - grandTotalExpenditure;
 
   const handleExportCsv = () => {
-    triggerToast('Rapport financier exporté au format CSV avec succès.');
+    const rows: (string | number)[][] = [
+      ['Frais de Scolarité & Inscription', 'Recette', totalCollected, '100%'],
+      ['Salaires du Personnel & Enseignants', 'Charge', totalSalaries, `${grandTotalExpenditure > 0 ? Math.round((totalSalaries / grandTotalExpenditure) * 100) : 0}%`],
+      ['Dépenses de Fonctionnement Validées', 'Charge', totalExpenses, `${grandTotalExpenditure > 0 ? Math.round((totalExpenses / grandTotalExpenditure) * 100) : 0}%`],
+      ['Résultat Net / Excédent', netSurplus >= 0 ? 'Excédent' : 'Déficit', netSurplus, '-'],
+      [],
+      ['--- DÉTAIL DES PAIEMENTS ÉLÈVES ---', 'Élève', 'Matricule', 'Classe', 'Parent / Tuteur', 'Tél Parent', 'Montant (GNF)', 'Date'],
+      ...payments.map(p => [p.reference, p.studentName, p.studentMatricule, p.className, p.parentName, p.parentPhone, p.amountPaidGnf, p.date])
+    ];
+    const filename = `Bilan_Financier_${period}_${new Date().toISOString().split('T')[0]}.csv`;
+    downloadCsvWithBom(filename, ['Poste / Référence', 'Type / Élève', 'Montant / Matricule', 'Part / Classe', 'Parent', 'Tél', 'Montant GNF', 'Date'], rows);
+    triggerToast(`Export CSV réussi : ${filename}`);
   };
 
   const handleExportExcel = () => {
-    triggerToast('Tableau financier exporté au format Microsoft Excel (.xlsx) avec succès.');
+    const filename = downloadAccountantFinanceExcel({
+      schoolName: profile.schoolName,
+      period,
+      payments,
+      expenses: expenses.map(e => ({
+        reference: e.reference,
+        title: e.title,
+        category: e.category,
+        vendor: e.beneficiary,
+        amountGnf: e.amountGnf,
+        date: e.date,
+        status: e.status
+      })),
+      salaries: salaries.map(s => ({
+        staffName: s.employeeName,
+        role: s.role,
+        month: s.month,
+        baseSalaryGnf: s.baseSalaryGnf,
+        bonusesGnf: s.bonusGnf,
+        deductionsGnf: s.deductionsGnf,
+        netSalaryGnf: s.netSalaryGnf,
+        status: s.status
+      })),
+      debtors
+    });
+    triggerToast(`Export Excel (.xlsx) réussi : ${filename}`);
   };
 
   return (

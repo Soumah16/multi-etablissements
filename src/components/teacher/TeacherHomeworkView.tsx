@@ -17,11 +17,13 @@ import {
   MessageSquare,
   Award,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Upload
 } from 'lucide-react';
+import { downloadHomeworkStatementPdf, downloadSubmittedHomeworkFile } from '../../utils/exportDocuments';
 
 export const TeacherHomeworkView: React.FC = () => {
-  const { homeworkList, addHomework, gradeHomeworkSubmission, classes, triggerToast } = useTeacher();
+  const { homeworkList, addHomework, gradeHomeworkSubmission, classes, profile, triggerToast } = useTeacher();
   const [modalOpen, setModalOpen] = useState(false);
   const [gradingDrawerOpen, setGradingDrawerOpen] = useState(false);
   const [selectedHomework, setSelectedHomework] = useState<HomeworkItem | null>(null);
@@ -34,6 +36,7 @@ export const TeacherHomeworkView: React.FC = () => {
   const [formDesc, setFormDesc] = useState('');
   const [formDueDate, setFormDueDate] = useState('');
   const [formMaxScore, setFormMaxScore] = useState(20);
+  const [formAttachment, setFormAttachment] = useState<{ name: string; url: string; type: string } | null>(null);
 
   // Grading state
   const [gradingScore, setGradingScore] = useState<number>(15);
@@ -55,13 +58,15 @@ export const TeacherHomeworkView: React.FC = () => {
       dueDate: formDueDate || new Date(Date.now() + 4 * 86400000).toISOString().substring(0, 10),
       maxScore: Number(formMaxScore) || 20,
       totalStudents: targetClass ? targetClass.studentsCount : 38,
-      status: 'en_cours'
+      status: 'en_cours',
+      attachments: formAttachment ? [formAttachment] : undefined
     });
 
     setModalOpen(false);
     setFormTitle('');
     setFormDesc('');
     setFormDueDate('');
+    setFormAttachment(null);
   };
 
   const handleOpenGrading = (hw: HomeworkItem, sub?: HomeworkSubmission) => {
@@ -182,13 +187,38 @@ export const TeacherHomeworkView: React.FC = () => {
                   <span className="text-emerald-600">Reste à noter : {hw.totalSubmissions - hw.evaluatedCount}</span>
                 </div>
 
-                <button
-                  onClick={() => handleOpenGrading(hw)}
-                  className="w-full mt-2 py-2 rounded-xl bg-slate-50 hover:bg-blue-100 text-xs font-bold text-slate-900 transition-colors flex items-center justify-center gap-2 border border-slate-200"
-                >
-                  <Eye className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Consulter & Corriger les Copies ({hw.submissions ? hw.submissions.length : 0})</span>
-                </button>
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    onClick={() => {
+                      const file = downloadHomeworkStatementPdf({
+                        title: hw.title,
+                        subject: hw.subject,
+                        teacherName: `${profile.firstName} ${profile.lastName}`,
+                        className: hw.className,
+                        assignedDate: hw.givenDate,
+                        dueDate: hw.dueDate,
+                        maxScore: hw.maxScore || 20,
+                        description: hw.description,
+                        schoolName: profile.schoolName,
+                        attachmentUrl: hw.attachments?.[0]?.url,
+                        attachmentName: hw.attachments?.[0]?.name
+                      });
+                      triggerToast(`Énoncé téléchargé : ${file}`);
+                    }}
+                    className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-xs font-bold text-amber-800 transition-colors flex items-center justify-center gap-1.5 border border-amber-200 cursor-pointer shrink-0"
+                    title="Télécharger l'énoncé PDF"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Énoncé</span>
+                  </button>
+                  <button
+                    onClick={() => handleOpenGrading(hw)}
+                    className="flex-1 py-2 rounded-xl bg-slate-50 hover:bg-blue-100 text-xs font-bold text-slate-900 transition-colors flex items-center justify-center gap-2 border border-slate-200 cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Corriger ({hw.submissions ? hw.submissions.length : 0})</span>
+                  </button>
+                </div>
               </div>
             </div>
           );
@@ -271,8 +301,21 @@ export const TeacherHomeworkView: React.FC = () => {
                       </div>
 
                       <button
-                        onClick={() => triggerToast(`Téléchargement de la copie "${selectedSubmission.fileName}"...`)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold"
+                        onClick={() => {
+                          const file = downloadSubmittedHomeworkFile({
+                            studentName: selectedSubmission.studentName,
+                            studentMatricule: selectedSubmission.studentMatricule,
+                            homeworkTitle: selectedHomework.title,
+                            fileName: selectedSubmission.fileName,
+                            fileUrl: selectedSubmission.fileUrl,
+                            submittedAt: selectedSubmission.submittedAt,
+                            grade: selectedSubmission.grade,
+                            maxScore: selectedSubmission.maxScore,
+                            teacherComment: selectedSubmission.teacherComment
+                          });
+                          triggerToast(`Copie téléchargée : ${file}`);
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>Télécharger le devoir</span>
@@ -420,6 +463,32 @@ export const TeacherHomeworkView: React.FC = () => {
                   onChange={e => setFormDesc(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-amber-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Joindre un fichier d'énoncé (PDF / Image, optionnel)</label>
+                <label className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-dashed border-slate-300 hover:border-amber-500 cursor-pointer text-xs text-slate-600">
+                  <span className="truncate flex items-center gap-1.5">
+                    <Upload className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>{formAttachment ? formAttachment.name : 'Choisir un PDF ou image sur votre appareil...'}</span>
+                  </span>
+                  <input
+                    type="file"
+                    accept=".pdf,image/*,.docx"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        if (typeof reader.result === 'string') {
+                          setFormAttachment({ name: file.name, url: reader.result, type: file.type || 'application/pdf' });
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                </label>
               </div>
 
               <div className="pt-3 border-t border-blue-100 flex items-center justify-end gap-2">

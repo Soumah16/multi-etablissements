@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   TeacherNavTab, 
   TeacherProfile, 
   AssignedClass, 
+  TeacherStudentRosterItem,
   TeacherSubject,
   CourseModuleItem,
   PedagogicalResource,
@@ -19,13 +20,14 @@ import {
 import { 
   initialTeacherProfile, 
   initialTeacherClasses, 
+  initialTeacherStudents,
   initialTeacherSubjects,
   initialCourses,
   initialLibraryResources,
   initialHomeworkList,
   initialEvaluations, 
   initialLogbookEntries, 
-  initialAttendanceSession, 
+  initialAttendanceSessions, 
   initialStudentProfiles,
   initialSchoolCalendarEvents,
   initialTeacherSchedule, 
@@ -41,6 +43,11 @@ interface TeacherContextType {
   selectedClassId: string;
   setSelectedClassId: (id: string) => void;
   
+  // Tous les élèves des classes du professeur (cloisonnement strict)
+  students: TeacherStudentRosterItem[];
+  getStudentsByClass: (classId: string) => TeacherStudentRosterItem[];
+  getSubjectsForClass: (className: string) => TeacherSubject[];
+
   // Mes Matières
   subjects: TeacherSubject[];
   
@@ -114,17 +121,56 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [classes] = useState<AssignedClass[]>(initialTeacherClasses);
   const [selectedClassId, setSelectedClassId] = useState<string>('cls-tsm');
   const [subjects] = useState<TeacherSubject[]>(initialTeacherSubjects);
-  const [courses, setCourses] = useState<CourseModuleItem[]>(initialCourses);
+  const [rawStudents] = useState<TeacherStudentRosterItem[]>(initialTeacherStudents);
+  const [rawCourses, setCourses] = useState<CourseModuleItem[]>(initialCourses);
   const [libraryResources, setLibraryResources] = useState<PedagogicalResource[]>(initialLibraryResources);
-  const [evaluations, setEvaluations] = useState<EvaluationSession[]>(initialEvaluations);
-  const [logbookEntries, setLogbookEntries] = useState<LogbookEntry[]>(initialLogbookEntries);
-  const [attendanceSession, setAttendanceSession] = useState<AttendanceSession>(initialAttendanceSession);
-  const [homeworkList, setHomeworkList] = useState<HomeworkItem[]>(initialHomeworkList);
-  const [studentProfiles, setStudentProfiles] = useState<StudentPedagogicalProfile[]>(initialStudentProfiles);
+  const [rawEvaluations, setEvaluations] = useState<EvaluationSession[]>(initialEvaluations);
+  const [rawLogbookEntries, setLogbookEntries] = useState<LogbookEntry[]>(initialLogbookEntries);
+  const [attendanceByClass, setAttendanceByClass] = useState<Record<string, AttendanceSession>>(initialAttendanceSessions);
+  const [rawHomeworkList, setHomeworkList] = useState<HomeworkItem[]>(initialHomeworkList);
+  const [rawStudentProfiles, setStudentProfiles] = useState<StudentPedagogicalProfile[]>(initialStudentProfiles);
   const [calendarEvents, setCalendarEvents] = useState<SchoolCalendarEvent[]>(initialSchoolCalendarEvents);
-  const [schedule] = useState<ScheduleSlot[]>(initialTeacherSchedule);
-  const [messages, setMessages] = useState<TeacherMessage[]>(initialTeacherMessages);
+  const [rawSchedule] = useState<ScheduleSlot[]>(initialTeacherSchedule);
+
+  // Strict Teacher Scoping: only assigned classes, assigned subjects, and enrolled students in those classes
+  const allowedClassIds = new Set(classes.map(c => c.id));
+  const allowedClassNames = new Set(classes.map(c => c.name));
+  const allowedSubjectNames = new Set(subjects.map(s => s.name));
+
+  const students = rawStudents.filter(s => allowedClassIds.has(s.classId));
+  const getStudentsByClass = (classId: string) => students.filter(s => s.classId === classId);
+  const getSubjectsForClass = (className: string) => subjects.filter(s => s.classNames.includes(className));
+
+  const courses = rawCourses.filter(c => allowedClassIds.has(c.classId) && allowedSubjectNames.has(c.subject));
+  const evaluations = rawEvaluations.filter(e => allowedClassIds.has(e.classId) && allowedSubjectNames.has(e.subject));
+  const logbookEntries = rawLogbookEntries.filter(l => allowedClassIds.has(l.classId) && allowedSubjectNames.has(l.subject));
+  const homeworkList = rawHomeworkList.filter(h => allowedClassIds.has(h.classId) && allowedSubjectNames.has(h.subject));
+  const studentProfiles = rawStudentProfiles.filter(p => allowedClassNames.has(p.className));
+  const schedule = rawSchedule.filter(s => allowedClassNames.has(s.className) && allowedSubjectNames.has(s.subject));
+
+  const activeAttendanceClassId = allowedClassIds.has(selectedClassId) ? selectedClassId : (classes[0]?.id || 'cls-tsm');
+  const attendanceSession = attendanceByClass[activeAttendanceClassId] || Object.values(attendanceByClass)[0];
+  const [messages, setMessages] = useState<TeacherMessage[]>(() => {
+    try {
+      const raw = localStorage.getItem('smartschool_teacher_messages_v1');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore storage errors
+    }
+    return initialTeacherMessages;
+  });
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('smartschool_teacher_messages_v1', JSON.stringify(messages));
+    } catch {
+      // ignore storage errors
+    }
+  }, [messages]);
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
@@ -154,21 +200,13 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     triggerToast('Cours supprimé.');
   };
 
-  // Library
-  const addLibraryResource = (res: Omit<PedagogicalResource, 'id' | 'downloadCount' | 'uploadedAt'>) => {
-    const newRes: PedagogicalResource = {
-      ...res,
-      id: `lib-${Date.now()}`,
-      downloadCount: 0,
-      uploadedAt: new Date().toISOString().substring(0, 10)
-    };
-    setLibraryResources(prev => [newRes, ...prev]);
-    triggerToast(`Ressource "${res.title}" ajoutée à la bibliothèque.`);
+  // Library (Read-only for Teachers — modifications strictly reserved to school Librarian Admin)
+  const addLibraryResource = (_res: Omit<PedagogicalResource, 'id' | 'downloadCount' | 'uploadedAt'>) => {
+    triggerToast("Accès refusé : Seul l'Admin de la Bibliothèque de l'école peut ajouter des ressources.");
   };
 
-  const deleteLibraryResource = (id: string) => {
-    setLibraryResources(prev => prev.filter(r => r.id !== id));
-    triggerToast('Ressource supprimée de la bibliothèque.');
+  const deleteLibraryResource = (_id: string) => {
+    triggerToast("Accès refusé : Seul l'Admin de la Bibliothèque de l'école peut supprimer des ressources.");
   };
 
   const incrementDownloadCount = (id: string) => {
@@ -340,33 +378,47 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     triggerToast('Séance archivée dans l\'historique.');
   };
 
-  // Attendance
+  // Attendance (per-class roll call with all enrolled students)
   const updateAttendanceStatus = (
     studentId: string, 
     status: 'present' | 'absent' | 'retard' | 'justifie', 
     minutesLate?: number, 
     motif?: string
   ) => {
-    setAttendanceSession(prev => ({
-      ...prev,
-      records: prev.records.map(rec => {
-        if (rec.studentId !== studentId) return rec;
-        return {
-          ...rec,
-          status,
-          minutesLate: status === 'retard' ? (minutesLate || 10) : undefined,
-          motif: motif || (status === 'absent' ? 'Non justifié' : undefined)
-        };
-      })
-    }));
+    setAttendanceByClass(prev => {
+      const current = prev[activeAttendanceClassId];
+      if (!current) return prev;
+      return {
+        ...prev,
+        [activeAttendanceClassId]: {
+          ...current,
+          records: current.records.map(rec => {
+            if (rec.studentId !== studentId) return rec;
+            return {
+              ...rec,
+              status,
+              minutesLate: status === 'retard' ? (minutesLate || 10) : undefined,
+              motif: motif || (status === 'absent' ? 'Non justifié' : undefined)
+            };
+          })
+        }
+      };
+    });
   };
 
   const completeAttendanceSession = () => {
-    setAttendanceSession(prev => ({
-      ...prev,
-      isCompleted: true
-    }));
-    triggerToast('Feuille d\'appel clôturée et transmise à la Vie Scolaire.');
+    setAttendanceByClass(prev => {
+      const current = prev[activeAttendanceClassId];
+      if (!current) return prev;
+      return {
+        ...prev,
+        [activeAttendanceClassId]: {
+          ...current,
+          isCompleted: true
+        }
+      };
+    });
+    triggerToast(`Feuille d'appel de ${attendanceSession?.className || ''} clôturée et transmise à la Vie Scolaire.`);
   };
 
   // Homework
@@ -466,6 +518,9 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         classes,
         selectedClassId,
         setSelectedClassId,
+        students,
+        getStudentsByClass,
+        getSubjectsForClass,
         subjects,
         courses,
         addCourse,

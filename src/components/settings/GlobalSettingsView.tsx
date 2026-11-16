@@ -93,7 +93,7 @@ export const GlobalSettingsView: React.FC = () => {
 
   const toggleLanguageStatus = (code: LanguageCode) => {
     if (code === 'fr') {
-      alert("La langue principale française ne peut pas être désactivée.");
+      showToast("La langue principale française ne peut pas être désactivée.");
       return;
     }
     setEnabledLanguages(prev => ({ ...prev, [code]: !prev[code] }));

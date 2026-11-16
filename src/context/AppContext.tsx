@@ -117,8 +117,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Data states with persistence or initial mocks
   const [schools, setSchools] = useState<School[]>(() => {
-    const saved = localStorage.getItem('smartschool_schools');
-    return saved ? JSON.parse(saved) : initialSchools;
+    try {
+      const saved = localStorage.getItem('smartschool_schools');
+      if (saved) {
+        const parsed = JSON.parse(saved) as School[];
+        return parsed.map(s => {
+          const fallback = initialSchools.find(init => init.id === s.id);
+          return {
+            ...s,
+            whatsappNumber: s.whatsappNumber || fallback?.whatsappNumber || s.phone || ''
+          };
+        });
+      }
+    } catch {
+      // ignore parse errors
+    }
+    return initialSchools;
   });
 
   const [admins, setAdmins] = useState<SchoolAdmin[]>(() => {

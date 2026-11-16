@@ -16,6 +16,8 @@ import {
   Eye
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
+import { downloadPvcBadgePdf, downloadPvcBadgeA4Pdf, PvcRenderData } from '../../utils/pvcCardRenderer';
 
 export const StudentCardView: React.FC = () => {
   const { students, profile } = useSecretary();
@@ -29,10 +31,38 @@ export const StudentCardView: React.FC = () => {
     s.className.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const studentQrValue = selectedStudent.qrToken || `STUDENT|${selectedStudent.matricule}|${selectedStudent.firstName} ${selectedStudent.lastName}`;
+
+  const getPvcData = (): PvcRenderData => ({
+    schoolName: "Lycée d'Excellence de Conakry",
+    schoolCode: 'LEC-GN',
+    categoryLabel: 'CARTE ÉLÈVE',
+    fullName: `${selectedStudent.firstName} ${selectedStudent.lastName}`,
+    title: selectedStudent.className,
+    matricule: selectedStudent.matricule,
+    nationalUid: selectedStudent.qrToken || `UID-${selectedStudent.matricule}`,
+    bloodGroup: selectedStudent.bloodGroup || 'O+',
+    validityPeriod: '2026 - 2027',
+    photoUrl: selectedStudent.photo,
+    themeColor: '#0d9488',
+    accentBg: 'bg-teal-600',
+    isDarkTheme: true,
+    showNationalArms: true,
+    showTricolorBanner: true,
+    showOfficialStamp: true,
+    showMicrotext: true,
+    showWatermark: true,
+    showBarcode: true,
+    qrValue: studentQrValue,
+    orientation: 'landscape',
+    phone: selectedStudent.parentPhone
+  });
+
   const handlePrint = () => {
     triggerPrint(
       'student-card-printable-area', 
-      `Carte_Scolaire_${selectedStudent.firstName}_${selectedStudent.lastName}`
+      `Carte_Scolaire_${selectedStudent.firstName}_${selectedStudent.lastName}`,
+      'landscape'
     );
   };
 
@@ -63,13 +93,34 @@ export const StudentCardView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => downloadQrCodePng(studentQrValue, `QR_Eleve_${selectedStudent.matricule}`, '#0f172a')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-blue-50 border border-slate-200 transition-colors cursor-pointer"
+          >
+            <QrCode className="w-3.5 h-3.5 text-teal-600" />
+            <span>QR PNG</span>
+          </button>
+          <button
+            onClick={() => downloadPvcBadgePdf(getPvcData(), 'both', 'Carte_Eleve')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 transition-colors cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>PDF PVC (CR-80)</span>
+          </button>
+          <button
+            onClick={() => downloadPvcBadgeA4Pdf(getPvcData(), 'both', 'Planche_Eleve')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-blue-50 border border-slate-200 transition-colors cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>PDF A4 (100%)</span>
+          </button>
           <button
             onClick={handlePrint}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 transition-all cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Imprimer la Carte</span>
+            <span>Imprimer PVC</span>
           </button>
         </div>
       </div>
@@ -124,13 +175,13 @@ export const StudentCardView: React.FC = () => {
 
         {/* Right 2 Cols: Card Preview (Front & Back) + Scan Simulator */}
         <div className="lg:col-span-2 space-y-6">
-          <div id="student-card-printable-area" className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div id="student-card-printable-area" className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start pvc-print-grid">
             {/* Front of Student Card */}
             <div className="space-y-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Recto · Carte Scolaire Officielle
+                Recto · Carte Scolaire Officielle (85.6 × 53.98 mm)
               </span>
-              <div className="w-full aspect-[85.6/53.98] rounded-2xl bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 border-2 border-teal-500/50 p-4 shadow-2xl relative overflow-hidden flex flex-col justify-between text-white print:border-black">
+              <div className="pvc-card w-full aspect-[85.6/53.98] rounded-2xl bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 border-2 border-teal-500/50 p-4 shadow-2xl relative overflow-hidden flex flex-col justify-between text-white print:border-black">
                 {/* Guinea Flag Top Accent */}
                 <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 via-yellow-400 to-green-500" />
                 <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-teal-500/10 pointer-events-none blur-xl" />
@@ -192,7 +243,7 @@ export const StudentCardView: React.FC = () => {
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Verso · QR Code & Contrôle d'Accès
               </span>
-              <div className="w-full aspect-[85.6/53.98] rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-slate-700 p-4 shadow-2xl relative overflow-hidden flex flex-col justify-between text-white">
+              <div className="pvc-card w-full aspect-[85.6/53.98] rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-slate-700 p-4 shadow-2xl relative overflow-hidden flex flex-col justify-between text-white">
                 <div className="absolute top-3 left-0 right-0 h-6 bg-slate-950 border-y border-slate-800" />
 
                 <div className="pt-8 flex items-center justify-between gap-3">
@@ -208,7 +259,7 @@ export const StudentCardView: React.FC = () => {
 
                   {/* QR Code Container */}
                   <div className="p-2 rounded-xl bg-white text-black shrink-0 shadow-lg text-center flex flex-col items-center">
-                    <QrCode className="w-14 h-14" />
+                    <RealQrCode value={studentQrValue} size={56} fgColor="#0f172a" />
                     <span className="text-[7px] font-mono font-bold mt-0.5">QR-ELV-2026</span>
                   </div>
                 </div>

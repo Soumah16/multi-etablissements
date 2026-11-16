@@ -1,6 +1,7 @@
 import React from 'react';
 import { useStudent } from '../../context/StudentContext';
 import { triggerPrint, exportPrintableDocument } from '../../utils/printHelper';
+import { RealQrCode } from '../common/RealQrCode';
 import { 
   FileCheck2, 
   Printer, 
@@ -88,8 +89,8 @@ export const StudentReportCardView: React.FC = () => {
             </div>
           </div>
 
-          <div className="w-16 h-16 border border-slate-300 flex items-center justify-center p-1">
-            <QrCode className="w-14 h-14 text-slate-900" />
+          <div className="w-16 h-16 border border-slate-300 flex items-center justify-center p-1 bg-white">
+            <RealQrCode value={`BULLETIN|${profile.matricule}|${profile.className}|T1-2026`} size={56} fgColor="#0f172a" />
           </div>
         </div>
 

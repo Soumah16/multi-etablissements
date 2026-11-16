@@ -3,6 +3,8 @@ import { StaffMember } from '../../types';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { X, Printer, QrCode, CheckCircle2, ShieldCheck, Download, Scan } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
+import { downloadPvcBadgePdf, downloadPvcBadgeA4Pdf, PvcRenderData } from '../../utils/pvcCardRenderer';
 
 interface StaffBadgeModalProps {
   staff: StaffMember;
@@ -12,6 +14,31 @@ interface StaffBadgeModalProps {
 export const StaffBadgeModal: React.FC<StaffBadgeModalProps> = ({ staff, onClose }) => {
   const { currentSchool } = useSchoolAdmin();
   const [scanVerified, setScanVerified] = useState(false);
+
+  const qrPayload = `STAFF|${currentSchool.code}|${staff.matricule}|${staff.firstName} ${staff.lastName}|${staff.role}`;
+
+  const getPvcData = (): PvcRenderData => ({
+    schoolName: currentSchool.name,
+    schoolCode: currentSchool.code,
+    categoryLabel: 'Personnel',
+    fullName: `${staff.firstName} ${staff.lastName}`,
+    title: `${staff.role} · ${staff.department}`,
+    matricule: staff.matricule,
+    nationalUid: qrPayload,
+    bloodGroup: 'N/A',
+    validityPeriod: '2026 - 2027',
+    photoUrl: staff.photo,
+    themeColor: '#1e3a8a',
+    accentBg: '',
+    isDarkTheme: false,
+    showNationalArms: true,
+    showTricolorBanner: true,
+    showOfficialStamp: true,
+    showMicrotext: false,
+    showWatermark: false,
+    showBarcode: false,
+    orientation: 'portrait'
+  });
 
   const handleTestScan = () => {
     setScanVerified(true);
@@ -38,8 +65,8 @@ export const StaffBadgeModal: React.FC<StaffBadgeModalProps> = ({ staff, onClose
 
         {/* Badge Card Container */}
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-6">
-          {/* Physical Badge ISO-7810 Specimen */}
-          <div id="staff-badge-printable-card" className="w-64 h-96 rounded-xl bg-white text-slate-900 shadow-2xl border-4 border-blue-900 overflow-hidden flex flex-col justify-between relative select-none">
+          {/* Physical Badge ISO-7810 Specimen (Portrait 53.98 x 85.60 mm) */}
+          <div id="staff-badge-printable-card" className="pvc-card-portrait w-64 h-96 rounded-xl bg-white text-slate-900 shadow-2xl border-4 border-blue-900 overflow-hidden flex flex-col justify-between relative select-none">
             {/* Header with School Branding */}
             <div className="bg-blue-950 text-white p-3 text-center">
               <div className="text-[9px] uppercase tracking-widest text-slate-300 font-semibold">
@@ -80,16 +107,7 @@ export const StaffBadgeModal: React.FC<StaffBadgeModalProps> = ({ staff, onClose
 
               {/* QR Code Specimen */}
               <div className="mt-3 flex items-center justify-center p-1.5 rounded-lg bg-slate-50 border border-slate-200">
-                <svg className="w-16 h-16" viewBox="0 0 100 100">
-                  <rect width="100" height="100" fill="white" />
-                  <path d="M10,10 h30 v30 h-30 z M15,15 h20 v20 h-20 z M20,20 h10 v10 h-10 z" fill="#1e3a8a" />
-                  <path d="M60,10 h30 v30 h-30 z M65,15 h20 v20 h-20 z M70,20 h10 v10 h-10 z" fill="#1e3a8a" />
-                  <path d="M10,60 h30 v30 h-30 z M15,65 h20 v20 h-20 z M20,70 h10 v10 h-10 z" fill="#1e3a8a" />
-                  <rect x="45" y="45" width="10" height="10" fill="#1e3a8a" />
-                  <rect x="65" y="65" width="15" height="15" fill="#1e3a8a" />
-                  <rect x="45" y="75" width="10" height="15" fill="#1e3a8a" />
-                  <rect x="75" y="45" width="15" height="10" fill="#1e3a8a" />
-                </svg>
+                <RealQrCode value={qrPayload} size={64} fgColor="#1e3a8a" alt={`QR ${staff.matricule}`} />
               </div>
             </div>
 
@@ -151,15 +169,41 @@ export const StaffBadgeModal: React.FC<StaffBadgeModalProps> = ({ staff, onClose
         </div>
 
         {/* Modal Actions */}
-        <div className="mt-6 pt-4 border-t border-blue-100 flex justify-end gap-2 text-xs">
+        <div className="mt-6 pt-4 border-t border-blue-100 flex flex-wrap justify-end gap-2 text-xs">
           <button
-            onClick={() => triggerPrint('staff-badge-printable-card', `Badge_${staff.firstName}_${staff.lastName}`)}
+            type="button"
+            onClick={() => downloadQrCodePng(qrPayload, `QR_${staff.matricule}`, '#1e3a8a')}
+            className="flex items-center gap-1.5 px-3 py-2 font-semibold text-blue-950 bg-slate-100 hover:bg-blue-50 rounded-lg border border-slate-200 cursor-pointer"
+          >
+            <QrCode className="w-4 h-4 text-blue-600" />
+            <span>QR PNG</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => downloadPvcBadgePdf(getPvcData(), 'recto', `Badge_${staff.firstName}_${staff.lastName}`)}
+            className="flex items-center gap-1.5 px-3 py-2 font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs cursor-pointer"
+          >
+            <Download className="w-4 h-4" />
+            <span>PDF PVC (CR-80)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => downloadPvcBadgeA4Pdf(getPvcData(), 'recto', `Planche_A4_${staff.matricule}`)}
+            className="flex items-center gap-1.5 px-3 py-2 font-semibold text-blue-950 bg-slate-100 hover:bg-blue-50 rounded-lg border border-slate-200 cursor-pointer"
+          >
+            <Download className="w-4 h-4 text-indigo-600" />
+            <span>PDF A4 (100%)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => triggerPrint('staff-badge-printable-card', `Badge_${staff.firstName}_${staff.lastName}`, 'portrait')}
             className="flex items-center gap-1.5 px-4 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-xs cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Imprimer le Badge</span>
+            <span>Imprimer PVC</span>
           </button>
           <button
+            type="button"
             onClick={onClose}
             className="px-4 py-2 font-semibold text-slate-600 hover:text-blue-950 rounded-lg bg-slate-100 hover:bg-blue-50 cursor-pointer"
           >

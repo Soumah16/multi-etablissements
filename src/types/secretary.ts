@@ -74,7 +74,7 @@ export interface ParentRecord {
 
 export interface DeliveredCertificate {
   id: string;
-  certificateNumber: string; // e.g. "CERT-2026-0182"
+  certificateNumber: string; // e.g. "LEC-CERT-2026-0182"
   type: DocumentCertificateType;
   studentId: string;
   studentName: string;
@@ -85,6 +85,14 @@ export interface DeliveredCertificate {
   signedBy: string;
   qrVerificationUrl: string;
   status: 'delivre' | 'en_attente';
+  schoolId?: string;
+  schoolName?: string;
+  schoolCode?: string;
+  schoolType?: string;
+  schoolCity?: string;
+  schoolAddress?: string;
+  schoolPhone?: string;
+  schoolLogo?: string;
 }
 
 export interface SchoolTransfer {

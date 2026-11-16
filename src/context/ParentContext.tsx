@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   ParentNavTab, 
   ChildSummary, 
@@ -41,16 +41,35 @@ export const ParentProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [selectedChildId, setSelectedChildId] = useState<string>(initialChildren[0].id);
   const [payments, setPayments] = useState<ParentPaymentItem[]>(initialParentPayments);
   const [notifications, setNotifications] = useState<ParentNotification[]>(initialParentNotifications);
-  const [sentMessages, setSentMessages] = useState<{ id: string; recipient: string; subject: string; message: string; date: string }[]>([
-    {
-      id: 'msg-001',
-      recipient: 'M. Mamadou Lamarana Diallo (Prof. Principal TSM)',
-      subject: 'Demande de rendez-vous orientation Bac',
-      message: 'Bonjour Monsieur, je souhaiterais échanger avec vous sur les choix d’orientation universitaire de Fatoumata Binta en France et au Maroc.',
-      date: '01 Nov 2026'
+  const [sentMessages, setSentMessages] = useState<{ id: string; recipient: string; subject: string; message: string; date: string }[]>(() => {
+    try {
+      const raw = localStorage.getItem('smartschool_parent_messages_v1');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore storage errors
     }
-  ]);
+    return [
+      {
+        id: 'msg-001',
+        recipient: 'M. Mamadou Lamarana Diallo (Prof. Principal TSM)',
+        subject: 'Demande de rendez-vous orientation Bac',
+        message: 'Bonjour Monsieur, je souhaiterais échanger avec vous sur les choix d’orientation universitaire de Fatoumata Binta en France et au Maroc.',
+        date: '01 Nov 2026'
+      }
+    ];
+  });
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('smartschool_parent_messages_v1', JSON.stringify(sentMessages));
+    } catch {
+      // ignore storage errors
+    }
+  }, [sentMessages]);
 
   const selectedChild = childrenList.find(c => c.id === selectedChildId) || childrenList[0];
 

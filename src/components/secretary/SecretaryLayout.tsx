@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useSecretary } from '../../context/SecretaryContext';
+import { useSchoolAdmin } from '../../context/SchoolAdminContext';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { SecretaryNavTab } from '../../types/secretary';
 import { 
   LayoutDashboard, 
@@ -21,7 +23,8 @@ import {
   Building2,
   Lock,
   ChevronDown,
-  LogOut
+  LogOut,
+  MessageCircle
 } from 'lucide-react';
 import { SecretaryDashboardView } from './SecretaryDashboardView';
 import { StudentEnrollmentView } from './StudentEnrollmentView';
@@ -62,6 +65,12 @@ export const SecretaryLayout: React.FC<SecretaryLayoutProps> = ({
     appointments, 
     toastMessage 
   } = useSecretary();
+  const { currentSchool } = useSchoolAdmin();
+  const schoolWaPhone = getSchoolWhatsAppNumber(currentSchool);
+  const schoolWaUrl = buildWhatsAppUrl(
+    schoolWaPhone,
+    `Bonjour ${currentSchool.name}, Secrétariat Général.`
+  );
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
@@ -341,6 +350,19 @@ export const SecretaryLayout: React.FC<SecretaryLayoutProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {schoolWaUrl && (
+              <a
+                href={schoolWaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition-colors"
+                title={`WhatsApp ${currentSchool.name} (${schoolWaPhone})`}
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">WhatsApp {currentSchool.code || 'École'}</span>
+              </a>
+            )}
+
             <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Guichet Admissions Ouvert</span>

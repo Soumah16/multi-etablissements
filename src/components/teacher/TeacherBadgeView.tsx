@@ -13,15 +13,42 @@ import {
   Download 
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
+import { downloadPvcBadgePdf, downloadPvcBadgeA4Pdf, PvcRenderData } from '../../utils/pvcCardRenderer';
 
 export const TeacherBadgeView: React.FC = () => {
-  const { profile, updateProfile } = useTeacher();
+  const { profile, updateProfile, triggerToast } = useTeacher();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [photoUrl, setPhotoUrl] = useState(profile.photo);
   const [firstName, setFirstName] = useState(profile.firstName);
   const [lastName, setLastName] = useState(profile.lastName);
   const [phone, setPhone] = useState(profile.phone);
   const [specialty, setSpecialty] = useState(profile.specialty);
+
+  const qrPayload = `TEACHER|${profile.schoolId}|${profile.matricule}|${profile.firstName} ${profile.lastName}`;
+
+  const getPvcData = (): PvcRenderData => ({
+    schoolName: profile.schoolName,
+    schoolCode: profile.schoolId,
+    categoryLabel: 'ENSEIGNANT',
+    fullName: `${profile.firstName} ${profile.lastName}`,
+    title: profile.specialty || 'Professeur Titulaire',
+    matricule: profile.matricule,
+    nationalUid: profile.id,
+    bloodGroup: 'N/A',
+    validityPeriod: '2026 - 2027',
+    photoUrl: profile.photo,
+    phone: profile.phone,
+    themeColor: '#2563eb',
+    accentBg: '',
+    isDarkTheme: true,
+    showNationalArms: true,
+    showTricolorBanner: true,
+    showOfficialStamp: true,
+    showMicrotext: true,
+    showWatermark: true,
+    showBarcode: true
+  });
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,30 +76,65 @@ export const TeacherBadgeView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <button
+            type="button"
             onClick={() => setEditModalOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors cursor-pointer"
           >
             <Edit3 className="w-3.5 h-3.5" />
-            <span>Modifier la photo / infos</span>
+            <span>Modifier infos</span>
           </button>
           <button
-            onClick={() => triggerPrint('teacher-badge-printable-area', `Badge_Enseignant_${profile.firstName}_${profile.lastName}`)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition-colors cursor-pointer"
+            type="button"
+            onClick={async () => {
+              await downloadQrCodePng(qrPayload, `QR_Enseignant_${profile.matricule}`, '#0f172a');
+              triggerToast('Code QR téléchargé en PNG.');
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-blue-950 text-xs font-semibold border border-slate-200 cursor-pointer"
+          >
+            <QrCode className="w-3.5 h-3.5 text-blue-600" />
+            <span>QR PNG</span>
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              const fn = await downloadPvcBadgePdf(getPvcData(), 'both', `Badge_Enseignant_${profile.matricule}`);
+              triggerToast(`PDF PVC CR-80 (85.6 × 53.98 mm) téléchargé : ${fn}`);
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>PDF PVC (CR-80)</span>
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              const fn = await downloadPvcBadgeA4Pdf(getPvcData(), 'both', `Planche_A4_Enseignant_${profile.matricule}`);
+              triggerToast(`PDF A4 taille PVC 100% téléchargé : ${fn}`);
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-blue-950 text-xs font-semibold border border-slate-200 cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5 text-indigo-600" />
+            <span>PDF A4 (100%)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => triggerPrint('teacher-badge-printable-area', `Badge_Enseignant_${profile.firstName}_${profile.lastName}`, 'landscape')}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition-colors cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Imprimer le badge</span>
+            <span>Imprimer PVC</span>
           </button>
         </div>
       </div>
 
       {/* Visual Badge Display (Front & Back) */}
-      <div id="teacher-badge-printable-area" className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto pt-2">
+      <div id="teacher-badge-printable-area" className="pvc-print-grid grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto pt-2">
         {/* RECTO */}
         <div className="space-y-2">
           <div className="text-xs uppercase font-bold text-slate-500 text-center">Recto - Face Officielle</div>
-          <div className="relative w-full aspect-[1.586/1] rounded-2xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 border-2 border-blue-500/40 p-5 shadow-2xl flex flex-col justify-between overflow-hidden text-white">
+          <div className="pvc-card relative w-full aspect-[1.586/1] rounded-2xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 border-2 border-blue-500/40 p-5 shadow-2xl flex flex-col justify-between overflow-hidden text-white">
             {/* Top header with Guinean flag stripe */}
             <div className="flex items-center justify-between border-b border-blue-500/30 pb-2">
               <div className="flex items-center gap-2">
@@ -142,7 +204,7 @@ export const TeacherBadgeView: React.FC = () => {
         {/* VERSO */}
         <div className="space-y-2">
           <div className="text-xs uppercase font-bold text-slate-500 text-center">Verso - Sécurité & Contacts</div>
-          <div className="relative w-full aspect-[1.586/1] rounded-2xl bg-slate-900 border-2 border-slate-700/60 p-5 shadow-2xl flex flex-col justify-between overflow-hidden text-white">
+          <div className="pvc-card relative w-full aspect-[1.586/1] rounded-2xl bg-slate-900 border-2 border-slate-700/60 p-5 shadow-2xl flex flex-col justify-between overflow-hidden text-white">
             {/* Magnetic Stripe simulation */}
             <div className="w-full h-8 bg-slate-950 -mx-5 -mt-2 mb-3 border-y border-slate-800 flex items-center px-5">
               <div className="w-full h-2 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 opacity-60" />
@@ -166,8 +228,8 @@ export const TeacherBadgeView: React.FC = () => {
               </div>
 
               {/* QR Code Specimen */}
-              <div className="p-2 rounded-xl bg-white text-slate-950 shrink-0 text-center shadow-lg">
-                <QrCode className="w-16 h-16 text-slate-950 mx-auto" />
+              <div className="p-1.5 rounded-xl bg-white text-slate-950 shrink-0 text-center shadow-lg">
+                <RealQrCode value={qrPayload} size={64} fgColor="#0f172a" alt={`QR ${profile.matricule}`} className="mx-auto" />
                 <span className="text-[7px] font-mono font-bold block mt-0.5">SCAN MEPU-A</span>
               </div>
             </div>

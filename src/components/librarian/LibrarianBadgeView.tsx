@@ -12,12 +12,15 @@ import {
   CheckCircle2,
   Calendar,
   Phone,
-  Mail
+  Mail,
+  Download
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
+import { downloadPvcBadgePdf, downloadPvcBadgeA4Pdf, PvcRenderData } from '../../utils/pvcCardRenderer';
 
 export const LibrarianBadgeView: React.FC = () => {
-  const { profile, updateProfile, showToast } = useLibrarian();
+  const { profile, updateProfile, canManageLibrary } = useLibrarian();
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     firstName: profile.firstName,
@@ -29,8 +32,37 @@ export const LibrarianBadgeView: React.FC = () => {
     librarySection: profile.librarySection
   });
 
+  const librarianQrValue = `LIBRARIAN|${profile.matricule}|${profile.id}|${profile.firstName} ${profile.lastName}`;
+
+  const getPvcData = (): PvcRenderData => ({
+    schoolName: profile.schoolName,
+    schoolCode: 'BIB-GN',
+    categoryLabel: 'BIBLIOTHÉCAIRE',
+    fullName: `${profile.firstName} ${profile.lastName}`,
+    title: profile.librarySection || 'Responsable Médiathèque',
+    matricule: profile.matricule,
+    nationalUid: `UID-${profile.id}`,
+    bloodGroup: 'O+',
+    validityPeriod: '2026 - 2027',
+    photoUrl: profile.photo,
+    themeColor: '#4f46e5',
+    accentBg: 'bg-indigo-600',
+    isDarkTheme: true,
+    showNationalArms: true,
+    showTricolorBanner: true,
+    showOfficialStamp: true,
+    showMicrotext: true,
+    showWatermark: true,
+    showBarcode: true,
+    qrValue: librarianQrValue,
+    orientation: 'landscape',
+    phone: profile.phone,
+    email: profile.email
+  });
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManageLibrary) return;
     updateProfile(formData);
     setEditing(false);
   };
@@ -40,31 +72,54 @@ export const LibrarianBadgeView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border border-blue-100 rounded-2xl p-4 sm:p-5 shadow-xs">
         <div>
-          <h1 className="text-xl md:text-2xl font-black text-blue-950">Badge & Carte Professionnelle Bibliothécaire</h1>
+          <h1 className="text-xl md:text-2xl font-black text-blue-950">Badge &amp; Carte Professionnelle Bibliothécaire</h1>
           <p className="text-xs text-slate-500 mt-0.5">
             Carte d'accréditation ISO-7810 ID-1 avec QR Code d'authentification et puce RFID virtuelle.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {canManageLibrary && (
+            <button
+              onClick={() => setEditing(!editing)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 border border-slate-200 text-xs font-semibold cursor-pointer"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>{editing ? 'Annuler modification' : 'Modifier ma fiche'}</span>
+            </button>
+          )}
           <button
-            onClick={() => setEditing(!editing)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 border border-slate-200 text-xs font-semibold cursor-pointer"
+            onClick={() => downloadQrCodePng(librarianQrValue, `QR_Bibliothecaire_${profile.matricule}`, '#0f172a')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 border border-slate-200 text-xs font-semibold cursor-pointer"
           >
-            <Edit3 className="w-3.5 h-3.5" />
-            <span>{editing ? 'Annuler modification' : 'Modifier ma fiche'}</span>
+            <QrCode className="w-3.5 h-3.5 text-indigo-600" />
+            <span>QR PNG</span>
           </button>
           <button
-            onClick={() => triggerPrint('librarian-badge-printable-area', `Badge_Bibliothecaire_${profile.firstName}_${profile.lastName}`)}
+            onClick={() => downloadPvcBadgePdf(getPvcData(), 'both', 'Badge_Bibliothecaire')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>PDF PVC (CR-80)</span>
+          </button>
+          <button
+            onClick={() => downloadPvcBadgeA4Pdf(getPvcData(), 'both', 'Planche_Bibliothecaire')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 border border-slate-200 text-xs font-bold cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>PDF A4 (100%)</span>
+          </button>
+          <button
+            onClick={() => triggerPrint('librarian-badge-printable-card', `Badge_Bibliothecaire_${profile.firstName}_${profile.lastName}`, 'landscape')}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Imprimer la Carte</span>
+            <span>Imprimer PVC</span>
           </button>
         </div>
       </div>
 
-      <div id="librarian-badge-printable-area" className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-start">
         {/* ISO-7810 ID-1 Professional Card (Front & Back Preview) */}
         <div className="space-y-4">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -72,7 +127,7 @@ export const LibrarianBadgeView: React.FC = () => {
           </div>
 
           {/* Front Face */}
-          <div className="w-full max-w-md mx-auto aspect-[1.586/1] rounded-2xl bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 border-2 border-indigo-400/40 shadow-2xl p-5 flex flex-col justify-between text-white relative overflow-hidden">
+          <div id="librarian-badge-printable-card" className="pvc-card w-full max-w-md mx-auto aspect-[1.586/1] rounded-2xl bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 border-2 border-indigo-400/40 shadow-2xl p-5 flex flex-col justify-between text-white relative overflow-hidden">
             {/* Holographic Watermark effect */}
             <div className="absolute -right-10 -bottom-10 w-44 h-44 rounded-full bg-indigo-500/10 blur-2xl pointer-events-none" />
             <div className="absolute top-2 right-4 text-[9px] font-mono tracking-widest text-indigo-300/60 uppercase">
@@ -128,8 +183,8 @@ export const LibrarianBadgeView: React.FC = () => {
             {/* Bottom Bar with QR Code */}
             <div className="pt-2 border-t border-indigo-500/30 flex items-center justify-between text-[10px]">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded bg-white p-0.5 flex items-center justify-center text-slate-900 shadow-xs">
-                  <QrCode className="w-7 h-7" />
+                <div className="w-10 h-10 rounded bg-white p-0.5 flex items-center justify-center text-slate-900 shadow-xs shrink-0">
+                  <RealQrCode value={librarianQrValue} size={36} fgColor="#0f172a" />
                 </div>
                 <div>
                   <div className="font-mono text-[9px] text-indigo-200">ID: {profile.id}</div>

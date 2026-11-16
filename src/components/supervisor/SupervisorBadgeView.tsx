@@ -11,9 +11,12 @@ import {
   Phone, 
   Mail, 
   MapPin, 
-  Sparkles 
+  Sparkles,
+  Download
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
+import { downloadPvcBadgePdf, downloadPvcBadgeA4Pdf, PvcRenderData } from '../../utils/pvcCardRenderer';
 
 export const SupervisorBadgeView: React.FC = () => {
   const { profile, updateProfile } = useSupervisor();
@@ -24,6 +27,34 @@ export const SupervisorBadgeView: React.FC = () => {
   const [phone, setPhone] = useState(profile.phone);
   const [address, setAddress] = useState(profile.address);
   const [roleTitle, setRoleTitle] = useState(profile.roleTitle);
+
+  const supervisorQrValue = `SUPERVISOR|${profile.matricule}|${profile.id}|${profile.firstName} ${profile.lastName}`;
+
+  const getPvcData = (): PvcRenderData => ({
+    schoolName: profile.schoolName,
+    schoolCode: 'SUP-GN',
+    categoryLabel: 'SURVEILLANT GÉNÉRAL',
+    fullName: `${profile.firstName} ${profile.lastName}`,
+    title: profile.roleTitle,
+    matricule: profile.matricule,
+    nationalUid: `UID-${profile.id}`,
+    bloodGroup: 'O+',
+    validityPeriod: '2026 - 2027',
+    photoUrl: profile.photo,
+    themeColor: '#dc2626',
+    accentBg: 'bg-red-600',
+    isDarkTheme: true,
+    showNationalArms: true,
+    showTricolorBanner: true,
+    showOfficialStamp: true,
+    showMicrotext: true,
+    showWatermark: true,
+    showBarcode: true,
+    qrValue: supervisorQrValue,
+    orientation: 'landscape',
+    phone: profile.phone,
+    email: profile.email
+  });
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,21 +92,42 @@ export const SupervisorBadgeView: React.FC = () => {
             <span>Modifier Photo & Infos</span>
           </button>
           <button
-            onClick={() => triggerPrint('supervisor-badge-printable-area', `Badge_Surveillant_${profile.firstName}_${profile.lastName}`)}
+            onClick={() => downloadQrCodePng(supervisorQrValue, `QR_Surveillant_${profile.matricule}`, '#0f172a')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors cursor-pointer"
+          >
+            <QrCode className="w-3.5 h-3.5 text-red-600" />
+            <span>QR PNG</span>
+          </button>
+          <button
+            onClick={() => downloadPvcBadgePdf(getPvcData(), 'both', 'Badge_Surveillant')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold border border-red-200 transition-colors cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>PDF PVC (CR-80)</span>
+          </button>
+          <button
+            onClick={() => downloadPvcBadgeA4Pdf(getPvcData(), 'both', 'Planche_Surveillant')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 text-xs font-bold border border-slate-200 transition-colors cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>PDF A4 (100%)</span>
+          </button>
+          <button
+            onClick={() => triggerPrint('supervisor-badge-printable-area', `Badge_Surveillant_${profile.firstName}_${profile.lastName}`, 'landscape')}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md shadow-red-600/20 transition-colors cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Imprimer Carte</span>
+            <span>Imprimer PVC</span>
           </button>
         </div>
       </div>
 
       {/* Visual Badge Display (Recto & Verso) */}
-      <div id="supervisor-badge-printable-area" className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto pt-2">
+      <div id="supervisor-badge-printable-area" className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto pt-2 pvc-print-grid">
         {/* RECTO */}
         <div className="space-y-2">
-          <div className="text-xs uppercase font-bold text-slate-500 text-center">Recto - Face Officielle</div>
-          <div className="relative w-full aspect-[1.586/1] rounded-2xl bg-gradient-to-br from-slate-900 via-red-950/70 to-slate-900 border-2 border-red-500/40 p-5 shadow-2xl flex flex-col justify-between overflow-hidden text-white">
+          <div className="text-xs uppercase font-bold text-slate-500 text-center">Recto - Face Officielle (85.6 × 53.98 mm)</div>
+          <div className="pvc-card relative w-full aspect-[1.586/1] rounded-2xl bg-gradient-to-br from-slate-900 via-red-950/70 to-slate-900 border-2 border-red-500/40 p-5 shadow-2xl flex flex-col justify-between overflow-hidden text-white">
             {/* Top header */}
             <div className="flex items-center justify-between border-b border-red-500/30 pb-2">
               <div className="flex items-center gap-2">
@@ -145,7 +197,7 @@ export const SupervisorBadgeView: React.FC = () => {
         {/* VERSO */}
         <div className="space-y-2">
           <div className="text-xs uppercase font-bold text-slate-500 text-center">Verso - Sécurité & Contacts</div>
-          <div className="relative w-full aspect-[1.586/1] rounded-2xl bg-slate-900 border-2 border-slate-700/60 p-5 shadow-2xl flex flex-col justify-between overflow-hidden text-white">
+          <div className="pvc-card relative w-full aspect-[1.586/1] rounded-2xl bg-slate-900 border-2 border-slate-700/60 p-5 shadow-2xl flex flex-col justify-between overflow-hidden text-white">
             {/* Magnetic Stripe simulation */}
             <div className="w-full h-8 bg-slate-950 -mx-5 -mt-2 mb-3 border-y border-slate-800 flex items-center px-5">
               <div className="w-full h-2 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 opacity-60" />
@@ -173,7 +225,7 @@ export const SupervisorBadgeView: React.FC = () => {
 
               {/* QR Code Specimen */}
               <div className="p-2 rounded-xl bg-white text-slate-950 shrink-0 text-center shadow-lg">
-                <QrCode className="w-16 h-16 text-slate-950 mx-auto" />
+                <RealQrCode value={supervisorQrValue} size={64} fgColor="#0f172a" className="mx-auto" />
                 <span className="text-[7px] font-mono font-bold block mt-0.5">SCAN MEPU-A</span>
               </div>
             </div>

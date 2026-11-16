@@ -16,9 +16,12 @@ import {
   Sparkles
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { useSchoolAdmin } from '../../context/SchoolAdminContext';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 
 export const DebtorsView: React.FC = () => {
   const { debtors, sendDebtorReminder, formatGnf } = useAccountant();
+  const { currentSchool } = useSchoolAdmin();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'en_retard' | 'relance_envoyee' | 'contentieux'>('all');
   const [selectedStudentForReminder, setSelectedStudentForReminder] = useState<DebtorStudent | null>(null);
@@ -201,6 +204,20 @@ export const DebtorsView: React.FC = () => {
                     >
                       <Phone className="w-3.5 h-3.5" />
                     </a>
+                    {buildWhatsAppUrl(debtor.parentPhone) && (
+                      <a
+                        href={buildWhatsAppUrl(
+                          debtor.parentPhone,
+                          `${currentSchool.name} : Cher(e) ${debtor.parentName}, rappel pour le solde de scolarité de ${debtor.studentName} (${formatGnf(debtor.balanceRemainingGnf)}). WhatsApp École : ${getSchoolWhatsAppNumber(currentSchool)}.`
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+                        title="Relancer directement sur WhatsApp"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                      </a>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -255,25 +272,62 @@ export const DebtorsView: React.FC = () => {
               </div>
 
               <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-100 text-[11px] text-slate-700 leading-relaxed">
-                <strong>Aperçu du message envoyé :</strong>
+                <strong>Aperçu du message envoyé ({currentSchool.name}) :</strong>
                 <p className="italic text-slate-500 mt-1">
-                  "Lycée d'Excellence : Cher parent de {selectedStudentForReminder.studentName}, nous vous rappelons que le solde de scolarité de {formatGnf(selectedStudentForReminder.balanceRemainingGnf)} est en attente de règlement. Merci de régulariser sous 48h au guichet comptable ou par Orange Money."
+                  "{currentSchool.name} : Cher parent de {selectedStudentForReminder.studentName}, nous vous rappelons que le solde de scolarité de {formatGnf(selectedStudentForReminder.balanceRemainingGnf)} est en attente de règlement. Contact WhatsApp École : {getSchoolWhatsAppNumber(currentSchool)}."
                 </p>
               </div>
+
+              {reminderChannel === 'WhatsApp' && (
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-col gap-2">
+                  <div className="text-[11px] text-emerald-900 font-semibold">
+                    Redirection WhatsApp directe ({currentSchool.name} → {selectedStudentForReminder.parentName}) :
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {buildWhatsAppUrl(selectedStudentForReminder.parentPhone) && (
+                      <a
+                        href={buildWhatsAppUrl(
+                          selectedStudentForReminder.parentPhone,
+                          `${currentSchool.name} : Cher(e) ${selectedStudentForReminder.parentName}, nous vous rappelons que le solde de scolarité de ${selectedStudentForReminder.studentName} (${formatGnf(selectedStudentForReminder.balanceRemainingGnf)}) est en attente de règlement. Merci de contacter le secrétariat ou notre WhatsApp officiel : ${getSchoolWhatsAppNumber(currentSchool)}.`
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>Ouvrir WhatsApp du Parent</span>
+                      </a>
+                    )}
+                    {buildWhatsAppUrl(getSchoolWhatsAppNumber(currentSchool)) && (
+                      <a
+                        href={buildWhatsAppUrl(
+                          getSchoolWhatsAppNumber(currentSchool),
+                          `Relance impayé - Élève : ${selectedStudentForReminder.studentName} - Parent : ${selectedStudentForReminder.parentName} (${selectedStudentForReminder.parentPhone}) - Montant : ${formatGnf(selectedStudentForReminder.balanceRemainingGnf)}`
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs"
+                      >
+                        <span>WhatsApp Comptabilité École ({getSchoolWhatsAppNumber(currentSchool)})</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="pt-3 border-t border-blue-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setSelectedStudentForReminder(null)}
-                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-blue-950 bg-slate-50 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-blue-950 bg-slate-50 text-xs font-semibold cursor-pointer"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold"
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold cursor-pointer"
                 >
-                  Envoyer le Rappel
+                  Enregistrer & Envoyer le Rappel
                 </button>
               </div>
             </form>

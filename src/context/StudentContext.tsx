@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   StudentNavTab, 
   StudentProfile, 
@@ -49,22 +49,41 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [homeworks, setHomeworks] = useState<StudentHomeworkSubmission[]>(initialStudentHomeworks);
   const [grades] = useState<StudentGradeRecord[]>(initialStudentGrades);
   const [attendances] = useState<StudentAttendanceItem[]>(initialStudentAttendance);
-  const [messages, setMessages] = useState<{ id: string; sender: string; text: string; time: string; isStudent: boolean }[]>([
-    {
-      id: 'm-1',
-      sender: 'M. Mamadou Lamarana Diallo (Maths)',
-      text: 'Bonjour Fatoumata, n’hésite pas à revoir l’exercice 4 sur les intégrales pour la composition de vendredi.',
-      time: 'Hier 16:30',
-      isStudent: false
-    },
-    {
-      id: 'm-2',
-      sender: 'Fatoumata Binta Diallo',
-      text: 'Merci beaucoup M. Diallo, j’ai appliqué la formule d’intégration par parties et j’ai téléversé ma copie sur le portail.',
-      time: 'Hier 21:15',
-      isStudent: true
+  const [messages, setMessages] = useState<{ id: string; sender: string; text: string; time: string; isStudent: boolean }[]>(() => {
+    try {
+      const raw = localStorage.getItem('smartschool_student_messages_v1');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore storage errors
     }
-  ]);
+    return [
+      {
+        id: 'm-1',
+        sender: 'M. Mamadou Lamarana Diallo (Maths)',
+        text: 'Bonjour Fatoumata, n’hésite pas à revoir l’exercice 4 sur les intégrales pour la composition de vendredi.',
+        time: 'Hier 16:30',
+        isStudent: false
+      },
+      {
+        id: 'm-2',
+        sender: 'Fatoumata Binta Diallo',
+        text: 'Merci beaucoup M. Diallo, j’ai appliqué la formule d’intégration par parties et j’ai téléversé ma copie sur le portail.',
+        time: 'Hier 21:15',
+        isStudent: true
+      }
+    ];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('smartschool_student_messages_v1', JSON.stringify(messages));
+    } catch {
+      // ignore storage errors
+    }
+  }, [messages]);
   const [notifications, setNotifications] = useState([
     {
       id: 'not-1',

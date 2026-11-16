@@ -3,6 +3,7 @@ import { PaymentRecord } from '../../types/accountant';
 import { useAccountant } from '../../context/AccountantContext';
 import { Printer, X, QrCode, CheckCircle2, ShieldCheck, Download } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { RealQrCode } from '../common/RealQrCode';
 
 interface ReceiptModalProps {
   payment: PaymentRecord;
@@ -139,7 +140,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ payment, onClose }) 
             {/* QR Code */}
             <div className="flex items-center gap-3">
               <div className="p-1.5 rounded-lg border border-slate-300 bg-white">
-                <QrCode className="w-14 h-14 text-slate-900" />
+                <RealQrCode value={payment.qrCodeToken || payment.reference} size={56} fgColor="#0f172a" />
               </div>
               <div className="text-[9px] text-slate-500 space-y-0.5 max-w-[180px]">
                 <div className="font-bold text-slate-800">VÉRIFICATION D'AUTHENTICITÉ</div>

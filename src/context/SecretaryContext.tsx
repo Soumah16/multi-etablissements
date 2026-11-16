@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   SecretaryNavTab, 
   SecretaryProfile, 
@@ -21,6 +21,7 @@ import {
   initialSecretaryMessages, 
   initialSecretarySecurityLogs 
 } from '../data/secretaryMockData';
+import { useSchoolAdmin } from './SchoolAdminContext';
 
 interface SecretaryContextType {
   activeSecretaryTab: SecretaryNavTab;
@@ -79,8 +80,16 @@ interface SecretaryContextType {
   generateCertificate: (
     studentId: string, 
     type: DocumentCertificateType, 
-    purpose: string
+    purpose: string,
+    customFields?: {
+      studentName?: string;
+      matricule?: string;
+      className?: string;
+      schoolName?: string;
+      issueDate?: string;
+    }
   ) => DeliveredCertificate;
+  updateCertificate: (id: string, partial: Partial<DeliveredCertificate>) => void;
   
   // Transfers
   transfers: SchoolTransfer[];
@@ -132,6 +141,7 @@ interface SecretaryContextType {
 const SecretaryContext = createContext<SecretaryContextType | undefined>(undefined);
 
 export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { currentSchool } = useSchoolAdmin();
   const [activeSecretaryTab, setActiveSecretaryTab] = useState<SecretaryNavTab>('dashboard');
   const [profile, setProfile] = useState<SecretaryProfile>(initialSecretaryProfile);
   const [students, setStudents] = useState<StudentEnrollment[]>(initialStudents);
@@ -139,9 +149,28 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [certificates, setCertificates] = useState<DeliveredCertificate[]>(initialCertificates);
   const [transfers, setTransfers] = useState<SchoolTransfer[]>(initialTransfers);
   const [appointments, setAppointments] = useState<SecretaryAppointment[]>(initialAppointments);
-  const [messages, setMessages] = useState<SecretaryMessage[]>(initialSecretaryMessages);
+  const [messages, setMessages] = useState<SecretaryMessage[]>(() => {
+    try {
+      const raw = localStorage.getItem('smartschool_secretary_messages_v1');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore storage errors
+    }
+    return initialSecretaryMessages;
+  });
   const [securityLogs, setSecurityLogs] = useState<SecretarySecurityLog[]>(initialSecretarySecurityLogs);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('smartschool_secretary_messages_v1', JSON.stringify(messages));
+    } catch {
+      // ignore storage errors
+    }
+  }, [messages]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -234,7 +263,34 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const updateStudent = (id: string, partial: Partial<StudentEnrollment>) => {
+    const existing = students.find(s => s.id === id);
+    const updatedName = `${partial.firstName ?? existing?.firstName ?? ''} ${partial.lastName ?? existing?.lastName ?? ''}`.trim();
+
     setStudents(prev => prev.map(s => s.id === id ? { ...s, ...partial } : s));
+
+    if (partial.parentId !== undefined) {
+      setParents(prev => prev.map(p => {
+        const idx = p.childrenIds.indexOf(id);
+        const filteredIds = p.childrenIds.filter(cid => cid !== id);
+        const filteredNames = idx >= 0
+          ? p.childrenNames.filter((_, i) => i !== idx)
+          : p.childrenNames.filter(n => n !== `${existing?.firstName} ${existing?.lastName}`);
+
+        if (partial.parentId && p.id === partial.parentId) {
+          return {
+            ...p,
+            childrenIds: [...filteredIds, id],
+            childrenNames: [...filteredNames, updatedName || 'Élève']
+          };
+        }
+        return {
+          ...p,
+          childrenIds: filteredIds,
+          childrenNames: filteredNames
+        };
+      }));
+    }
+
     showToast('Dossier élève mis à jour.');
   };
 
@@ -385,44 +441,79 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     showToast('Liaison parent-enfant enregistrée avec succès.');
   };
 
-  // Certificates Generation
+  // Certificates Generation (per-school model & editable student details)
   const generateCertificate = (
     studentId: string, 
     type: DocumentCertificateType, 
-    purpose: string
+    purpose: string,
+    customFields?: {
+      studentName?: string;
+      matricule?: string;
+      className?: string;
+      schoolName?: string;
+      issueDate?: string;
+    }
   ): DeliveredCertificate => {
-    const student = students.find(s => s.id === studentId);
-    if (!student) throw new Error('Élève introuvable');
+    const student = studentId !== 'custom' ? students.find(s => s.id === studentId) : undefined;
+    const resolvedName = customFields?.studentName?.trim() || (student ? `${student.firstName} ${student.lastName}` : '');
+    if (!resolvedName) throw new Error('Nom de l\'élève requis');
 
-    const prefix = 
-      type === 'certificat_scolarite' ? 'LEC-CERT' :
-      type === 'attestation_inscription' ? 'LEC-ATT-INS' :
-      type === 'attestation_frequentation' ? 'LEC-FREQ' :
-      type === 'attestation_reussite' ? 'LEC-REUSS' : 'LEC-TRANS';
+    const schoolShortCode = (currentSchool?.code || 'LEC').split('-')[0].toUpperCase();
+    const resolvedMatricule = customFields?.matricule?.trim() || student?.matricule || `${schoolShortCode}-2026-${Math.floor(100 + Math.random() * 900)}`;
+    const resolvedClassName = customFields?.className?.trim() || student?.className || 'Classe non précisée';
+    const resolvedSchoolName = customFields?.schoolName?.trim() || currentSchool?.name || profile.schoolName;
+    const resolvedIssueDate = customFields?.issueDate || new Date().toISOString().split('T')[0];
+
+    const typeTag = 
+      type === 'certificat_scolarite' ? 'CERT' :
+      type === 'attestation_inscription' ? 'ATT-INS' :
+      type === 'attestation_frequentation' ? 'FREQ' :
+      type === 'attestation_reussite' ? 'REUSS' : 'TRANS';
     
     const randomNum = Math.floor(1000 + Math.random() * 9000);
-    const certNum = `${prefix}-2026-${randomNum}`;
-    const qrUrl = `https://smartschool-verify.gn/cert/${certNum}`;
+    const certNum = `${schoolShortCode}-${typeTag}-2026-${randomNum}`;
+    const qrUrl = `https://smartschool-verify.gn/cert/${certNum}?m=${encodeURIComponent(resolvedMatricule)}&s=${encodeURIComponent(currentSchool?.code || 'LEC-CKY')}`;
 
     const newDoc: DeliveredCertificate = {
       id: `cert-${Date.now()}`,
       certificateNumber: certNum,
       type,
-      studentId: student.id,
-      studentName: `${student.firstName} ${student.lastName}`,
-      matricule: student.matricule,
-      className: student.className,
-      issueDate: new Date().toISOString().split('T')[0],
+      studentId: student?.id || `custom-${Date.now()}`,
+      studentName: resolvedName,
+      matricule: resolvedMatricule,
+      className: resolvedClassName,
+      issueDate: resolvedIssueDate,
       purpose,
       signedBy: `${profile.name} (${profile.title})`,
       qrVerificationUrl: qrUrl,
-      status: 'delivre'
+      status: 'delivre',
+      schoolId: currentSchool?.id || 'sch-gn-ck-001',
+      schoolName: resolvedSchoolName,
+      schoolCode: currentSchool?.code || 'LEC-CKY',
+      schoolType: currentSchool?.type || 'Lycée',
+      schoolCity: currentSchool?.city || 'Conakry',
+      schoolAddress: currentSchool?.address || 'Boulevard Diallo Telli, Kaloum',
+      schoolPhone: currentSchool?.phone || '+224 621 34 56 78',
+      schoolLogo: currentSchool?.logo
     };
 
     setCertificates(prev => [newDoc, ...prev]);
-    addSecurityLog(`Délivrance de document officiel : ${certNum} pour ${student.firstName} ${student.lastName}`);
-    showToast(`Document ${certNum} délivré avec succès ! Spécimen officiel prêt.`);
+    addSecurityLog(`Délivrance document officiel (${currentSchool?.code || 'LEC'}) : ${certNum} pour ${resolvedName} (${resolvedMatricule})`);
+    showToast(`Document ${certNum} délivré pour ${resolvedSchoolName} !`);
     return newDoc;
+  };
+
+  const updateCertificate = (id: string, partial: Partial<DeliveredCertificate>) => {
+    setCertificates(prev => prev.map(c => {
+      if (c.id !== id) return c;
+      const updated = { ...c, ...partial };
+      return {
+        ...updated,
+        qrVerificationUrl: `https://smartschool-verify.gn/cert/${updated.certificateNumber}?m=${encodeURIComponent(updated.matricule)}&s=${encodeURIComponent(updated.schoolCode || currentSchool?.code || 'LEC')}`
+      };
+    }));
+    addSecurityLog(`Modification certificat #${id} (Élève / Matricule / Classe mis à jour)`);
+    showToast('Certificat mis à jour avec succès !');
   };
 
   // Transfers
@@ -523,6 +614,7 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       linkChildToParent,
       certificates,
       generateCertificate,
+      updateCertificate,
       transfers,
       createTransfer,
       updateTransferStatus,

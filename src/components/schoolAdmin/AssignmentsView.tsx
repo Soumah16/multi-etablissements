@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { 
-  Shuffle, 
   UserCheck, 
   BookOpen, 
   Building2, 
   DoorOpen, 
-  Plus, 
-  Trash2, 
-  CheckCircle2, 
-  ShieldCheck 
+  Search,
+  X,
+  Award,
+  Table2
 } from 'lucide-react';
 
 export const AssignmentsView: React.FC = () => {
@@ -19,16 +18,18 @@ export const AssignmentsView: React.FC = () => {
     subjects, 
     rooms, 
     assignTeacherToClass, 
+    unassignTeacherFromClass,
     assignTeacherToSubject, 
+    unassignTeacherFromSubject,
     assignPrincipalTeacher, 
     assignRoomToClass 
   } = useSchoolAdmin();
 
   const teachers = staff.filter(s => s.role === 'Enseignant');
-  const supervisors = staff.filter(s => s.role === 'Surveillant');
 
   // Form states
   const [selectedTeacherId, setSelectedTeacherId] = useState(teachers[0]?.id || '');
+  const [selectedClassTeacherId, setSelectedClassTeacherId] = useState(teachers[0]?.id || '');
   const [selectedSubjectId, setSelectedSubjectId] = useState(subjects[0]?.id || '');
   const [selectedClassId, setSelectedClassId] = useState(classes[0]?.id || '');
 
@@ -38,6 +39,10 @@ export const AssignmentsView: React.FC = () => {
   const [roomClassId, setRoomClassId] = useState(classes[0]?.id || '');
   const [selectedRoomId, setSelectedRoomId] = useState(rooms[0]?.id || '');
 
+  // Matrix filter state
+  const [matrixSearch, setMatrixSearch] = useState('');
+  const [matrixClassFilter, setMatrixClassFilter] = useState<string>('all');
+
   const handleAssignTeacherSubject = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTeacherId || !selectedSubjectId) return;
@@ -46,8 +51,8 @@ export const AssignmentsView: React.FC = () => {
 
   const handleAssignTeacherClass = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTeacherId || !selectedClassId) return;
-    assignTeacherToClass(selectedTeacherId, selectedClassId);
+    if (!selectedClassTeacherId || !selectedClassId) return;
+    assignTeacherToClass(selectedClassTeacherId, selectedClassId);
   };
 
   const handleAssignPrincipal = (e: React.FormEvent) => {
@@ -62,6 +67,27 @@ export const AssignmentsView: React.FC = () => {
     assignRoomToClass(roomClassId, selectedRoomId);
   };
 
+  // Filtered teachers for the summary matrix
+  const filteredTeachers = teachers.filter(t => {
+    const teacherSubjects = (t.assignedSubjects || [])
+      .map(id => subjects.find(s => s.id === id)?.name || '')
+      .join(' ');
+    const teacherClasses = (t.assignedClasses || [])
+      .map(id => classes.find(c => c.id === id)?.name || '')
+      .join(' ');
+
+    const matchesSearch = !matrixSearch.trim() ||
+      `${t.firstName} ${t.lastName}`.toLowerCase().includes(matrixSearch.toLowerCase()) ||
+      t.matricule.toLowerCase().includes(matrixSearch.toLowerCase()) ||
+      teacherSubjects.toLowerCase().includes(matrixSearch.toLowerCase()) ||
+      teacherClasses.toLowerCase().includes(matrixSearch.toLowerCase());
+
+    const matchesClass = matrixClassFilter === 'all' ||
+      (t.assignedClasses || []).includes(matrixClassFilter);
+
+    return matchesSearch && matchesClass;
+  });
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -71,7 +97,7 @@ export const AssignmentsView: React.FC = () => {
             Affectations Administratives & Pédagogiques
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Attribution des enseignants aux matières, classes, professeurs principaux et salles de cours
+            Attribution et suivi en direct des enseignants par matière, classe, professeur principal et salle de cours
           </p>
         </div>
       </div>
@@ -116,7 +142,7 @@ export const AssignmentsView: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2 font-semibold text-xs rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors"
+              className="w-full py-2 font-semibold text-xs rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors cursor-pointer"
             >
               Affecter la Matière
             </button>
@@ -136,8 +162,8 @@ export const AssignmentsView: React.FC = () => {
             <div className="space-y-1">
               <label className="text-slate-500 font-medium">Sélectionner l'Enseignant :</label>
               <select
-                value={selectedTeacherId}
-                onChange={e => setSelectedTeacherId(e.target.value)}
+                value={selectedClassTeacherId}
+                onChange={e => setSelectedClassTeacherId(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
               >
                 {teachers.map(t => (
@@ -161,7 +187,7 @@ export const AssignmentsView: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2 font-semibold text-xs rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
+              className="w-full py-2 font-semibold text-xs rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-colors cursor-pointer"
             >
               Affecter à la Classe
             </button>
@@ -206,7 +232,7 @@ export const AssignmentsView: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2 font-semibold text-xs rounded-lg bg-purple-600 hover:bg-purple-500 text-white transition-colors"
+              className="w-full py-2 font-semibold text-xs rounded-lg bg-purple-600 hover:bg-purple-500 text-white transition-colors cursor-pointer"
             >
               Désigner Professeur Principal
             </button>
@@ -251,11 +277,166 @@ export const AssignmentsView: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2 font-semibold text-xs rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-colors"
+              className="w-full py-2 font-semibold text-xs rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-colors cursor-pointer"
             >
               Attribuer la Salle
             </button>
           </form>
+        </div>
+      </div>
+
+      {/* Live Summary Table: Which Teacher teaches which Subject in which Class */}
+      <div className="rounded-2xl bg-white border border-blue-100 overflow-hidden shadow-xs">
+        <div className="p-5 border-b border-blue-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-blue-50/40">
+          <div>
+            <h2 className="text-sm font-black text-blue-950 flex items-center gap-2">
+              <Table2 className="w-4 h-4 text-blue-600" />
+              <span>Tableau Récapitulatif : Quel Professeur dispense quel Cours et dans quelle Classe</span>
+            </h2>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Vue consolidée en temps réel de toutes les matières et classes attribuées à chaque enseignant (cliquez sur × pour retirer).
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+              <input
+                type="text"
+                value={matrixSearch}
+                onChange={e => setMatrixSearch(e.target.value)}
+                placeholder="Prof, matière ou classe..."
+                className="pl-8 pr-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-blue-950 placeholder-slate-400 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <select
+              value={matrixClassFilter}
+              onChange={e => setMatrixClassFilter(e.target.value)}
+              className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-blue-950 focus:outline-none focus:border-blue-500"
+            >
+              <option value="all">Toutes les classes ({classes.length})</option>
+              {classes.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-blue-50/60 text-slate-500 uppercase text-[10px] tracking-wider border-b border-blue-100">
+              <tr>
+                <th className="py-3 px-4">Professeur & Matricule</th>
+                <th className="py-3 px-4">Matière(s) Dispensée(s)</th>
+                <th className="py-3 px-4">Classe(s) Attribuée(s)</th>
+                <th className="py-3 px-4">Professeur Principal de</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-blue-100">
+              {filteredTeachers.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-slate-500 text-xs">
+                    Aucun enseignant ne correspond aux filtres sélectionnés.
+                  </td>
+                </tr>
+              ) : (
+                filteredTeachers.map(teacher => {
+                  const assignedSubs = (teacher.assignedSubjects || [])
+                    .map(id => subjects.find(s => s.id === id))
+                    .filter((s): s is NonNullable<typeof s> => Boolean(s));
+                  const assignedCls = (teacher.assignedClasses || [])
+                    .map(id => classes.find(c => c.id === id))
+                    .filter((c): c is NonNullable<typeof c> => Boolean(c));
+                  const principalOf = classes.filter(c => c.principalTeacherId === teacher.id);
+
+                  return (
+                    <tr key={teacher.id} className="hover:bg-blue-50/50 transition-colors">
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-2.5">
+                          <img
+                            src={teacher.photo}
+                            alt={teacher.firstName}
+                            className="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0"
+                          />
+                          <div>
+                            <div className="font-bold text-blue-950">{teacher.firstName} {teacher.lastName}</div>
+                            <div className="text-[10px] font-mono text-blue-600">{teacher.matricule} · {teacher.department}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-wrap gap-1.5">
+                          {assignedSubs.length === 0 ? (
+                            <span className="text-[11px] text-slate-400 italic">Aucune matière assignée</span>
+                          ) : (
+                            assignedSubs.map(sub => (
+                              <span
+                                key={sub.id}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200 text-[11px] font-semibold"
+                              >
+                                <BookOpen className="w-3 h-3 text-blue-600" />
+                                <span>{sub.name} (Coef {sub.coefficient})</span>
+                                <button
+                                  type="button"
+                                  onClick={() => unassignTeacherFromSubject(teacher.id, sub.id)}
+                                  className="ml-0.5 text-blue-400 hover:text-rose-600 cursor-pointer"
+                                  title={`Retirer ${sub.name}`}
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </span>
+                            ))
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-wrap gap-1.5">
+                          {assignedCls.length === 0 ? (
+                            <span className="text-[11px] text-slate-400 italic">Aucune classe assignée</span>
+                          ) : (
+                            assignedCls.map(cls => (
+                              <span
+                                key={cls.id}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-semibold"
+                              >
+                                <Building2 className="w-3 h-3 text-emerald-600" />
+                                <span>{cls.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => unassignTeacherFromClass(teacher.id, cls.id)}
+                                  className="ml-0.5 text-emerald-500 hover:text-rose-600 cursor-pointer"
+                                  title={`Retirer de ${cls.name}`}
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </span>
+                            ))
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        {principalOf.length === 0 ? (
+                          <span className="text-[11px] text-slate-400">—</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {principalOf.map(c => (
+                              <span key={c.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-200 text-[11px] font-bold">
+                                <Award className="w-3 h-3 text-purple-600" />
+                                <span>{c.name}</span>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

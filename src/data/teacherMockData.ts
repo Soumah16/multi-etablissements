@@ -1,6 +1,7 @@
 import { 
   TeacherProfile, 
   AssignedClass, 
+  TeacherStudentRosterItem,
   TeacherSubject,
   CourseModuleItem,
   PedagogicalResource,
@@ -37,24 +38,70 @@ export const initialTeacherProfile: TeacherProfile = {
   twoFactorEnabled: true
 };
 
+export const initialTeacherStudents: TeacherStudentRosterItem[] = [
+  // === Terminale Sciences Mathématiques (TSM) - 14 élèves ===
+  { id: 'std-001', matricule: 'LEC-2026-001', firstName: 'Mamadou Alpha', lastName: 'Diallo', fullName: 'Mamadou Alpha Diallo', gender: 'M', classId: 'cls-tsm', className: 'Terminale Sciences Mathématiques (TSM)', average: 18.4, attendanceRate: 98.5, absenceCount: 0, lateCount: 0, parentName: 'M. Thierno Diallo', parentPhone: '+224 621 11 22 33', bloodGroup: 'O+', medicalNote: 'Aucune contre-indication', observation: 'Délégué de classe, excellent niveau analytique.', status: 'actif' },
+  { id: 'std-002', matricule: 'LEC-2026-002', firstName: 'Fatoumata Binta', lastName: 'Bah', fullName: 'Fatoumata Binta Bah', gender: 'F', classId: 'cls-tsm', className: 'Terminale Sciences Mathématiques (TSM)', average: 17.1, attendanceRate: 96.0, absenceCount: 1, lateCount: 0, parentName: 'Mme Aissatou Bah', parentPhone: '+224 622 44 55 66', bloodGroup: 'A+', medicalNote: 'Asthme modéré (Ventoline)', observation: 'Très rigoureuse et proactive en cours.', status: 'actif' },
+  { id: 'std-003', matricule: 'LEC-2026-003', firstName: 'Ibrahima Sory', lastName: 'Bangoura', fullName: 'Ibrahima Sory Bangoura', gender: 'M', classId: 'cls-tsm', className: 'Terminale Sciences Mathématiques (TSM)', average: 15.1, attendanceRate: 94.0, absenceCount: 1, lateCount: 2, parentName: 'M. Sékou Bangoura', parentPhone: '+224 628 77 88 99', bloodGroup: 'B+', medicalNote: 'RAS', observation: 'Bon potentiel en mathématiques et physique.', status: 'actif' },
+  { id: 'std-004', matricule: 'LEC-2026-004', firstName: 'Mariama', lastName: 'Camara', fullName: 'Mariama Camara', gender: 'F', classId: 'cls-tsm', className: 'Terminale Sciences Mathématiques (TSM)', average: 13.4, attendanceRate: 91.0, absenceCount: 2, lateCount: 1, parentName: 'Dr. Lansana Camara', parentPhone: '+224 620 99 00 11', bloodGroup: 'O-', medicalNote: 'Allergie pénicilline', observation: 'En nette progression sur la géométrie dans l\'espace.', status: 'actif' },
+  { id: 'std-005', matricule: 'LEC-2026-005', firstName: 'Ousmane', lastName: 'Barry', fullName: 'Ousmane Barry', gender: 'M', classId: 'cls-tsm', className: 'Terminale Sciences Mathématiques (TSM)', average: 10.4, attendanceRate: 83.5, absenceCount: 3, lateCount: 4, parentName: 'M. Amadou Barry', parentPhone: '+224 624 33 22 11', bloodGroup: 'AB+', medicalNote: 'RAS', observation: 'Soutien pédagogique recommandé en analyse numérique.', status: 'suivi' },
+  { id: 'std-006', matricule: 'LEC-2026-006', firstName: 'Kadiatou', lastName: 'Touré', fullName: 'Kadiatou Touré', gender: 'F', classId: 'cls-tsm', className: 'Terminale Sciences Mathématiques (TSM)', average: 16.2, attendanceRate: 98.0, absenceCount: 0, lateCount: 1, parentName: 'M. Oumar Touré', parentPhone: '+224 664 99 88 77', bloodGroup: 'A+', medicalNote: 'RAS', observation: 'Très appliquée en travaux dirigés.', status: 'actif' },
+  { id: 'std-007', matricule: 'LEC-2026-007', firstName: 'Abdoulaye', lastName: 'Condé', fullName: 'Abdoulaye Condé', gender: 'M', classId: 'cls-tsm', className: 'Terminale Sciences Mathématiques (TSM)', average: 14.5, attendanceRate: 95.5, absenceCount: 1, lateCount: 0, parentName: 'M. Moussa Condé', parentPhone: '+224 622 55 44 33', bloodGroup: 'O+', medicalNote: 'RAS', observation: 'Bonne participation orale.', status: 'actif' },
+  { id: 'std-008', matricule: 'LEC-2026-008', firstName: 'Hawa', lastName: 'Keita', fullName: 'Hawa Keita', gender: 'F', classId: 'cls-tsm', className: 'Terminale Sciences Mathématiques (TSM)', average: 13.8, attendanceRate: 97.0, absenceCount: 1, lateCount: 0, parentName: 'Mme Aminata Keita', parentPhone: '+224 621 88 77 66', bloodGroup: 'B+', medicalNote: 'RAS', observation: 'Régulière et sérieuse dans ses devoirs.', status: 'actif' },
+  { id: 'std-009', matricule: 'LEC-2026-009', firstName: 'Thierno Sadou', lastName: 'Diallo', fullName: 'Thierno Sadou Diallo', gender: 'M', classId: 'cls-tsm', className: 'Terminale Sciences Mathématiques (TSM)', average: 12.9, attendanceRate: 93.0, absenceCount: 2, lateCount: 1, parentName: 'M. Boubacar Diallo', parentPhone: '+224 628 12 34 56', bloodGroup: 'O+', medicalNote: 'RAS', observation: 'Doit renforcer la rapidité en calcul matriciel.', status: 'actif' },
+  { id: 'std-010t', matricule: 'LEC-2026-010', firstName: 'Nafissatou', lastName: 'Sylla', fullName: 'Nafissatou Sylla', gender: 'F', classId: 'cls-tsm', className: 'Terminale Sciences Mathématiques (TSM)', average: 15.7, attendanceRate: 99.0, absenceCount: 0, lateCount: 0, parentName: 'M. Aly Sylla', parentPhone: '+224 623 45 67 89', bloodGroup: 'A-', medicalNote: 'RAS', observation: 'Excellente maîtrise des nombres complexes.', status: 'actif' },
+  { id: 'std-011t', matricule: 'LEC-2026-011', firstName: 'Mohamed Lamine', lastName: 'Sylla', fullName: 'Mohamed Lamine Sylla', gender: 'M', classId: 'cls-tsm', className: 'Terminale Sciences Mathématiques (TSM)', average: 14.0, attendanceRate: 96.5, absenceCount: 0, lateCount: 1, parentName: 'M. Ibrahima Sylla', parentPhone: '+224 625 90 12 34', bloodGroup: 'O+', medicalNote: 'RAS', observation: 'Nouvel élève transféré, bonne intégration.', status: 'actif' },
+  { id: 'std-012t', matricule: 'LEC-2026-012', firstName: 'Djenabou', lastName: 'Baldé', fullName: 'Djenabou Baldé', gender: 'F', classId: 'cls-tsm', className: 'Terminale Sciences Mathématiques (TSM)', average: 11.8, attendanceRate: 92.0, absenceCount: 2, lateCount: 1, parentName: 'Mme Mariama Baldé', parentPhone: '+224 627 33 44 55', bloodGroup: 'B-', medicalNote: 'RAS', observation: 'Progrès réguliers, poursuivre les exercices CIAM.', status: 'actif' },
+  { id: 'std-013t', matricule: 'LEC-2026-013', firstName: 'Alpha Oumar', lastName: 'Kouyaté', fullName: 'Alpha Oumar Kouyaté', gender: 'M', classId: 'cls-tsm', className: 'Terminale Sciences Mathématiques (TSM)', average: 14.9, attendanceRate: 97.5, absenceCount: 0, lateCount: 1, parentName: 'M. Djibril Kouyaté', parentPhone: '+224 620 11 99 88', bloodGroup: 'O+', medicalNote: 'RAS', observation: 'Très bon esprit de synthèse en physique.', status: 'actif' },
+  { id: 'std-014t', matricule: 'LEC-2026-014', firstName: 'Salimatou', lastName: 'Souaré', fullName: 'Salimatou Souaré', gender: 'F', classId: 'cls-tsm', className: 'Terminale Sciences Mathématiques (TSM)', average: 15.3, attendanceRate: 98.0, absenceCount: 0, lateCount: 0, parentName: 'M. Mamadou Souaré', parentPhone: '+224 624 66 77 88', bloodGroup: 'A+', medicalNote: 'RAS', observation: 'Travail très soigné et régulier.', status: 'actif' },
+
+  // === 1ère Sciences Expérimentales (1SE) - 12 élèves ===
+  { id: 'std-010', matricule: 'LEC-2026-101', firstName: 'Aissatou', lastName: 'Sow', fullName: 'Aissatou Sow', gender: 'F', classId: 'cls-1se', className: '1ère Sciences Expérimentales (1SE)', average: 15.4, attendanceRate: 97.5, absenceCount: 0, lateCount: 1, parentName: 'M. Alpha Sow', parentPhone: '+224 622 33 44 55', bloodGroup: 'O+', medicalNote: 'RAS', observation: 'Très bon investissement en Mathématiques.', status: 'actif' },
+  { id: 'std-011', matricule: 'LEC-2026-102', firstName: 'Cherif', lastName: 'Haidara', fullName: 'Cherif Haidara', gender: 'M', classId: 'cls-1se', className: '1ère Sciences Expérimentales (1SE)', average: 12.7, attendanceRate: 94.0, absenceCount: 1, lateCount: 1, parentName: 'M. Cheick Haidara', parentPhone: '+224 621 22 33 44', bloodGroup: 'A+', medicalNote: 'RAS', observation: 'Travail régulier, consolider la dérivation.', status: 'actif' },
+  { id: 'std-012', matricule: 'LEC-2026-103', firstName: 'Fatoumata Binta', lastName: 'Camara', fullName: 'Fatoumata Binta Camara', gender: 'F', classId: 'cls-1se', className: '1ère Sciences Expérimentales (1SE)', average: 16.5, attendanceRate: 99.0, absenceCount: 0, lateCount: 0, parentName: 'Mme Hadja Camara', parentPhone: '+224 628 55 66 77', bloodGroup: 'B+', medicalNote: 'RAS', observation: 'Déléguée de classe exemplaire.', status: 'actif' },
+  { id: 'std-013', matricule: 'LEC-2026-104', firstName: 'Mamadou Bobo', lastName: 'Diallo', fullName: 'Mamadou Bobo Diallo', gender: 'M', classId: 'cls-1se', className: '1ère Sciences Expérimentales (1SE)', average: 13.9, attendanceRate: 95.0, absenceCount: 1, lateCount: 0, parentName: 'M. Ousmane Diallo', parentPhone: '+224 623 11 22 33', bloodGroup: 'O+', medicalNote: 'RAS', observation: 'Bonne compréhension des fonctions rationnelles.', status: 'actif' },
+  { id: 'std-014', matricule: 'LEC-2026-105', firstName: 'Bintou', lastName: 'Kourouma', fullName: 'Bintou Kourouma', gender: 'F', classId: 'cls-1se', className: '1ère Sciences Expérimentales (1SE)', average: 11.4, attendanceRate: 91.5, absenceCount: 2, lateCount: 1, parentName: 'M. Lansana Kourouma', parentPhone: '+224 624 77 88 99', bloodGroup: 'AB+', medicalNote: 'RAS', observation: 'Participation timide, à encourager.', status: 'actif' },
+  { id: 'std-015', matricule: 'LEC-2026-106', firstName: 'Alseny', lastName: 'Fofana', fullName: 'Alseny Fofana', gender: 'M', classId: 'cls-1se', className: '1ère Sciences Expérimentales (1SE)', average: 14.2, attendanceRate: 96.0, absenceCount: 1, lateCount: 0, parentName: 'M. Morlaye Fofana', parentPhone: '+224 626 44 55 66', bloodGroup: 'O-', medicalNote: 'RAS', observation: 'Rigoureux dans les exercices d\'application.', status: 'actif' },
+  { id: 'std-016', matricule: 'LEC-2026-107', firstName: 'Ramatoulaye', lastName: 'Diallo', fullName: 'Ramatoulaye Diallo', gender: 'F', classId: 'cls-1se', className: '1ère Sciences Expérimentales (1SE)', average: 14.8, attendanceRate: 98.0, absenceCount: 0, lateCount: 0, parentName: 'Mme Kadiatou Diallo', parentPhone: '+224 625 11 44 77', bloodGroup: 'A+', medicalNote: 'RAS', observation: 'Très appliquée en travaux dirigés.', status: 'actif' },
+  { id: 'std-017', matricule: 'LEC-2026-108', firstName: 'Souleymane', lastName: 'Sacko', fullName: 'Souleymane Sacko', gender: 'M', classId: 'cls-1se', className: '1ère Sciences Expérimentales (1SE)', average: 9.8, attendanceRate: 84.0, absenceCount: 3, lateCount: 3, parentName: 'M. Karamo Sacko', parentPhone: '+224 629 22 11 00', bloodGroup: 'B+', medicalNote: 'RAS', observation: 'Baisse en algèbre, tutorat conseillé.', status: 'suivi' },
+  { id: 'std-018', matricule: 'LEC-2026-109', firstName: 'Maimouna', lastName: 'Bah', fullName: 'Maimouna Bah', gender: 'F', classId: 'cls-1se', className: '1ère Sciences Expérimentales (1SE)', average: 13.5, attendanceRate: 95.5, absenceCount: 1, lateCount: 0, parentName: 'M. Mamadou Bah', parentPhone: '+224 622 99 00 11', bloodGroup: 'O+', medicalNote: 'RAS', observation: 'Résultats homogènes et sérieux.', status: 'actif' },
+  { id: 'std-019', matricule: 'LEC-2026-110', firstName: 'Aboubacar Sidiki', lastName: 'Cissé', fullName: 'Aboubacar Sidiki Cissé', gender: 'M', classId: 'cls-1se', className: '1ère Sciences Expérimentales (1SE)', average: 12.1, attendanceRate: 92.5, absenceCount: 1, lateCount: 2, parentName: 'M. Ibrahim Cissé', parentPhone: '+224 621 55 33 22', bloodGroup: 'A-', medicalNote: 'RAS', observation: 'Peut mieux faire en soignant ses brouillons.', status: 'actif' },
+  { id: 'std-020', matricule: 'LEC-2026-111', firstName: 'Oumou', lastName: 'Diakité', fullName: 'Oumou Diakité', gender: 'F', classId: 'cls-1se', className: '1ère Sciences Expérimentales (1SE)', average: 15.1, attendanceRate: 97.0, absenceCount: 0, lateCount: 1, parentName: 'Mme Fatou Diakité', parentPhone: '+224 627 88 99 00', bloodGroup: 'O+', medicalNote: 'RAS', observation: 'Très vive d\'esprit en trigonométrie.', status: 'actif' },
+  { id: 'std-021', matricule: 'LEC-2026-112', firstName: 'Lansana', lastName: 'Bangoura', fullName: 'Lansana Bangoura', gender: 'M', classId: 'cls-1se', className: '1ère Sciences Expérimentales (1SE)', average: 11.9, attendanceRate: 93.0, absenceCount: 1, lateCount: 1, parentName: 'M. Aboubacar Bangoura', parentPhone: '+224 624 12 45 78', bloodGroup: 'B-', medicalNote: 'RAS', observation: 'Progrès encourageants depuis octobre.', status: 'actif' },
+
+  // === 10ème Année A (Brevet BEPC) - 12 élèves ===
+  { id: 'std-030', matricule: 'LEC-2026-301', firstName: 'Ibrahima Sory', lastName: 'Soumah', fullName: 'Ibrahima Sory Soumah', gender: 'M', classId: 'cls-10a', className: '10ème Année A (Brevet BEPC)', average: 15.8, attendanceRate: 98.5, absenceCount: 0, lateCount: 0, parentName: 'M. Saïd Soumah', parentPhone: '+224 625 12 34 56', bloodGroup: 'O+', medicalNote: 'RAS', observation: 'Délégué de classe, excellent niveau en géométrie.', status: 'actif' },
+  { id: 'std-031', matricule: 'LEC-2026-302', firstName: 'Mohamed Lamine', lastName: 'Soumah', fullName: 'Mohamed Lamine Soumah', gender: 'M', classId: 'cls-10a', className: '10ème Année A (Brevet BEPC)', average: 14.3, attendanceRate: 96.0, absenceCount: 0, lateCount: 1, parentName: 'M. Alseny Soumah', parentPhone: '+224 625 12 34 56', bloodGroup: 'O-', medicalNote: 'RAS', observation: 'Très assidu dans la préparation du BEPC.', status: 'actif' },
+  { id: 'std-032', matricule: 'LEC-2026-303', firstName: 'Aissatou', lastName: 'Camara', fullName: 'Aissatou Camara', gender: 'F', classId: 'cls-10a', className: '10ème Année A (Brevet BEPC)', average: 13.7, attendanceRate: 95.0, absenceCount: 1, lateCount: 0, parentName: 'Mme Mariama Camara', parentPhone: '+224 622 66 55 44', bloodGroup: 'A+', medicalNote: 'RAS', observation: 'Bonne maîtrise du théorème de Thalès.', status: 'actif' },
+  { id: 'std-033', matricule: 'LEC-2026-304', firstName: 'Sékou', lastName: 'Doumbouya', fullName: 'Sékou Doumbouya', gender: 'M', classId: 'cls-10a', className: '10ème Année A (Brevet BEPC)', average: 11.5, attendanceRate: 90.0, absenceCount: 2, lateCount: 2, parentName: 'M. Mamady Doumbouya', parentPhone: '+224 621 77 66 55', bloodGroup: 'B+', medicalNote: 'RAS', observation: 'Doit relire attentivement les énoncés.', status: 'actif' },
+  { id: 'std-034', matricule: 'LEC-2026-305', firstName: 'Kadiatou', lastName: 'Diallo', fullName: 'Kadiatou Diallo', gender: 'F', classId: 'cls-10a', className: '10ème Année A (Brevet BEPC)', average: 14.9, attendanceRate: 97.5, absenceCount: 0, lateCount: 0, parentName: 'M. Abdoulaye Diallo', parentPhone: '+224 623 99 88 77', bloodGroup: 'O+', medicalNote: 'RAS', observation: 'Cahiers impeccables, élève sérieuse.', status: 'actif' },
+  { id: 'std-035', matricule: 'LEC-2026-306', firstName: 'Fodé', lastName: 'Bangoura', fullName: 'Fodé Bangoura', gender: 'M', classId: 'cls-10a', className: '10ème Année A (Brevet BEPC)', average: 12.2, attendanceRate: 93.0, absenceCount: 1, lateCount: 1, parentName: 'M. Naby Bangoura', parentPhone: '+224 628 33 11 22', bloodGroup: 'A+', medicalNote: 'RAS', observation: 'Bon calcul littéral, géométrie à consolider.', status: 'actif' },
+  { id: 'std-036', matricule: 'LEC-2026-307', firstName: 'Mariama Cire', lastName: 'Bah', fullName: 'Mariama Cire Bah', gender: 'F', classId: 'cls-10a', className: '10ème Année A (Brevet BEPC)', average: 13.1, attendanceRate: 94.5, absenceCount: 1, lateCount: 0, parentName: 'Mme Fatoumata Bah', parentPhone: '+224 624 55 66 00', bloodGroup: 'O+', medicalNote: 'RAS', observation: 'Participe activement aux exercices au tableau.', status: 'actif' },
+  { id: 'std-037', matricule: 'LEC-2026-308', firstName: 'Moussa', lastName: 'Kaba', fullName: 'Moussa Kaba', gender: 'M', classId: 'cls-10a', className: '10ème Année A (Brevet BEPC)', average: 9.4, attendanceRate: 83.0, absenceCount: 3, lateCount: 2, parentName: 'M. Lamine Kaba', parentPhone: '+224 627 11 00 99', bloodGroup: 'B+', medicalNote: 'RAS', observation: 'Difficultés sur les équations du 1er degré, soutien activé.', status: 'suivi' },
+  { id: 'std-038', matricule: 'LEC-2026-309', firstName: 'Saran', lastName: 'Keita', fullName: 'Saran Keita', gender: 'F', classId: 'cls-10a', className: '10ème Année A (Brevet BEPC)', average: 12.8, attendanceRate: 95.0, absenceCount: 1, lateCount: 0, parentName: 'M. Famoro Keita', parentPhone: '+224 629 44 33 22', bloodGroup: 'O+', medicalNote: 'RAS', observation: 'Bonne progression ce mois-ci.', status: 'actif' },
+  { id: 'std-039', matricule: 'LEC-2026-310', firstName: 'Amadou Tidiane', lastName: 'Barry', fullName: 'Amadou Tidiane Barry', gender: 'M', classId: 'cls-10a', className: '10ème Année A (Brevet BEPC)', average: 11.9, attendanceRate: 92.0, absenceCount: 1, lateCount: 1, parentName: 'M. Yéro Barry', parentPhone: '+224 620 77 55 33', bloodGroup: 'A-', medicalNote: 'RAS', observation: 'Attentif en classe, doit rendre ses DM à temps.', status: 'actif' },
+  { id: 'std-040', matricule: 'LEC-2026-311', firstName: 'Hadja', lastName: 'Condé', fullName: 'Hadja Condé', gender: 'F', classId: 'cls-10a', className: '10ème Année A (Brevet BEPC)', average: 14.0, attendanceRate: 96.5, absenceCount: 0, lateCount: 1, parentName: 'Mme Binta Condé', parentPhone: '+224 622 10 20 30', bloodGroup: 'O+', medicalNote: 'RAS', observation: 'Très régulière et motivée pour le BEPC.', status: 'actif' },
+  { id: 'std-041', matricule: 'LEC-2026-312', firstName: 'Naby', lastName: 'Touré', fullName: 'Naby Touré', gender: 'M', classId: 'cls-10a', className: '10ème Année A (Brevet BEPC)', average: 10.7, attendanceRate: 89.5, absenceCount: 2, lateCount: 1, parentName: 'M. Sory Touré', parentPhone: '+224 626 88 77 66', bloodGroup: 'AB+', medicalNote: 'RAS', observation: 'Résultats en hausse, encourager la révision des formules.', status: 'actif' }
+];
+
 export const initialTeacherClasses: AssignedClass[] = [
   {
     id: 'cls-tsm',
     name: 'Terminale Sciences Mathématiques (TSM)',
     level: 'Terminale',
     room: 'Salle 102 - Bâtiment Scientifique',
-    studentsCount: 38,
+    studentsCount: 14,
     isMainTeacher: true,
     classDelegate: 'Mamadou Alpha Diallo',
     averageGrade: 14.85,
-    attendanceRate: 97.4
+    attendanceRate: 95.4
   },
   {
     id: 'cls-1se',
     name: '1ère Sciences Expérimentales (1SE)',
     level: '1ère',
     room: 'Salle 104 - Labo Physique',
-    studentsCount: 42,
+    studentsCount: 12,
     isMainTeacher: false,
     classDelegate: 'Fatoumata Binta Camara',
     averageGrade: 13.20,
@@ -65,11 +112,11 @@ export const initialTeacherClasses: AssignedClass[] = [
     name: '10ème Année A (Brevet BEPC)',
     level: '10ème Année',
     room: 'Salle 201 - Bâtiment Collège',
-    studentsCount: 45,
+    studentsCount: 12,
     isMainTeacher: false,
     classDelegate: 'Ibrahima Sory Soumah',
     averageGrade: 12.65,
-    attendanceRate: 92.1
+    attendanceRate: 92.8
   }
 ];
 
@@ -412,73 +459,22 @@ export const initialEvaluations: EvaluationSession[] = [
     type: 'controle_continu',
     status: 'soumis_direction',
     isProvisionalPublished: true,
-    grades: [
-      {
-        studentId: 'std-001',
-        matricule: 'LEC-2026-001',
-        fullName: 'Mamadou Alpha Diallo',
-        photo: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=200',
-        interro1: 17.5,
-        interro2: 18,
-        devoir: 19,
-        composition: 18.5,
-        average: 18.4,
-        rank: 1,
-        appreciation: 'Excellente maîtrise analytique, rédaction impeccable.'
-      },
-      {
-        studentId: 'std-002',
-        matricule: 'LEC-2026-002',
-        fullName: 'Fatoumata Binta Bah',
-        photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200',
-        interro1: 16,
-        interro2: 16.5,
-        devoir: 17,
-        composition: 17.5,
-        average: 17.1,
-        rank: 2,
-        appreciation: 'Très bon raisonnement, rigueur mathématique exemplaire.'
-      },
-      {
-        studentId: 'std-003',
-        matricule: 'LEC-2026-003',
-        fullName: 'Ibrahima Sory Bangoura',
-        photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
-        interro1: 14.5,
-        interro2: 15,
-        devoir: 15.5,
-        composition: 15,
-        average: 15.1,
-        rank: 3,
-        appreciation: 'Bon travail d\'ensemble, consolider l\'argumentation géométrique.'
-      },
-      {
-        studentId: 'std-004',
-        matricule: 'LEC-2026-004',
-        fullName: 'Mariama Camara',
-        photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
-        interro1: 12,
-        interro2: 13,
-        devoir: 14,
-        composition: 13.5,
-        average: 13.4,
-        rank: 4,
-        appreciation: 'Résultats satisfaisants en progrès constants.'
-      },
-      {
-        studentId: 'std-005',
-        matricule: 'LEC-2026-005',
-        fullName: 'Ousmane Barry',
-        photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200',
-        interro1: 9.5,
-        interro2: 10,
-        devoir: 11,
-        composition: 10.5,
-        average: 10.4,
-        rank: 5,
-        appreciation: 'Doit approfondir les révisions et poser plus de questions.'
-      }
-    ]
+    grades: initialTeacherStudents
+      .filter(s => s.classId === 'cls-tsm')
+      .map((s, idx) => ({
+        studentId: s.id,
+        matricule: s.matricule,
+        fullName: s.fullName,
+        interro1: Number(Math.min(20, Math.max(7, s.average - 0.5)).toFixed(1)),
+        interro2: Number(Math.min(20, Math.max(7, s.average)).toFixed(1)),
+        devoir: Number(Math.min(20, Math.max(7, s.average + 0.5)).toFixed(1)),
+        composition: s.average,
+        average: s.average,
+        rank: idx + 1,
+        appreciation: s.observation
+      }))
+      .sort((a, b) => b.average - a.average)
+      .map((g, idx) => ({ ...g, rank: idx + 1 }))
   },
   {
     id: 'eval-002',
@@ -494,32 +490,22 @@ export const initialEvaluations: EvaluationSession[] = [
     type: 'controle_continu',
     status: 'en_cours',
     isProvisionalPublished: false,
-    grades: [
-      {
-        studentId: 'std-010',
-        matricule: 'LEC-2026-010',
-        fullName: 'Aissatou Sow',
-        interro1: 15,
-        interro2: 14.5,
-        devoir: 16,
-        composition: 15.5,
-        average: 15.4,
-        rank: 1,
-        appreciation: 'Très bon investissement.'
-      },
-      {
-        studentId: 'std-011',
-        matricule: 'LEC-2026-011',
-        fullName: 'Cherif Haidara',
-        interro1: 12,
-        interro2: 13,
-        devoir: 12.5,
-        composition: 13,
-        average: 12.7,
-        rank: 2,
-        appreciation: 'Travail régulier.'
-      }
-    ]
+    grades: initialTeacherStudents
+      .filter(s => s.classId === 'cls-1se')
+      .map((s, idx) => ({
+        studentId: s.id,
+        matricule: s.matricule,
+        fullName: s.fullName,
+        interro1: Number(Math.min(20, Math.max(7, s.average - 0.4)).toFixed(1)),
+        interro2: s.average,
+        devoir: Number(Math.min(20, Math.max(7, s.average + 0.3)).toFixed(1)),
+        composition: s.average,
+        average: s.average,
+        rank: idx + 1,
+        appreciation: s.observation
+      }))
+      .sort((a, b) => b.average - a.average)
+      .map((g, idx) => ({ ...g, rank: idx + 1 }))
   }
 ];
 
@@ -593,52 +579,72 @@ export const initialLogbookEntries: LogbookEntry[] = [
   }
 ];
 
-export const initialAttendanceSession: AttendanceSession = {
-  id: 'att-session-today',
-  classId: 'cls-tsm',
-  className: 'Terminale Sciences Mathématiques (TSM)',
-  subject: 'Mathématiques',
-  date: '2026-11-03',
-  startTime: '08:00',
-  endTime: '10:00',
-  room: 'Salle 102',
-  isCompleted: true,
-  records: [
-    {
-      studentId: 'std-001',
-      matricule: 'LEC-2026-001',
-      fullName: 'Mamadou Alpha Diallo',
-      status: 'present'
-    },
-    {
-      studentId: 'std-002',
-      matricule: 'LEC-2026-002',
-      fullName: 'Fatoumata Binta Bah',
-      status: 'present'
-    },
-    {
-      studentId: 'std-003',
-      matricule: 'LEC-2026-003',
-      fullName: 'Ibrahima Sory Bangoura',
-      status: 'retard',
-      minutesLate: 12,
-      motif: 'Embouteillages carrefour Cosa'
-    },
-    {
-      studentId: 'std-004',
-      matricule: 'LEC-2026-004',
-      fullName: 'Mariama Camara',
-      status: 'absent',
-      motif: 'Maladie - Certificat médical en attente'
-    },
-    {
-      studentId: 'std-005',
-      matricule: 'LEC-2026-005',
-      fullName: 'Ousmane Barry',
-      status: 'present'
-    }
-  ]
+export const initialAttendanceSessions: Record<string, AttendanceSession> = {
+  'cls-tsm': {
+    id: 'att-session-tsm',
+    classId: 'cls-tsm',
+    className: 'Terminale Sciences Mathématiques (TSM)',
+    subject: 'Mathématiques',
+    date: '2026-11-03',
+    startTime: '08:00',
+    endTime: '10:00',
+    room: 'Salle 102 - Bâtiment Scientifique',
+    isCompleted: false,
+    records: initialTeacherStudents
+      .filter(s => s.classId === 'cls-tsm')
+      .map(s => ({
+        studentId: s.id,
+        matricule: s.matricule,
+        fullName: s.fullName,
+        status: s.id === 'std-003' ? 'retard' : s.id === 'std-004' ? 'absent' : 'present',
+        minutesLate: s.id === 'std-003' ? 12 : undefined,
+        motif: s.id === 'std-003' ? 'Embouteillages carrefour Cosa' : s.id === 'std-004' ? 'Maladie - Certificat en attente' : undefined
+      }))
+  },
+  'cls-1se': {
+    id: 'att-session-1se',
+    classId: 'cls-1se',
+    className: '1ère Sciences Expérimentales (1SE)',
+    subject: 'Mathématiques',
+    date: '2026-11-03',
+    startTime: '10:15',
+    endTime: '12:15',
+    room: 'Salle 104 - Labo Physique',
+    isCompleted: false,
+    records: initialTeacherStudents
+      .filter(s => s.classId === 'cls-1se')
+      .map(s => ({
+        studentId: s.id,
+        matricule: s.matricule,
+        fullName: s.fullName,
+        status: s.id === 'std-017' ? 'absent' : 'present',
+        motif: s.id === 'std-017' ? 'Absence non justifiée' : undefined
+      }))
+  },
+  'cls-10a': {
+    id: 'att-session-10a',
+    classId: 'cls-10a',
+    className: '10ème Année A (Brevet BEPC)',
+    subject: 'Mathématiques',
+    date: '2026-11-03',
+    startTime: '14:00',
+    endTime: '16:00',
+    room: 'Salle 201 - Bâtiment Collège',
+    isCompleted: false,
+    records: initialTeacherStudents
+      .filter(s => s.classId === 'cls-10a')
+      .map(s => ({
+        studentId: s.id,
+        matricule: s.matricule,
+        fullName: s.fullName,
+        status: s.id === 'std-037' ? 'retard' : 'present',
+        minutesLate: s.id === 'std-037' ? 8 : undefined,
+        motif: s.id === 'std-037' ? 'Transport' : undefined
+      }))
+  }
 };
+
+export const initialAttendanceSession: AttendanceSession = initialAttendanceSessions['cls-tsm'];
 
 export const initialStudentProfiles: StudentPedagogicalProfile[] = [
   {
@@ -759,20 +765,20 @@ export const initialSchoolCalendarEvents: SchoolCalendarEvent[] = [
 ];
 
 export const initialTeacherSchedule: ScheduleSlot[] = [
-  // Lundi
-  { id: 'sch-1', day: 'Lundi', startTime: '08:00', endTime: '10:00', className: 'Terminale SM', subject: 'Mathématiques', room: 'Salle 102', color: 'blue' },
-  { id: 'sch-2', day: 'Lundi', startTime: '10:15', endTime: '12:15', className: '1ère SE', subject: 'Mathématiques', room: 'Salle 104', color: 'emerald' },
+  // Lundi (strictement classes et matières attribuées au professeur)
+  { id: 'sch-1', day: 'Lundi', startTime: '08:00', endTime: '10:00', className: 'Terminale Sciences Mathématiques (TSM)', subject: 'Mathématiques', room: 'Salle 102', color: 'blue' },
+  { id: 'sch-2', day: 'Lundi', startTime: '10:15', endTime: '12:15', className: '1ère Sciences Expérimentales (1SE)', subject: 'Mathématiques', room: 'Salle 104', color: 'emerald' },
   // Mardi
-  { id: 'sch-3', day: 'Mardi', startTime: '08:00', endTime: '10:00', className: 'Terminale SM', subject: 'Sciences Physiques', room: 'Labo Sciences', color: 'purple' },
-  { id: 'sch-4', day: 'Mardi', startTime: '14:00', endTime: '16:00', className: '10ème Année A', subject: 'Mathématiques', room: 'Salle 201', color: 'amber' },
+  { id: 'sch-3', day: 'Mardi', startTime: '08:00', endTime: '10:00', className: 'Terminale Sciences Mathématiques (TSM)', subject: 'Sciences Physiques', room: 'Labo Sciences', color: 'purple' },
+  { id: 'sch-4', day: 'Mardi', startTime: '14:00', endTime: '16:00', className: '10ème Année A (Brevet BEPC)', subject: 'Mathématiques', room: 'Salle 201', color: 'amber' },
   // Mercredi
-  { id: 'sch-5', day: 'Mercredi', startTime: '08:00', endTime: '10:00', className: '1ère SE', subject: 'Mathématiques', room: 'Salle 104', color: 'emerald' },
-  { id: 'sch-6', day: 'Mercredi', startTime: '10:15', endTime: '12:15', className: 'Terminale SM', subject: 'Travaux Dirigés (TD)', room: 'Salle 102', color: 'blue' },
+  { id: 'sch-5', day: 'Mercredi', startTime: '08:00', endTime: '10:00', className: '1ère Sciences Expérimentales (1SE)', subject: 'Mathématiques', room: 'Salle 104', color: 'emerald' },
+  { id: 'sch-6', day: 'Mercredi', startTime: '10:15', endTime: '12:15', className: 'Terminale Sciences Mathématiques (TSM)', subject: 'Mathématiques', room: 'Salle 102', color: 'blue' },
   // Jeudi
-  { id: 'sch-7', day: 'Jeudi', startTime: '08:00', endTime: '10:00', className: '10ème Année A', subject: 'Mathématiques', room: 'Salle 201', color: 'amber' },
-  { id: 'sch-8', day: 'Jeudi', startTime: '10:15', endTime: '12:15', className: '1ère SE', subject: 'Sciences Physiques', room: 'Labo Sciences', color: 'purple' },
+  { id: 'sch-7', day: 'Jeudi', startTime: '08:00', endTime: '10:00', className: '10ème Année A (Brevet BEPC)', subject: 'Mathématiques', room: 'Salle 201', color: 'amber' },
+  { id: 'sch-8', day: 'Jeudi', startTime: '10:15', endTime: '12:15', className: 'Terminale Sciences Mathématiques (TSM)', subject: 'Sciences Physiques', room: 'Labo Sciences', color: 'purple' },
   // Vendredi
-  { id: 'sch-9', day: 'Vendredi', startTime: '08:00', endTime: '11:00', className: 'Terminale SM', subject: 'Devoir Surveillé / Évaluation', room: 'Salle 102', color: 'rose' }
+  { id: 'sch-9', day: 'Vendredi', startTime: '08:00', endTime: '11:00', className: 'Terminale Sciences Mathématiques (TSM)', subject: 'Mathématiques', room: 'Salle 102', color: 'rose' }
 ];
 
 export const initialTeacherMessages: TeacherMessage[] = [

@@ -33,6 +33,7 @@ export interface School {
   prefecture: string;
   country: string;
   phone: string;
+  whatsappNumber?: string;
   email: string;
   website: string;
   currency: string; // "GNF"

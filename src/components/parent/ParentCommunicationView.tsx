@@ -8,11 +8,21 @@ import {
   Clock, 
   Mail, 
   User, 
-  AlertCircle
+  AlertCircle,
+  MessageCircle,
+  ExternalLink
 } from 'lucide-react';
+import { useSchoolAdmin } from '../../context/SchoolAdminContext';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 
 export const ParentCommunicationView: React.FC = () => {
   const { sentMessages, sendMessageToStaff, notifications, markNotificationRead, selectedChild } = useParent();
+  const { currentSchool } = useSchoolAdmin();
+  const schoolWaNumber = getSchoolWhatsAppNumber(currentSchool);
+  const schoolWaUrl = buildWhatsAppUrl(
+    schoolWaNumber,
+    `Bonjour ${currentSchool.name}, je suis parent de l'élève ${selectedChild.firstName} ${selectedChild.lastName} (${selectedChild.className}).`
+  );
   const [composeModalOpen, setComposeModalOpen] = useState(false);
   const [recipient, setRecipient] = useState('M. Mamadou Lamarana Diallo (Prof. Principal TSM)');
   const [subject, setSubject] = useState('');
@@ -37,13 +47,28 @@ export const ParentCommunicationView: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setComposeModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/20 transition-all cursor-pointer self-start sm:self-auto"
-        >
-          <Send className="w-4 h-4" />
-          <span>Écrire à un Enseignant / Direction</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {schoolWaUrl && (
+            <a
+              href={schoolWaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all"
+              title={`Contacter ${currentSchool.name} sur WhatsApp (${schoolWaNumber})`}
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>WhatsApp {currentSchool.code || "l'École"}</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
+          <button
+            onClick={() => setComposeModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/20 transition-all cursor-pointer"
+          >
+            <Send className="w-4 h-4" />
+            <span>Écrire à un Enseignant / Direction</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

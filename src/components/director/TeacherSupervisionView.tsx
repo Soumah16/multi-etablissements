@@ -13,21 +13,32 @@ import {
   X, 
   Check, 
   TrendingUp,
-  UserCheck
+  UserCheck,
+  Table2,
+  Building2
 } from 'lucide-react';
 
 export const TeacherSupervisionView: React.FC = () => {
   const { teacherProfiles, updateTeacherObservation } = useDirector();
   const [searchTerm, setSearchTerm] = useState('');
+  const [classFilter, setClassFilter] = useState<string>('all');
   const [selectedTeacherForEval, setSelectedTeacherForEval] = useState<TeacherPedagogicalProfile | null>(null);
   const [evalRemarks, setEvalRemarks] = useState('');
   const [evalRating, setEvalRating] = useState(5);
 
-  const filteredTeachers = teacherProfiles.filter(t => 
-    t.teacherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.matricule.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const allAssignedClasses = Array.from(
+    new Set(teacherProfiles.flatMap(t => t.assignedClasses))
+  ).sort();
+
+  const filteredTeachers = teacherProfiles.filter(t => {
+    const matchesSearch = 
+      t.teacherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.matricule.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.assignedClasses.some(c => c.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesClass = classFilter === 'all' || t.assignedClasses.includes(classFilter);
+    return matchesSearch && matchesClass;
+  });
 
   const handleOpenEvaluationModal = (t: TeacherPedagogicalProfile) => {
     setSelectedTeacherForEval(t);
@@ -75,16 +86,85 @@ export const TeacherSupervisionView: React.FC = () => {
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="p-4 rounded-xl bg-white border border-blue-100 flex items-center gap-3">
-        <Search className="w-4 h-4 text-slate-500 shrink-0" />
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Rechercher un professeur par nom, matière ou matricule..."
-          className="w-full bg-transparent text-xs text-blue-950 placeholder-slate-400 focus:outline-hidden"
-        />
+      {/* Search Bar & Class Filter */}
+      <div className="p-4 rounded-xl bg-white border border-blue-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex items-center gap-3 flex-1">
+          <Search className="w-4 h-4 text-slate-500 shrink-0" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Rechercher un professeur par nom, matière, classe ou matricule..."
+            className="w-full bg-transparent text-xs text-blue-950 placeholder-slate-400 focus:outline-hidden"
+          />
+        </div>
+        <select
+          value={classFilter}
+          onChange={(e) => setClassFilter(e.target.value)}
+          className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950 focus:outline-hidden focus:border-emerald-500"
+        >
+          <option value="all">Toutes les classes ({allAssignedClasses.length})</option>
+          {allAssignedClasses.map(cls => (
+            <option key={cls} value={cls}>{cls}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Quick Attribution Matrix: Teacher -> Subject -> Classes */}
+      <div className="rounded-2xl bg-white border border-blue-100 overflow-hidden shadow-xs">
+        <div className="px-5 py-3.5 bg-blue-50/50 border-b border-blue-100 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Table2 className="w-4 h-4 text-emerald-600" />
+            <h2 className="text-xs font-black text-blue-950 uppercase tracking-wider">
+              Matrice Rapide : Quel Professeur dispense quel Cours & dans quelle Classe
+            </h2>
+          </div>
+          <span className="text-[11px] font-mono text-slate-500">{filteredTeachers.length} enseignant(s)</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-[10px] uppercase text-slate-500 border-b border-slate-200">
+              <tr>
+                <th className="py-2.5 px-4">Professeur</th>
+                <th className="py-2.5 px-4">Cours / Matière Dispensée</th>
+                <th className="py-2.5 px-4">Classe(s) Prise(s) en Charge</th>
+                <th className="py-2.5 px-4 text-center">Heures</th>
+                <th className="py-2.5 px-4 text-center">Syllabus</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-blue-100">
+              {filteredTeachers.map(t => (
+                <tr key={`matrix-${t.id}`} className="hover:bg-blue-50/40">
+                  <td className="py-2.5 px-4 font-bold text-blue-950">
+                    {t.teacherName}
+                    <span className="ml-2 text-[10px] font-mono text-slate-500 font-normal">{t.matricule}</span>
+                  </td>
+                  <td className="py-2.5 px-4">
+                    <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-semibold text-[11px]">
+                      {t.subject}
+                    </span>
+                  </td>
+                  <td className="py-2.5 px-4">
+                    <div className="flex flex-wrap gap-1">
+                      {t.assignedClasses.map(cls => (
+                        <span key={cls} className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-medium">
+                          <Building2 className="w-3 h-3 text-emerald-600" />
+                          <span>{cls}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="py-2.5 px-4 text-center font-mono text-slate-700">
+                    {t.hoursCompleted}/{t.hoursScheduled}h
+                  </td>
+                  <td className="py-2.5 px-4 text-center font-mono font-bold text-emerald-600">
+                    {t.syllabusProgressPct}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Teachers Grid */}

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useAccountant } from '../../context/AccountantContext';
+import { useSchoolAdmin } from '../../context/SchoolAdminContext';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { AccountantNavTab } from '../../types/accountant';
 import { 
   LayoutDashboard, 
@@ -20,7 +22,8 @@ import {
   Coins,
   ArrowRightLeft,
   ChevronDown,
-  LogOut
+  LogOut,
+  MessageCircle
 } from 'lucide-react';
 import { AccountantDashboardView } from './AccountantDashboardView';
 import { FeeSettingsView } from './FeeSettingsView';
@@ -61,6 +64,12 @@ export const AccountantLayout: React.FC<AccountantLayoutProps> = ({
     toastMessage, 
     formatGnf 
   } = useAccountant();
+  const { currentSchool } = useSchoolAdmin();
+  const schoolWaPhone = getSchoolWhatsAppNumber(currentSchool);
+  const schoolWaUrl = buildWhatsAppUrl(
+    schoolWaPhone,
+    `Bonjour ${currentSchool.name}, service Comptabilité (${profile.firstName} ${profile.lastName}).`
+  );
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
@@ -332,6 +341,19 @@ export const AccountantLayout: React.FC<AccountantLayoutProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {schoolWaUrl && (
+              <a
+                href={schoolWaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition-colors"
+                title={`WhatsApp ${currentSchool.name} (${schoolWaPhone})`}
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">WhatsApp {currentSchool.code || 'École'}</span>
+              </a>
+            )}
+
             <button
               onClick={() => setActiveAccountantTab('security')}
               className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-mono font-semibold hover:bg-emerald-100 transition-colors"

@@ -1,31 +1,32 @@
-import React, { createContext, useContext, useState } from 'react';
-import { 
-  DirectorNavTab, 
-  StudentReportCard, 
-  DirectorExam, 
-  TeacherPedagogicalProfile, 
-  StudentMonitoringRecord, 
-  DisciplinaryIncident, 
-  DirectorAnnouncement, 
-  DirectorNewsItem, 
-  DirectorCalendarEvent, 
-  DirectorFinancialSummary, 
-  DirectorAuditLog 
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import {
+  DirectorNavTab,
+  StudentReportCard,
+  DirectorExam,
+  TeacherPedagogicalProfile,
+  StudentMonitoringRecord,
+  DisciplinaryIncident,
+  DirectorAnnouncement,
+  DirectorNewsItem,
+  DirectorCalendarEvent,
+  DirectorFinancialSummary,
+  DirectorAuditLog
 } from '../types/director';
-import { 
-  DirectorProfile, 
-  initialDirectorProfile, 
-  initialReportCards, 
-  initialExams, 
-  initialTeacherProfiles, 
-  initialStudentMonitoring, 
-  initialDisciplineIncidents, 
-  initialDirectorAnnouncements, 
-  initialDirectorNews, 
-  initialCalendarEvents, 
-  initialFinancialOverview, 
-  initialDirectorAuditLogs 
+import {
+  DirectorProfile,
+  initialDirectorProfile,
+  initialReportCards,
+  initialExams,
+  initialTeacherProfiles,
+  initialStudentMonitoring,
+  initialDisciplineIncidents,
+  initialDirectorAnnouncements,
+  initialDirectorNews,
+  initialCalendarEvents,
+  initialFinancialOverview,
+  initialDirectorAuditLogs
 } from '../data/directorMockData';
+import { generateTotpSecret, verifyTotpCode } from '../utils/totp';
 
 interface PinPromptRequest {
   title: string;
@@ -34,65 +35,119 @@ interface PinPromptRequest {
   onSuccess: () => void;
 }
 
+export interface SentOtpInfo {
+  method: 'sms' | 'email';
+  destination: string;
+  code: string;
+  sentAt: string;
+}
+
+export interface PinVerificationResult {
+  ok: boolean;
+  error?: string;
+}
+
+interface DirectorSecurityStorage {
+  directorPin: string;
+  totpSecret: string;
+  twoFactorMethod: 'app' | 'sms' | 'email';
+}
+
+const DIRECTOR_SECURITY_STORAGE_KEY = 'smartschool_director_security_v1';
+
+const loadStoredSecurity = (): DirectorSecurityStorage => {
+  try {
+    const raw = localStorage.getItem(DIRECTOR_SECURITY_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        directorPin:
+          typeof parsed.directorPin === 'string' && /^\d{6}$/.test(parsed.directorPin)
+            ? parsed.directorPin
+            : '654321',
+        totpSecret:
+          typeof parsed.totpSecret === 'string' && parsed.totpSecret.length >= 16
+            ? parsed.totpSecret
+            : generateTotpSecret(16),
+        twoFactorMethod:
+          parsed.twoFactorMethod === 'sms' || parsed.twoFactorMethod === 'email'
+            ? parsed.twoFactorMethod
+            : 'app'
+      };
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return {
+    directorPin: '654321',
+    totpSecret: generateTotpSecret(16),
+    twoFactorMethod: 'app'
+  };
+};
+
 interface DirectorContextType {
   activeDirectorTab: DirectorNavTab;
   setActiveDirectorTab: (tab: DirectorNavTab) => void;
   profile: DirectorProfile;
   updateProfile: (partial: Partial<DirectorProfile>) => void;
-  
+
   // Bulletins
   reportCards: StudentReportCard[];
   approveReportCard: (id: string, observation?: string) => void;
   rejectReportCard: (id: string, observation: string) => void;
   requestCorrectionReportCard: (id: string, observation: string) => void;
-  
+
   // Exams
   exams: DirectorExam[];
   approveExam: (id: string, notes?: string) => void;
   publishExam: (id: string, notes?: string) => void;
   rejectExam: (id: string, notes: string) => void;
-  
+
   // Teachers
   teacherProfiles: TeacherPedagogicalProfile[];
   updateTeacherObservation: (id: string, observation: string, rating: number) => void;
-  
+
   // Students
   studentRecords: StudentMonitoringRecord[];
-  
+
   // Discipline
   disciplineIncidents: DisciplinaryIncident[];
   validateIncidentSanction: (id: string, finalSanction: string, notes?: string) => void;
   rejectIncident: (id: string, notes: string) => void;
-  
+
   // Communication
   announcements: DirectorAnnouncement[];
   createAnnouncement: (item: Omit<DirectorAnnouncement, 'id' | 'createdAt' | 'author' | 'readsCount'>) => void;
-  
+
   // News
   newsItems: DirectorNewsItem[];
   createNews: (item: Omit<DirectorNewsItem, 'id' | 'viewsCount'>) => void;
   deleteNews: (id: string) => void;
-  
+
   // Calendar
   calendarEvents: DirectorCalendarEvent[];
   createCalendarEvent: (event: Omit<DirectorCalendarEvent, 'id'>) => void;
-  
+
   // Finances (Read-only)
   financialOverview: DirectorFinancialSummary;
-  
+
   // Audit Logs
   auditLogs: DirectorAuditLog[];
   addAuditLog: (entry: Omit<DirectorAuditLog, 'id' | 'timestamp'>) => void;
-  
+
   // PIN & 2FA Security System
   directorPin: string;
+  totpSecret: string;
+  regenerateTotpSecret: () => void;
+  lastSentOtpInfo: SentOtpInfo | null;
+  sendVerificationOtp: (channel?: 'sms' | 'email') => SentOtpInfo;
   updateDirectorPin: (oldPin: string, newPin: string) => boolean;
   pinModalOpen: boolean;
   currentPinPrompt: PinPromptRequest | null;
   requirePinAnd2FA: (title: string, description: string, actionName: string, onSuccess: () => void) => void;
   closePinModal: () => void;
-  submitPinVerification: (pin: string, twoFactorCode: string) => boolean;
-  
+  submitPinVerification: (pin: string, twoFactorCode: string) => Promise<PinVerificationResult>;
+
   // Toast
   toastMessage: string | null;
   showToast: (msg: string) => void;
@@ -101,23 +156,83 @@ interface DirectorContextType {
 const DirectorContext = createContext<DirectorContextType | undefined>(undefined);
 
 export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [initialSecurity] = useState<DirectorSecurityStorage>(() => loadStoredSecurity());
+
   const [activeDirectorTab, setActiveDirectorTab] = useState<DirectorNavTab>('dashboard');
-  const [profile, setProfile] = useState<DirectorProfile>(initialDirectorProfile);
+  const [profile, setProfile] = useState<DirectorProfile>({
+    ...initialDirectorProfile,
+    twoFactorMethod: initialSecurity.twoFactorMethod
+  });
   const [reportCards, setReportCards] = useState<StudentReportCard[]>(initialReportCards);
   const [exams, setExams] = useState<DirectorExam[]>(initialExams);
   const [teacherProfiles, setTeacherProfiles] = useState<TeacherPedagogicalProfile[]>(initialTeacherProfiles);
   const [studentRecords] = useState<StudentMonitoringRecord[]>(initialStudentMonitoring);
   const [disciplineIncidents, setDisciplineIncidents] = useState<DisciplinaryIncident[]>(initialDisciplineIncidents);
-  const [announcements, setAnnouncements] = useState<DirectorAnnouncement[]>(initialDirectorAnnouncements);
-  const [newsItems, setNewsItems] = useState<DirectorNewsItem[]>(initialDirectorNews);
+  const [announcements, setAnnouncements] = useState<DirectorAnnouncement[]>(() => {
+    try {
+      const raw = localStorage.getItem('smartschool_director_announcements_v1');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore storage errors
+    }
+    return initialDirectorAnnouncements;
+  });
+  const [newsItems, setNewsItems] = useState<DirectorNewsItem[]>(() => {
+    try {
+      const raw = localStorage.getItem('smartschool_director_news_v1');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore storage errors
+    }
+    return initialDirectorNews;
+  });
   const [calendarEvents, setCalendarEvents] = useState<DirectorCalendarEvent[]>(initialCalendarEvents);
   const [financialOverview] = useState<DirectorFinancialSummary>(initialFinancialOverview);
   const [auditLogs, setAuditLogs] = useState<DirectorAuditLog[]>(initialDirectorAuditLogs);
-  
-  const [directorPin, setDirectorPin] = useState<string>('654321');
+
+  const [directorPin, setDirectorPin] = useState<string>(initialSecurity.directorPin);
+  const [totpSecret, setTotpSecret] = useState<string>(initialSecurity.totpSecret);
+  const [activeOtpCode, setActiveOtpCode] = useState<string | null>(null);
+  const [lastSentOtpInfo, setLastSentOtpInfo] = useState<SentOtpInfo | null>(null);
+
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [currentPinPrompt, setCurrentPinPrompt] = useState<PinPromptRequest | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const payload: DirectorSecurityStorage = {
+        directorPin,
+        totpSecret,
+        twoFactorMethod: profile.twoFactorMethod
+      };
+      localStorage.setItem(DIRECTOR_SECURITY_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore storage errors
+    }
+  }, [directorPin, totpSecret, profile.twoFactorMethod]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('smartschool_director_announcements_v1', JSON.stringify(announcements));
+    } catch {
+      // ignore storage errors
+    }
+  }, [announcements]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('smartschool_director_news_v1', JSON.stringify(newsItems));
+    } catch {
+      // ignore storage quota errors on large local PDF data URLs
+    }
+  }, [newsItems]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -142,6 +257,39 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     showToast('Profil Directeur mis à jour avec succès');
   };
 
+  const regenerateTotpSecret = () => {
+    const nextSecret = generateTotpSecret(16);
+    setTotpSecret(nextSecret);
+    addAuditLog({
+      action: 'Renouvellement clé secrète TOTP Authenticator',
+      target: 'Sécurité Directeur (2FA)',
+      userRole: 'Directeur des Études',
+      ip: '197.149.214.33',
+      device: 'Poste Direction',
+      securityLevel: 'critique',
+      status: 'succes'
+    });
+    showToast('Nouvelle clé QR Authenticator générée. Pensez à la scanner sur votre téléphone.');
+  };
+
+  const sendVerificationOtp = (channel?: 'sms' | 'email'): SentOtpInfo => {
+    const chosenChannel: 'sms' | 'email' =
+      channel || (profile.twoFactorMethod === 'email' ? 'email' : 'sms');
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const destination = chosenChannel === 'sms' ? profile.phone : profile.email;
+    const sentAt = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const info: SentOtpInfo = {
+      method: chosenChannel,
+      destination,
+      code,
+      sentAt
+    };
+    setActiveOtpCode(code);
+    setLastSentOtpInfo(info);
+    showToast(`Code 2FA envoyé par ${chosenChannel === 'sms' ? 'SMS' : 'Email'} vers ${destination}`);
+    return info;
+  };
+
   const updateDirectorPin = (oldPin: string, newPin: string): boolean => {
     if (oldPin !== directorPin) {
       return false;
@@ -155,7 +303,7 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       target: 'Sécurité Directeur',
       userRole: 'Directeur des Études',
       ip: '197.149.214.33',
-      device: 'MacBook Pro / Chrome',
+      device: 'Poste Direction',
       securityLevel: 'critique',
       status: 'succes'
     });
@@ -164,11 +312,13 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const requirePinAnd2FA = (
-    title: string, 
-    description: string, 
-    actionName: string, 
+    title: string,
+    description: string,
+    actionName: string,
     onSuccess: () => void
   ) => {
+    setActiveOtpCode(null);
+    setLastSentOtpInfo(null);
     setCurrentPinPrompt({
       title,
       description,
@@ -181,16 +331,67 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const closePinModal = () => {
     setPinModalOpen(false);
     setCurrentPinPrompt(null);
+    setActiveOtpCode(null);
+    setLastSentOtpInfo(null);
   };
 
-  const submitPinVerification = (pin: string, twoFactorCode: string): boolean => {
-    // Check PIN (must match directorPin)
-    if (pin !== directorPin) {
-      return false;
+  const submitPinVerification = async (
+    pin: string,
+    twoFactorCode: string
+  ): Promise<PinVerificationResult> => {
+    const cleanPin = pin.trim();
+    const clean2FA = twoFactorCode.trim();
+
+    if (cleanPin !== directorPin) {
+      addAuditLog({
+        action: `Échec vérification PIN : ${currentPinPrompt?.actionName || 'Action sensible'}`,
+        target: currentPinPrompt?.title || 'Coffre Directeur',
+        userRole: 'Directeur des Études',
+        ip: '197.149.214.33',
+        device: 'Poste Direction',
+        securityLevel: 'critique',
+        status: 'echec'
+      });
+      return {
+        ok: false,
+        error: 'Code PIN Directeur incorrect (vérifiez votre PIN dans Sécurité & Code PIN).'
+      };
     }
-    // Check 2FA (accept any 6-digit number or 123456 as valid OTP)
-    if (!twoFactorCode || twoFactorCode.length < 4) {
-      return false;
+
+    if (!/^\d{6}$/.test(clean2FA)) {
+      return {
+        ok: false,
+        error: 'Le code 2FA doit contenir exactement 6 chiffres.'
+      };
+    }
+
+    let is2faValid = false;
+    if (profile.twoFactorMethod === 'app') {
+      // Allow real TOTP from Authenticator app (or an explicitly requested fallback OTP if dispatched)
+      const matchesTotp = await verifyTotpCode(totpSecret, clean2FA, 1);
+      const matchesFallbackOtp = activeOtpCode !== null && clean2FA === activeOtpCode;
+      is2faValid = matchesTotp || matchesFallbackOtp;
+    } else {
+      is2faValid = activeOtpCode !== null && clean2FA === activeOtpCode;
+    }
+
+    if (!is2faValid) {
+      addAuditLog({
+        action: `Échec vérification 2FA : ${currentPinPrompt?.actionName || 'Action sensible'}`,
+        target: currentPinPrompt?.title || 'Coffre Directeur',
+        userRole: 'Directeur des Études',
+        ip: '197.149.214.33',
+        device: 'Poste Direction',
+        securityLevel: 'critique',
+        status: 'echec'
+      });
+      return {
+        ok: false,
+        error:
+          profile.twoFactorMethod === 'app'
+            ? 'Code 2FA Authenticator invalide ou expiré. Utilisez votre application Authenticator (ou consultez le code en direct dans Sécurité & Code PIN).'
+            : 'Code 2FA incorrect ou non généré. Cliquez d’abord sur « Envoyer le code par SMS / Email ».'
+      };
     }
 
     if (currentPinPrompt) {
@@ -200,14 +401,14 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         target: currentPinPrompt.title,
         userRole: 'Directeur des Études',
         ip: '197.149.214.33',
-        device: 'MacBook Pro / Chrome',
+        device: 'Poste Direction',
         securityLevel: 'critique',
         status: 'succes'
       });
     }
 
     closePinModal();
-    return true;
+    return { ok: true };
   };
 
   // Report Card Actions
@@ -217,44 +418,49 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       'Cette action génère la signature électronique infalsifiable du Directeur et archive officiellement les notes.',
       'Validation de bulletin',
       () => {
-        setReportCards(prev => prev.map(bc => {
-          if (bc.id === id) {
-            const now = new Date();
-            const dateStr = `${now.toISOString().split('T')[0]} ${now.toTimeString().substring(0, 5)}`;
-            return {
-              ...bc,
-              directorStatus: 'approuve',
-              directorObservation: observation || bc.directorObservation || 'Validé et certifié par la Direction des Études.',
-              validatedAt: dateStr,
-              validatedBy: profile.name,
-              signatureHash: `CERT-DIR-LEC-${Math.floor(100000 + Math.random() * 900000)}-S27`,
-              pdfGenerated: true
-            };
-          }
-          return bc;
-        }));
+        setReportCards(prev =>
+          prev.map(bc => {
+            if (bc.id === id) {
+              const now = new Date();
+              const dateStr = `${now.toISOString().split('T')[0]} ${now.toTimeString().substring(0, 5)}`;
+              return {
+                ...bc,
+                directorStatus: 'approuve',
+                directorObservation:
+                  observation || bc.directorObservation || 'Validé et certifié par la Direction des Études.',
+                validatedAt: dateStr,
+                validatedBy: profile.name,
+                signatureHash: `CERT-DIR-LEC-${Math.floor(100000 + Math.random() * 900000)}-S27`,
+                pdfGenerated: true
+              };
+            }
+            return bc;
+          })
+        );
         showToast('Bulletin approuvé et signé électroniquement ! Spécimen officiel prêt.');
       }
     );
   };
 
   const rejectReportCard = (id: string, observation: string) => {
-    setReportCards(prev => prev.map(bc => {
-      if (bc.id === id) {
-        return {
-          ...bc,
-          directorStatus: 'rejete',
-          directorObservation: observation
-        };
-      }
-      return bc;
-    }));
+    setReportCards(prev =>
+      prev.map(bc => {
+        if (bc.id === id) {
+          return {
+            ...bc,
+            directorStatus: 'rejete',
+            directorObservation: observation
+          };
+        }
+        return bc;
+      })
+    );
     addAuditLog({
       action: 'Rejet du Bulletin Scolaire',
       target: `Bulletin #${id}`,
       userRole: 'Directeur des Études',
       ip: '197.149.214.33',
-      device: 'MacBook Pro / Chrome',
+      device: 'Poste Direction',
       securityLevel: 'sensible',
       status: 'succes'
     });
@@ -262,22 +468,24 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const requestCorrectionReportCard = (id: string, observation: string) => {
-    setReportCards(prev => prev.map(bc => {
-      if (bc.id === id) {
-        return {
-          ...bc,
-          directorStatus: 'correction_demandee',
-          directorObservation: observation
-        };
-      }
-      return bc;
-    }));
+    setReportCards(prev =>
+      prev.map(bc => {
+        if (bc.id === id) {
+          return {
+            ...bc,
+            directorStatus: 'correction_demandee',
+            directorObservation: observation
+          };
+        }
+        return bc;
+      })
+    );
     addAuditLog({
       action: 'Demande de Correction sur Bulletin',
       target: `Bulletin #${id}`,
       userRole: 'Directeur des Études',
       ip: '197.149.214.33',
-      device: 'MacBook Pro / Chrome',
+      device: 'Poste Direction',
       securityLevel: 'sensible',
       status: 'succes'
     });
@@ -287,21 +495,23 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Exam Actions
   const approveExam = (id: string, notes?: string) => {
     requirePinAnd2FA(
-      'Validation Académique des Résultats de l\'Examen',
-      'Cette action valide les moyennes, les pourcentages de réussite et les délibérations de l\'examen.',
-      'Validation d\'examen',
+      "Validation Académique des Résultats de l'Examen",
+      "Cette action valide les moyennes, les pourcentages de réussite et les délibérations de l'examen.",
+      "Validation d'examen",
       () => {
-        setExams(prev => prev.map(ex => {
-          if (ex.id === id) {
-            return {
-              ...ex,
-              status: 'valide',
-              directorNotes: notes || ex.directorNotes,
-              publishedBy: profile.name
-            };
-          }
-          return ex;
-        }));
+        setExams(prev =>
+          prev.map(ex => {
+            if (ex.id === id) {
+              return {
+                ...ex,
+                status: 'valide',
+                directorNotes: notes || ex.directorNotes,
+                publishedBy: profile.name
+              };
+            }
+            return ex;
+          })
+        );
         showToast('Examen validé avec succès par le Directeur des Études.');
       }
     );
@@ -309,110 +519,122 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const publishExam = (id: string, notes?: string) => {
     requirePinAnd2FA(
-      'Publication Officielle des Résultats de l\'Examen',
-      'ATTENTION : La publication officielle rend les résultats immédiatement visibles aux élèves, parents et enseignants avec le sceau de l\'établissement.',
-      'Publication officielle d\'examen',
+      "Publication Officielle des Résultats de l'Examen",
+      "ATTENTION : La publication officielle rend les résultats immédiatement visibles aux élèves, parents et enseignants avec le sceau de l'établissement.",
+      "Publication officielle d'examen",
       () => {
-        setExams(prev => prev.map(ex => {
-          if (ex.id === id) {
-            const now = new Date();
-            const dateStr = `${now.toISOString().split('T')[0]} ${now.toTimeString().substring(0, 5)}`;
-            return {
-              ...ex,
-              status: 'publie',
-              directorNotes: notes || ex.directorNotes,
-              publishedAt: dateStr,
-              publishedBy: profile.name,
-              signatureHash: `CERT-EXAM-PUB-${Math.floor(100000 + Math.random() * 900000)}`
-            };
-          }
-          return ex;
-        }));
+        setExams(prev =>
+          prev.map(ex => {
+            if (ex.id === id) {
+              const now = new Date();
+              const dateStr = `${now.toISOString().split('T')[0]} ${now.toTimeString().substring(0, 5)}`;
+              return {
+                ...ex,
+                status: 'publie',
+                directorNotes: notes || ex.directorNotes,
+                publishedAt: dateStr,
+                publishedBy: profile.name,
+                signatureHash: `CERT-EXAM-PUB-${Math.floor(100000 + Math.random() * 900000)}`
+              };
+            }
+            return ex;
+          })
+        );
         showToast('Résultats officiellement proclamés et publiés !');
       }
     );
   };
 
   const rejectExam = (id: string, notes: string) => {
-    setExams(prev => prev.map(ex => {
-      if (ex.id === id) {
-        return {
-          ...ex,
-          status: 'rejete',
-          directorNotes: notes
-        };
-      }
-      return ex;
-    }));
+    setExams(prev =>
+      prev.map(ex => {
+        if (ex.id === id) {
+          return {
+            ...ex,
+            status: 'rejete',
+            directorNotes: notes
+          };
+        }
+        return ex;
+      })
+    );
     addAuditLog({
-      action: 'Rejet de la session d\'examen',
+      action: "Rejet de la session d'examen",
       target: `Examen #${id}`,
       userRole: 'Directeur des Études',
       ip: '197.149.214.33',
-      device: 'MacBook Pro / Chrome',
+      device: 'Poste Direction',
       securityLevel: 'sensible',
       status: 'succes'
     });
-    showToast('Résultats d\'examen rejetés pour audit approfondi.');
+    showToast("Résultats d'examen rejetés pour audit approfondi.");
   };
 
   // Teacher supervision
   const updateTeacherObservation = (id: string, observation: string, rating: number) => {
-    setTeacherProfiles(prev => prev.map(t => {
-      if (t.id === id) {
-        return {
-          ...t,
-          directorObservation: observation,
-          pedagogicalRating: rating,
-          lastInspectionDate: new Date().toISOString().split('T')[0]
-        };
-      }
-      return t;
-    }));
-    showToast('Évaluation pédagogique de l\'enseignant enregistrée.');
+    setTeacherProfiles(prev =>
+      prev.map(t => {
+        if (t.id === id) {
+          return {
+            ...t,
+            directorObservation: observation,
+            pedagogicalRating: rating,
+            lastInspectionDate: new Date().toISOString().split('T')[0]
+          };
+        }
+        return t;
+      })
+    );
+    showToast("Évaluation pédagogique de l'enseignant enregistrée.");
   };
 
   // Discipline
   const validateIncidentSanction = (id: string, finalSanction: string, notes?: string) => {
     requirePinAnd2FA(
       'Validation de Décision Disciplinaire Majeure',
-      'La validation du Directeur officialise la sanction d\'exclusion ou de conseil de discipline inscrite au dossier scolaire.',
+      "La validation du Directeur officialise la sanction d'exclusion ou de conseil de discipline inscrite au dossier scolaire.",
       'Validation disciplinaire',
       () => {
-        setDisciplineIncidents(prev => prev.map(inc => {
-          if (inc.id === id) {
-            return {
-              ...inc,
-              directorStatus: 'validee',
-              finalSanction,
-              directorNotes: notes,
-              decisionDate: new Date().toISOString().split('T')[0]
-            };
-          }
-          return inc;
-        }));
+        setDisciplineIncidents(prev =>
+          prev.map(inc => {
+            if (inc.id === id) {
+              return {
+                ...inc,
+                directorStatus: 'validee',
+                finalSanction,
+                directorNotes: notes,
+                decisionDate: new Date().toISOString().split('T')[0]
+              };
+            }
+            return inc;
+          })
+        );
         showToast('Décision disciplinaire officialisée.');
       }
     );
   };
 
   const rejectIncident = (id: string, notes: string) => {
-    setDisciplineIncidents(prev => prev.map(inc => {
-      if (inc.id === id) {
-        return {
-          ...inc,
-          directorStatus: 'rejetee',
-          directorNotes: notes,
-          decisionDate: new Date().toISOString().split('T')[0]
-        };
-      }
-      return inc;
-    }));
+    setDisciplineIncidents(prev =>
+      prev.map(inc => {
+        if (inc.id === id) {
+          return {
+            ...inc,
+            directorStatus: 'rejetee',
+            directorNotes: notes,
+            decisionDate: new Date().toISOString().split('T')[0]
+          };
+        }
+        return inc;
+      })
+    );
     showToast('Rapport disciplinaire classé sans suite / rejeté.');
   };
 
   // Announcements
-  const createAnnouncement = (item: Omit<DirectorAnnouncement, 'id' | 'createdAt' | 'author' | 'readsCount'>) => {
+  const createAnnouncement = (
+    item: Omit<DirectorAnnouncement, 'id' | 'createdAt' | 'author' | 'readsCount'>
+  ) => {
     const now = new Date();
     const dateStr = `${now.toISOString().split('T')[0]} ${now.toTimeString().substring(0, 5)}`;
     const newAnn: DirectorAnnouncement = {
@@ -428,7 +650,7 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       target: item.title,
       userRole: 'Directeur des Études',
       ip: '197.149.214.33',
-      device: 'MacBook Pro / Chrome',
+      device: 'Poste Direction',
       securityLevel: 'normale',
       status: 'succes'
     });
@@ -462,45 +684,51 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <DirectorContext.Provider value={{
-      activeDirectorTab,
-      setActiveDirectorTab,
-      profile,
-      updateProfile,
-      reportCards,
-      approveReportCard,
-      rejectReportCard,
-      requestCorrectionReportCard,
-      exams,
-      approveExam,
-      publishExam,
-      rejectExam,
-      teacherProfiles,
-      updateTeacherObservation,
-      studentRecords,
-      disciplineIncidents,
-      validateIncidentSanction,
-      rejectIncident,
-      announcements,
-      createAnnouncement,
-      newsItems,
-      createNews,
-      deleteNews,
-      calendarEvents,
-      createCalendarEvent,
-      financialOverview,
-      auditLogs,
-      addAuditLog,
-      directorPin,
-      updateDirectorPin,
-      pinModalOpen,
-      currentPinPrompt,
-      requirePinAnd2FA,
-      closePinModal,
-      submitPinVerification,
-      toastMessage,
-      showToast
-    }}>
+    <DirectorContext.Provider
+      value={{
+        activeDirectorTab,
+        setActiveDirectorTab,
+        profile,
+        updateProfile,
+        reportCards,
+        approveReportCard,
+        rejectReportCard,
+        requestCorrectionReportCard,
+        exams,
+        approveExam,
+        publishExam,
+        rejectExam,
+        teacherProfiles,
+        updateTeacherObservation,
+        studentRecords,
+        disciplineIncidents,
+        validateIncidentSanction,
+        rejectIncident,
+        announcements,
+        createAnnouncement,
+        newsItems,
+        createNews,
+        deleteNews,
+        calendarEvents,
+        createCalendarEvent,
+        financialOverview,
+        auditLogs,
+        addAuditLog,
+        directorPin,
+        totpSecret,
+        regenerateTotpSecret,
+        lastSentOtpInfo,
+        sendVerificationOtp,
+        updateDirectorPin,
+        pinModalOpen,
+        currentPinPrompt,
+        requirePinAnd2FA,
+        closePinModal,
+        submitPinVerification,
+        toastMessage,
+        showToast
+      }}
+    >
       {children}
     </DirectorContext.Provider>
   );

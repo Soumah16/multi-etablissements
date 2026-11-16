@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTeacher } from '../../context/TeacherContext';
+import { downloadSyllabusPdf } from '../../utils/exportDocuments';
 import { 
   BookOpen, 
   Layers, 
@@ -146,8 +147,22 @@ export const TeacherSubjectsView: React.FC = () => {
             <div className="pt-4 border-t border-blue-100 flex items-center justify-between">
               <span className="text-[11px] text-slate-500 font-mono">ID: {subj.id}</span>
               <button
-                onClick={() => triggerToast(`Téléchargement du syllabus officiel MEPU-A pour ${subj.name}...`)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-blue-100 text-slate-900 text-xs font-semibold border border-slate-200 transition-colors"
+                onClick={() => {
+                  const file = downloadSyllabusPdf({
+                    subjectName: subj.name,
+                    level: subj.level,
+                    coefficient: subj.coefficient,
+                    classNames: subj.classNames,
+                    hoursCompleted: subj.hoursCompleted,
+                    hoursTotal: subj.hoursTotal,
+                    chaptersCount: subj.chaptersCount,
+                    summary: subj.officialSyllabusSummary,
+                    teacherName: `${profile.firstName} ${profile.lastName}`,
+                    schoolName: profile.schoolName
+                  });
+                  triggerToast(`Syllabus téléchargé : ${file}`);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-blue-100 text-slate-900 text-xs font-semibold border border-slate-200 transition-colors cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5 text-purple-600" />
                 <span>Télécharger le Syllabus (PDF)</span>

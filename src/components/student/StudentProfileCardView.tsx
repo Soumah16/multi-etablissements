@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useStudent } from '../../context/StudentContext';
 import { ImageUploadField } from '../common/ImageUploadField';
-import { triggerPrint, exportPrintableDocument } from '../../utils/printHelper';
+import { triggerPrint } from '../../utils/printHelper';
+import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
+import { downloadPvcBadgePdf, downloadPvcBadgeA4Pdf, PvcRenderData } from '../../utils/pvcCardRenderer';
 import { 
   CreditCard, 
   QrCode, 
@@ -19,9 +21,34 @@ import {
 } from 'lucide-react';
 
 export const StudentProfileCardView: React.FC = () => {
-  const { profile, updateProfilePhoto } = useStudent();
+  const { profile, updateProfilePhoto, showToast } = useStudent();
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [newPhoto, setNewPhoto] = useState(profile.photo);
+
+  const qrPayload = profile.qrCodeToken || `STUDENT|${profile.matricule}|${profile.firstName} ${profile.lastName}|${profile.className}`;
+
+  const getPvcData = (): PvcRenderData => ({
+    schoolName: profile.schoolName,
+    schoolCode: 'ELV',
+    categoryLabel: 'CARTE SCOLAIRE',
+    fullName: `${profile.firstName} ${profile.lastName}`,
+    title: profile.className,
+    matricule: profile.matricule,
+    nationalUid: qrPayload,
+    bloodGroup: 'O+',
+    validityPeriod: '2026 - 2027',
+    photoUrl: profile.photo,
+    phone: profile.parentPhone,
+    themeColor: '#2563eb',
+    accentBg: '',
+    isDarkTheme: true,
+    showNationalArms: true,
+    showTricolorBanner: true,
+    showOfficialStamp: true,
+    showMicrotext: true,
+    showWatermark: true,
+    showBarcode: true
+  });
 
   const handleSavePhoto = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,30 +69,52 @@ export const StudentProfileCardView: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2">
           <button
+            type="button"
             onClick={() => { setNewPhoto(profile.photo); setPhotoModalOpen(true); }}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 border border-slate-200 text-xs font-semibold cursor-pointer"
-          >
-            <span>Mettre à jour ma photo</span>
-          </button>
-          <button
-            onClick={() => {
-              const el = document.getElementById('student-id-card-printable');
-              if (el) {
-                exportPrintableDocument(`Carte_Scolaire_${profile.matricule}`, el.innerHTML);
-              }
-            }}
             className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 border border-slate-200 text-xs font-semibold cursor-pointer"
-            title="Télécharger version imprimable propre"
           >
-            <Download className="w-3.5 h-3.5 text-blue-600" />
-            <span>Télécharger</span>
+            <span>Modifier ma photo</span>
           </button>
           <button
-            onClick={() => triggerPrint('student-id-card-printable')}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 cursor-pointer"
+            type="button"
+            onClick={async () => {
+              await downloadQrCodePng(qrPayload, `QR_Eleve_${profile.matricule}`, '#0f172a');
+              showToast('Code QR téléchargé en PNG.');
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-blue-950 border border-slate-200 text-xs font-semibold cursor-pointer"
+          >
+            <QrCode className="w-3.5 h-3.5 text-blue-600" />
+            <span>QR PNG</span>
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              const fn = await downloadPvcBadgePdf(getPvcData(), 'both', `Carte_Scolaire_${profile.matricule}`);
+              showToast(`PDF PVC CR-80 (85.6 × 53.98 mm) téléchargé : ${fn}`);
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>PDF PVC (CR-80)</span>
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              const fn = await downloadPvcBadgeA4Pdf(getPvcData(), 'both', `Planche_A4_Eleve_${profile.matricule}`);
+              showToast(`PDF A4 taille PVC 100% téléchargé : ${fn}`);
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-blue-950 border border-slate-200 text-xs font-semibold cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5 text-indigo-600" />
+            <span>PDF A4 (100%)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => triggerPrint('student-id-card-printable', `Carte_Scolaire_${profile.matricule}`, 'landscape')}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Imprimer</span>
+            <span>Imprimer PVC</span>
           </button>
         </div>
       </div>
@@ -74,12 +123,12 @@ export const StudentProfileCardView: React.FC = () => {
         {/* ISO-7810 Digital Card Display */}
         <div className="space-y-4">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Aperçu Carte d'Élève Officielle (Format Portefeuille ID-1)
+            Aperçu Carte d'Élève Officielle (Format PVC CR-80 · 85.60 × 53.98 mm)
           </div>
 
           <div 
             id="student-id-card-printable"
-            className="w-full max-w-md mx-auto aspect-[1.586/1] rounded-2xl bg-gradient-to-br from-blue-950 via-slate-900 to-indigo-950 border-2 border-blue-400/40 shadow-2xl p-5 flex flex-col justify-between text-white relative overflow-hidden printable-document"
+            className="pvc-card w-full max-w-md mx-auto aspect-[1.586/1] rounded-2xl bg-gradient-to-br from-blue-950 via-slate-900 to-indigo-950 border-2 border-blue-400/40 shadow-2xl p-5 flex flex-col justify-between text-white relative overflow-hidden printable-document"
           >
             {/* Hologram aesthetic */}
             <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-blue-500/10 blur-xl pointer-events-none" />
@@ -134,8 +183,8 @@ export const StudentProfileCardView: React.FC = () => {
             {/* Bottom Bar with Multi-Service QR Code */}
             <div className="pt-2 border-t border-blue-500/30 flex items-center justify-between text-[10px]">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded bg-white p-0.5 flex items-center justify-center text-slate-900">
-                  <QrCode className="w-7 h-7" />
+                <div className="w-10 h-10 rounded bg-white p-0.5 flex items-center justify-center text-slate-900 shrink-0">
+                  <RealQrCode value={qrPayload} size={36} fgColor="#0f172a" alt={`QR ${profile.matricule}`} />
                 </div>
                 <div>
                   <div className="font-mono text-[9px] text-blue-200">TOKEN: {profile.qrCodeToken}</div>

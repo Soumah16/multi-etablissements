@@ -14,9 +14,11 @@ import {
   Printer, 
   X,
   CreditCard,
-  Send
+  Send,
+  FileSpreadsheet
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { downloadCsvWithBom, downloadPlatformRevenueExcel } from '../../utils/exportDocuments';
 
 export const RevenueView: React.FC = () => {
   const { transactions, schools, plans, createTransaction, updateTransactionStatus, t, showToast } = useApp();
@@ -88,25 +90,27 @@ export const RevenueView: React.FC = () => {
   };
 
   const handleExportCsv = () => {
-    const headers = ["Numero_Facture", "Etablissement", "Montant_GNF", "Date", "Methode_Paiement", "Statut", "Reference"];
-    const rows = filteredTransactions.map(t => [
-      t.invoiceNumber,
-      `"${t.schoolName}"`,
-      t.amountGnf,
-      t.date,
-      `"${t.paymentMethod}"`,
-      t.status,
-      t.reference
-    ]);
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `smartschool_rapport_revenus_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast("Rapport financier exporté au format CSV");
+    const filename = `smartschool_rapport_revenus_${new Date().toISOString().split('T')[0]}.csv`;
+    downloadCsvWithBom(
+      filename,
+      ['N° Facture', 'Établissement', 'Formule', 'Montant (GNF)', 'Date', 'Méthode de Paiement', 'Statut', 'Référence'],
+      filteredTransactions.map(tx => [
+        tx.invoiceNumber,
+        tx.schoolName,
+        tx.planId.toUpperCase(),
+        tx.amountGnf,
+        tx.date,
+        tx.paymentMethod,
+        tx.status,
+        tx.reference
+      ])
+    );
+    showToast(`Rapport financier exporté au format CSV : ${filename}`);
+  };
+
+  const handleExportExcel = () => {
+    const filename = downloadPlatformRevenueExcel(filteredTransactions);
+    showToast(`Rapport financier exporté en Excel (.xlsx) : ${filename}`);
   };
 
   return (
@@ -122,13 +126,21 @@ export const RevenueView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleExportExcel}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span>Export Excel (.xlsx)</span>
+          </button>
+
           <button
             onClick={handleExportCsv}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 bg-slate-50 hover:bg-blue-100 border border-slate-200 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 bg-slate-50 hover:bg-blue-100 border border-slate-200 rounded-lg transition-colors cursor-pointer"
           >
             <Download className="w-4 h-4 text-slate-500" />
-            <span>{t.revenue.exportReport}</span>
+            <span>{t.revenue.exportReport} (CSV)</span>
           </button>
 
           <button

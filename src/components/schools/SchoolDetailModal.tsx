@@ -17,8 +17,11 @@ import {
   Calendar,
   Lock,
   Layers,
-  Sparkles
+  Sparkles,
+  MessageCircle,
+  ExternalLink
 } from 'lucide-react';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 
 interface SchoolDetailModalProps {
   school: School;
@@ -188,6 +191,23 @@ export const SchoolDetailModal: React.FC<SchoolDetailModalProps> = ({ school, on
                     <Phone className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                     <span>{school.phone}</span>
                   </div>
+                  {getSchoolWhatsAppNumber(school) && (
+                    <div className="flex items-center justify-between gap-2 text-emerald-800 bg-emerald-50/80 border border-emerald-200 rounded-lg px-2.5 py-1.5">
+                      <div className="flex items-center gap-2 font-mono font-semibold">
+                        <MessageCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>{getSchoolWhatsAppNumber(school)}</span>
+                      </div>
+                      <a
+                        href={buildWhatsAppUrl(getSchoolWhatsAppNumber(school), `Bonjour ${school.name}, message depuis SmartSchool ERP.`)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px]"
+                      >
+                        <span>WhatsApp</span>
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </a>
+                    </div>
+                  )}
                   <div className="text-slate-500 text-[11px] pt-1 border-t border-slate-200">
                     Adresse : {school.address}
                   </div>

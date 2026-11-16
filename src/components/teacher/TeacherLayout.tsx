@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useTeacher } from '../../context/TeacherContext';
+import { useSchoolAdmin } from '../../context/SchoolAdminContext';
+import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { TeacherNavTab } from '../../types/teacher';
 import { 
   LayoutDashboard, 
@@ -22,10 +24,13 @@ import {
   Clock,
   ArrowRightLeft,
   ChevronDown,
-  LogOut
+  LogOut,
+  MessageCircle,
+  Users
 } from 'lucide-react';
 import { TeacherDashboardView } from './TeacherDashboardView';
 import { TeacherClassesView } from './TeacherClassesView';
+import { TeacherStudentsView } from './TeacherStudentsView';
 import { TeacherSubjectsView } from './TeacherSubjectsView';
 import { TeacherCoursesView } from './TeacherCoursesView';
 import { TeacherGradebookView } from './TeacherGradebookView';
@@ -64,6 +69,7 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({
     setActiveTeacherTab, 
     profile, 
     classes, 
+    students,
     subjects,
     courses,
     evaluations, 
@@ -71,6 +77,12 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({
     studentProfiles,
     toastMessage 
   } = useTeacher();
+  const { currentSchool } = useSchoolAdmin();
+  const schoolWaPhone = getSchoolWhatsAppNumber(currentSchool);
+  const schoolWaUrl = buildWhatsAppUrl(
+    schoolWaPhone,
+    `Bonjour ${currentSchool.name}, enseignant ${profile.firstName} ${profile.lastName}.`
+  );
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
@@ -100,6 +112,7 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({
       groupTitle: 'ENSEIGNEMENT & COURS',
       items: [
         { tab: 'classes', label: 'Mes Classes', icon: <GraduationCap className="w-4 h-4" />, badge: classes.length },
+        { tab: 'students', label: 'Mes Élèves (Tous)', icon: <Users className="w-4 h-4 text-emerald-600" />, badge: students.length, badgeColor: 'bg-emerald-100 text-emerald-800 border border-emerald-200' },
         { tab: 'subjects', label: 'Matières & Syllabus', icon: <Layers className="w-4 h-4" />, badge: subjects.length },
         { tab: 'courses', label: 'Gestion des Cours', icon: <BookOpen className="w-4 h-4" />, badge: courses.length },
         { tab: 'logbook', label: 'Cahier de Textes', icon: <FileText className="w-4 h-4" /> },
@@ -149,6 +162,7 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({
     switch (activeTeacherTab) {
       case 'dashboard': return <TeacherDashboardView />;
       case 'classes': return <TeacherClassesView />;
+      case 'students': return <TeacherStudentsView />;
       case 'subjects': return <TeacherSubjectsView />;
       case 'courses': return <TeacherCoursesView />;
       case 'logbook': return <TeacherLogbookView />;
@@ -363,6 +377,19 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {schoolWaUrl && (
+              <a
+                href={schoolWaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition-colors"
+                title={`WhatsApp ${currentSchool.name} (${schoolWaPhone})`}
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">WhatsApp {currentSchool.code || 'École'}</span>
+              </a>
+            )}
+
             <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-xs font-semibold">
               <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
               <span>Année 2026-2027</span>

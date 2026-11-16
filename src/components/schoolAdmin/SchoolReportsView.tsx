@@ -5,12 +5,14 @@ import {
   Download, 
   Printer, 
   FileSpreadsheet, 
+  FileText,
   Users, 
   Building2, 
   DoorOpen, 
   CheckCircle2 
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { downloadSchoolAdminExcel, downloadSchoolAdminPdf } from '../../utils/exportDocuments';
 
 export const SchoolReportsView: React.FC = () => {
   const { currentSchool, staff, classes, rooms, academicYears } = useSchoolAdmin();
@@ -21,6 +23,31 @@ export const SchoolReportsView: React.FC = () => {
   const totalCapacity = classes.reduce((acc, c) => acc + c.capacity, 0);
   const totalEnrolledInClasses = classes.reduce((acc, c) => acc + c.studentsCount, 0);
   const avgOccupation = totalCapacity > 0 ? Math.round((totalEnrolledInClasses / totalCapacity) * 100) : 0;
+
+  const handleExportExcel = () => {
+    downloadSchoolAdminExcel({
+      schoolName: currentSchool.name,
+      schoolCode: currentSchool.code,
+      studentsCount: currentSchool.stats.studentsCount,
+      teachersCount,
+      adminStaffCount,
+      classes,
+      rooms
+    });
+  };
+
+  const handleExportPdf = () => {
+    downloadSchoolAdminPdf({
+      schoolName: currentSchool.name,
+      schoolCode: currentSchool.code,
+      academicYear: activeYear?.yearLabel || '2026-2027',
+      studentsCount: currentSchool.stats.studentsCount,
+      teachersCount,
+      adminStaffCount,
+      classes,
+      rooms
+    });
+  };
 
   const handleExportCsv = () => {
     const headers = ['Categorie', 'Element', 'Effectif_ou_Capacite', 'Occupation', 'Observations'];
@@ -77,20 +104,38 @@ export const SchoolReportsView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={handleExportCsv}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
+            type="button"
+            onClick={handleExportPdf}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-xs transition-colors cursor-pointer"
           >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span>Exporter CSV</span>
+            <FileText className="w-4 h-4" />
+            <span>PDF</span>
           </button>
           <button
+            type="button"
+            onClick={handleExportExcel}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-xs transition-colors cursor-pointer"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>Excel (.xlsx)</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
+          >
+            <Download className="w-4 h-4" />
+            <span>CSV</span>
+          </button>
+          <button
+            type="button"
             onClick={() => triggerPrint('school-reports-printable-area', `Rapport_Administratif_${currentSchool.code}`)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 transition-all cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Imprimer le Rapport</span>
+            <span>Imprimer</span>
           </button>
         </div>
       </div>

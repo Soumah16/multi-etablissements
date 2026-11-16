@@ -1,24 +1,38 @@
 import React, { useState } from 'react';
 import { useLibrarian } from '../../context/LibrarianContext';
-import { 
-  ShieldCheck, 
-  Lock, 
-  KeyRound, 
-  AlertOctagon, 
-  CheckCircle2, 
-  ShieldX, 
+import {
+  ShieldCheck,
+  Lock,
+  AlertOctagon,
+  ShieldX,
   Smartphone,
   Eye,
-  EyeOff
+  EyeOff,
+  History,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 
 export const LibrarianSecurityView: React.FC = () => {
-  const { profile, updateProfile, showToast } = useLibrarian();
-  const [currentPin, setCurrentPin] = useState('');
+  const { profile, updateProfile, showToast, canManageLibrary, libraryAuditLogs } = useLibrarian();
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [showPin, setShowPin] = useState(false);
   const [twoFactor, setTwoFactor] = useState(profile.twoFactorEnabled);
+
+  if (!canManageLibrary) {
+    return (
+      <div className="p-6 rounded-2xl bg-white border border-rose-200 text-center space-y-3">
+        <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center mx-auto">
+          <Lock className="w-6 h-6" />
+        </div>
+        <h2 className="text-base font-black text-blue-950">Accès Refusé — Administration Bibliothèque</h2>
+        <p className="text-xs text-slate-600 max-w-md mx-auto">
+          Seul l'<strong>Admin de la Bibliothèque de l'école</strong> connecté avec son compte bibliothécaire peut accéder aux paramètres de sécurité, au code PIN et au journal d'audit.
+        </p>
+      </div>
+    );
+  }
 
   const handleUpdatePin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +45,6 @@ export const LibrarianSecurityView: React.FC = () => {
       return;
     }
     updateProfile({ pinCode: newPin });
-    setCurrentPin('');
     setNewPin('');
     setConfirmPin('');
     showToast('Code PIN de sécurité mis à jour.');
@@ -48,9 +61,9 @@ export const LibrarianSecurityView: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl md:text-2xl font-black text-blue-950">Sécurité & Habilitations Bibliothécaire</h1>
+        <h1 className="text-xl md:text-2xl font-black text-blue-950">Sécurité, Habilitations &amp; Audit Bibliothèque</h1>
         <p className="text-xs text-slate-500 mt-0.5">
-          Gestion du code PIN 6 chiffres, authentification double facteur et strict respect du périmètre documentaire.
+          Gestion du code PIN 6 chiffres, authentification double facteur et journal complet des connexions et modifications.
         </p>
       </div>
 
@@ -62,7 +75,7 @@ export const LibrarianSecurityView: React.FC = () => {
             <h2 className="text-sm font-bold text-blue-950">Code PIN Rapide (6 chiffres)</h2>
           </div>
           <p className="text-xs text-slate-500">
-            Utilisé pour valider instantanément les opérations sensibles (clôture d'emprunt litigieux, déclaration de perte, radiation d'ouvrage).
+            Utilisé par l'Admin de la Bibliothèque pour valider les opérations sensibles (clôture d'emprunt litigieux, déclaration de perte, radiation d'ouvrage).
           </p>
 
           <form onSubmit={handleUpdatePin} className="space-y-3">
@@ -131,58 +144,95 @@ export const LibrarianSecurityView: React.FC = () => {
           </div>
         </div>
 
-        {/* Strict Functional Prohibitions (CE QUE LE BIBLIOTHÉCAIRE NE PEUT PAS FAIRE) */}
+        {/* Strict Functional Prohibitions */}
         <div className="p-6 rounded-2xl bg-white border border-blue-100 space-y-4">
           <div className="flex items-center gap-2 text-rose-600">
             <AlertOctagon className="w-4 h-4" />
-            <h2 className="text-sm font-bold text-blue-950">Séparation des Pouvoirs & Règles ERP</h2>
+            <h2 className="text-sm font-bold text-blue-950">Séparation des Pouvoirs &amp; Règles Bibliothèque</h2>
           </div>
 
           <p className="text-xs text-slate-500 leading-relaxed">
-            Pour garantir l'intégrité pédagogique et financière de l'établissement, le compte Bibliothécaire applique une politique d'isolation stricte (Role-Based Access Control) :
+            La bibliothèque applique un cloisonnement strict : chaque visiteur se connecte avec son compte personnel, et <strong>seul l'Admin de la Bibliothèque de l'école</strong> peut modifier le fonds documentaire.
           </p>
 
           <div className="space-y-3">
-            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-3">
-              <ShieldX className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-              <div>
-                <div className="text-xs font-bold text-rose-700">Interdiction de Gérer les Notes</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">
-                  Aucun accès en écriture aux devoirs, interrogations, coefficients ou relevés de notes des élèves.
-                </div>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-3">
-              <ShieldX className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-              <div>
-                <div className="text-xs font-bold text-rose-700">Interdiction d'Encaisser les Paiements</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">
-                  Les frais de scolarité et salaires relèvent exclusivement du Chef Comptable. Seules les amendes de perte d'ouvrages sont tracées dans le registre de prêt.
-                </div>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-3">
-              <ShieldX className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-              <div>
-                <div className="text-xs font-bold text-rose-700">Interdiction de Modifier les Bulletins</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">
-                  La délivrance et validation des bulletins officiels et attestations dépendent uniquement du Directeur des Études et de l'Admin École.
-                </div>
-              </div>
-            </div>
-
             <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-3">
               <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
               <div>
-                <div className="text-xs font-bold text-emerald-700">Pouvoirs Concédés au Bibliothécaire</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">
-                  Gestion intégrale du fonds physique, téléversement de ressources numériques, attribution des QR Codes et enregistrement des emprunts/retours.
+                <div className="text-xs font-bold text-emerald-700">Exclusivité de Modification (Admin Biblio)</div>
+                <div className="text-[11px] text-slate-600 mt-0.5">
+                  Aucun élève, enseignant, parent, directeur, comptable, admin école ou super admin ne peut modifier, ajouter ou supprimer un livre ou prêt.
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-3">
+              <ShieldX className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <div className="text-xs font-bold text-rose-700">Interdiction de Gérer les Notes &amp; Finances</div>
+                <div className="text-[11px] text-slate-600 mt-0.5">
+                  Aucun accès aux relevés de notes, bulletins ni aux caisses de scolarité.
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Library Access & Modifications Audit Table */}
+      <div className="rounded-2xl bg-white border border-blue-100 overflow-hidden">
+        <div className="p-5 border-b border-blue-100 flex items-center gap-2">
+          <History className="w-5 h-5 text-indigo-600" />
+          <div>
+            <h3 className="text-sm font-bold text-blue-950">Journal des Connexions &amp; Modifications Bibliothèque</h3>
+            <p className="text-xs text-slate-500">Historique des comptes connectés, modifications autorisées et tentatives bloquées.</p>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left">
+            <thead className="bg-blue-50/60 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200">
+              <tr>
+                <th className="py-2.5 px-4">Date &amp; Heure</th>
+                <th className="py-2.5 px-3">Compte Utilisateur</th>
+                <th className="py-2.5 px-3">Rôle</th>
+                <th className="py-2.5 px-3">Action</th>
+                <th className="py-2.5 px-4 text-right">Décision</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-blue-100">
+              {libraryAuditLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-6 text-center text-xs text-slate-500">
+                    Aucune activité récente enregistrée dans cette session.
+                  </td>
+                </tr>
+              ) : (
+                libraryAuditLogs.map(log => (
+                  <tr key={log.id} className="hover:bg-blue-50">
+                    <td className="py-2.5 px-4 font-mono text-[11px] text-slate-500">{log.timestamp}</td>
+                    <td className="py-2.5 px-3 font-semibold text-blue-950">
+                      {log.userName} <span className="text-[10px] font-mono text-slate-500">({log.userMatricule})</span>
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-600 font-mono text-[11px]">{log.userRole}</td>
+                    <td className="py-2.5 px-3 text-slate-800">{log.action}</td>
+                    <td className="py-2.5 px-4 text-right">
+                      {log.status === 'autorise' ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Autorisé</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                          <AlertCircle className="w-3 h-3" />
+                          <span>Bloqué</span>
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

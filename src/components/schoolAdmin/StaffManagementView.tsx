@@ -33,7 +33,9 @@ export const StaffManagementView: React.FC = () => {
     sendStaffCredentials, 
     selectedStaffForBadge, 
     setSelectedStaffForBadge,
-    currentSchool 
+    currentSchool,
+    classes,
+    subjects
   } = useSchoolAdmin();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -228,10 +230,43 @@ export const StaffManagementView: React.FC = () => {
                       </div>
                     </td>
 
-                    {/* Role & Department */}
+                    {/* Role, Department & Teacher Assignments */}
                     <td className="py-3 px-4">
                       <span className="font-semibold text-slate-900">{member.role}</span>
                       <div className="text-[11px] text-slate-500 mt-0.5">{member.department}</div>
+                      {member.role === 'Enseignant' && (
+                        <div className="mt-1.5 space-y-1">
+                          <div className="flex flex-wrap gap-1">
+                            {(member.assignedSubjects || []).length > 0 ? (
+                              (member.assignedSubjects || []).map(subId => {
+                                const sub = subjects.find(su => su.id === subId);
+                                return sub ? (
+                                  <span key={subId} className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-semibold">
+                                    {sub.name}
+                                  </span>
+                                ) : null;
+                              })
+                            ) : (
+                              <span className="text-[10px] text-slate-400 italic">Aucune matière affectée</span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {(member.assignedClasses || []).length > 0 ? (
+                              (member.assignedClasses || []).map(clsId => {
+                                const cls = classes.find(c => c.id === clsId);
+                                const isPrincipal = cls?.principalTeacherId === member.id;
+                                return cls ? (
+                                  <span key={clsId} className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-medium">
+                                    {cls.name}{isPrincipal ? ' ★ PP' : ''}
+                                  </span>
+                                ) : null;
+                              })
+                            ) : (
+                              <span className="text-[10px] text-slate-400 italic">Aucune classe affectée</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </td>
 
                     {/* Automated Username & Temporary Password */}
