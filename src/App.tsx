@@ -37,6 +37,7 @@ import { AuthPortal, AuthenticatedUser } from './components/auth/AuthPortal';
 import { RoleSwitchAuthModal } from './components/auth/RoleSwitchAuthModal';
 import { SuperAdminUsersView } from './components/users/SuperAdminUsersView';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
+import { PWAUpdateBanner } from './components/common/PWAUpdateBanner';
 import { CheckCircle2, ShieldCheck, ArrowRight, Building2 } from 'lucide-react';
 
 export type WorkspaceMode = 
@@ -420,6 +421,7 @@ const MainLayout: React.FC = () => {
     <>
       {renderCurrentWorkspace()}
       <OfflineIndicator />
+      <PWAUpdateBanner />
       {pendingRoleSwitch && (
         <RoleSwitchAuthModal
           targetRole={pendingRoleSwitch.role}

@@ -1,9 +1,9 @@
 import { createRoot } from 'react-dom/client';
-import { registerSW } from 'virtual:pwa-register';
 import App from './App.tsx';
 import './index.css';
+import { initPWAUpdates } from './utils/pwaUpdates';
 
-// Register PWA Service Worker for Android, iOS, Desktop installation & offline caching
-registerSW({ immediate: true });
+// Register PWA Service Worker with automatic background update checks (Android, iOS, Desktop)
+initPWAUpdates();
 
 createRoot(document.getElementById('root')!).render(<App />);
