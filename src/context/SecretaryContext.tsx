@@ -22,6 +22,7 @@ import {
   initialSecretarySecurityLogs 
 } from '../data/secretaryMockData';
 import { useSchoolAdmin } from './SchoolAdminContext';
+import { usePersistedState } from '../utils/storage';
 
 interface SecretaryContextType {
   activeSecretaryTab: SecretaryNavTab;
@@ -143,34 +144,19 @@ const SecretaryContext = createContext<SecretaryContextType | undefined>(undefin
 export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentSchool } = useSchoolAdmin();
   const [activeSecretaryTab, setActiveSecretaryTab] = useState<SecretaryNavTab>('dashboard');
-  const [profile, setProfile] = useState<SecretaryProfile>(initialSecretaryProfile);
-  const [students, setStudents] = useState<StudentEnrollment[]>(initialStudents);
-  const [parents, setParents] = useState<ParentRecord[]>(initialParents);
-  const [certificates, setCertificates] = useState<DeliveredCertificate[]>(initialCertificates);
-  const [transfers, setTransfers] = useState<SchoolTransfer[]>(initialTransfers);
-  const [appointments, setAppointments] = useState<SecretaryAppointment[]>(initialAppointments);
-  const [messages, setMessages] = useState<SecretaryMessage[]>(() => {
-    try {
-      const raw = localStorage.getItem('smartschool_secretary_messages_v1');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {
-      // ignore storage errors
-    }
-    return initialSecretaryMessages;
-  });
-  const [securityLogs, setSecurityLogs] = useState<SecretarySecurityLog[]>(initialSecretarySecurityLogs);
+  const [profile, setProfile] = usePersistedState<SecretaryProfile>('smartschool_secretary_profile_v1', initialSecretaryProfile);
+  const [students, setStudents] = usePersistedState<StudentEnrollment[]>('smartschool_secretary_students_v1', initialStudents);
+  const [parents, setParents] = usePersistedState<ParentRecord[]>('smartschool_secretary_parents_v1', initialParents);
+  const [certificates, setCertificates] = usePersistedState<DeliveredCertificate[]>('smartschool_secretary_certificates_v1', initialCertificates);
+  const [transfers, setTransfers] = usePersistedState<SchoolTransfer[]>('smartschool_secretary_transfers_v1', initialTransfers);
+  const [appointments, setAppointments] = usePersistedState<SecretaryAppointment[]>('smartschool_secretary_appointments_v1', initialAppointments);
+  const [messages, setMessages] = usePersistedState<SecretaryMessage[]>(
+    'smartschool_secretary_messages_v1',
+    initialSecretaryMessages,
+    loaded => (Array.isArray(loaded) && loaded.length > 0 ? loaded : initialSecretaryMessages)
+  );
+  const [securityLogs, setSecurityLogs] = usePersistedState<SecretarySecurityLog[]>('smartschool_secretary_logs_v1', initialSecretarySecurityLogs);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('smartschool_secretary_messages_v1', JSON.stringify(messages));
-    } catch {
-      // ignore storage errors
-    }
-  }, [messages]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

@@ -27,6 +27,7 @@ import {
   initialDirectorAuditLogs
 } from '../data/directorMockData';
 import { generateTotpSecret, verifyTotpCode } from '../utils/totp';
+import { saveDualStorage, subscribeStorageKey, usePersistedState } from '../utils/storage';
 
 interface PinPromptRequest {
   title: string;
@@ -159,42 +160,54 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [initialSecurity] = useState<DirectorSecurityStorage>(() => loadStoredSecurity());
 
   const [activeDirectorTab, setActiveDirectorTab] = useState<DirectorNavTab>('dashboard');
-  const [profile, setProfile] = useState<DirectorProfile>({
-    ...initialDirectorProfile,
-    twoFactorMethod: initialSecurity.twoFactorMethod
-  });
-  const [reportCards, setReportCards] = useState<StudentReportCard[]>(initialReportCards);
-  const [exams, setExams] = useState<DirectorExam[]>(initialExams);
-  const [teacherProfiles, setTeacherProfiles] = useState<TeacherPedagogicalProfile[]>(initialTeacherProfiles);
+  const [profile, setProfile] = usePersistedState<DirectorProfile>(
+    'smartschool_director_profile_v1',
+    {
+      ...initialDirectorProfile,
+      twoFactorMethod: initialSecurity.twoFactorMethod
+    },
+    loaded => ({
+      ...initialDirectorProfile,
+      ...loaded,
+      twoFactorMethod: initialSecurity.twoFactorMethod
+    })
+  );
+  const [reportCards, setReportCards] = usePersistedState<StudentReportCard[]>(
+    'smartschool_director_report_cards_v1',
+    initialReportCards
+  );
+  const [exams, setExams] = usePersistedState<DirectorExam[]>(
+    'smartschool_director_exams_v1',
+    initialExams
+  );
+  const [teacherProfiles, setTeacherProfiles] = usePersistedState<TeacherPedagogicalProfile[]>(
+    'smartschool_director_teachers_v1',
+    initialTeacherProfiles
+  );
   const [studentRecords] = useState<StudentMonitoringRecord[]>(initialStudentMonitoring);
-  const [disciplineIncidents, setDisciplineIncidents] = useState<DisciplinaryIncident[]>(initialDisciplineIncidents);
-  const [announcements, setAnnouncements] = useState<DirectorAnnouncement[]>(() => {
-    try {
-      const raw = localStorage.getItem('smartschool_director_announcements_v1');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {
-      // ignore storage errors
-    }
-    return initialDirectorAnnouncements;
-  });
-  const [newsItems, setNewsItems] = useState<DirectorNewsItem[]>(() => {
-    try {
-      const raw = localStorage.getItem('smartschool_director_news_v1');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {
-      // ignore storage errors
-    }
-    return initialDirectorNews;
-  });
-  const [calendarEvents, setCalendarEvents] = useState<DirectorCalendarEvent[]>(initialCalendarEvents);
+  const [disciplineIncidents, setDisciplineIncidents] = usePersistedState<DisciplinaryIncident[]>(
+    'smartschool_director_discipline_v1',
+    initialDisciplineIncidents
+  );
+  const [announcements, setAnnouncements] = usePersistedState<DirectorAnnouncement[]>(
+    'smartschool_director_announcements_v1',
+    initialDirectorAnnouncements,
+    loaded => (Array.isArray(loaded) && loaded.length > 0 ? loaded : initialDirectorAnnouncements)
+  );
+  const [newsItems, setNewsItems] = usePersistedState<DirectorNewsItem[]>(
+    'smartschool_director_news_v1',
+    initialDirectorNews,
+    loaded => (Array.isArray(loaded) && loaded.length > 0 ? loaded : initialDirectorNews)
+  );
+  const [calendarEvents, setCalendarEvents] = usePersistedState<DirectorCalendarEvent[]>(
+    'smartschool_director_calendar_v1',
+    initialCalendarEvents
+  );
   const [financialOverview] = useState<DirectorFinancialSummary>(initialFinancialOverview);
-  const [auditLogs, setAuditLogs] = useState<DirectorAuditLog[]>(initialDirectorAuditLogs);
+  const [auditLogs, setAuditLogs] = usePersistedState<DirectorAuditLog[]>(
+    'smartschool_director_audit_logs_v1',
+    initialDirectorAuditLogs
+  );
 
   const [directorPin, setDirectorPin] = useState<string>(initialSecurity.directorPin);
   const [totpSecret, setTotpSecret] = useState<string>(initialSecurity.totpSecret);
@@ -205,34 +218,35 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [currentPinPrompt, setCurrentPinPrompt] = useState<PinPromptRequest | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const mountedSecRef = React.useRef(false);
+  const remoteSecUpdateRef = React.useRef(false);
+
   useEffect(() => {
-    try {
-      const payload: DirectorSecurityStorage = {
-        directorPin,
-        totpSecret,
-        twoFactorMethod: profile.twoFactorMethod
-      };
-      localStorage.setItem(DIRECTOR_SECURITY_STORAGE_KEY, JSON.stringify(payload));
-    } catch {
-      // ignore storage errors
+    return subscribeStorageKey(DIRECTOR_SECURITY_STORAGE_KEY, (data, _ts, src) => {
+      if (src !== 'remote' || !data || typeof data !== 'object') return;
+      const incoming = data as Partial<DirectorSecurityStorage>;
+      remoteSecUpdateRef.current = true;
+      if (typeof incoming.directorPin === 'string') setDirectorPin(incoming.directorPin);
+      if (typeof incoming.totpSecret === 'string') setTotpSecret(incoming.totpSecret);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!mountedSecRef.current) {
+      mountedSecRef.current = true;
+      return;
     }
+    if (remoteSecUpdateRef.current) {
+      remoteSecUpdateRef.current = false;
+      return;
+    }
+    const payload: DirectorSecurityStorage = {
+      directorPin,
+      totpSecret,
+      twoFactorMethod: profile.twoFactorMethod
+    };
+    saveDualStorage(DIRECTOR_SECURITY_STORAGE_KEY, payload, Date.now(), 'local');
   }, [directorPin, totpSecret, profile.twoFactorMethod]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('smartschool_director_announcements_v1', JSON.stringify(announcements));
-    } catch {
-      // ignore storage errors
-    }
-  }, [announcements]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('smartschool_director_news_v1', JSON.stringify(newsItems));
-    } catch {
-      // ignore storage quota errors on large local PDF data URLs
-    }
-  }, [newsItems]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

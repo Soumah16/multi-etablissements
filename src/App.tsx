@@ -38,6 +38,9 @@ import { RoleSwitchAuthModal } from './components/auth/RoleSwitchAuthModal';
 import { SuperAdminUsersView } from './components/users/SuperAdminUsersView';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { PWAUpdateBanner } from './components/common/PWAUpdateBanner';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { FirebaseProvider } from './context/FirebaseContext';
+import { CloudSyncButton, CloudSyncModal } from './components/common/CloudSyncModal';
 import { CheckCircle2, ShieldCheck, ArrowRight, Building2 } from 'lucide-react';
 
 export type WorkspaceMode = 
@@ -61,10 +64,12 @@ const MainLayout: React.FC = () => {
     logoutFromLibrary
   } = useLibrarian();
 
-  // Authentication gate state
+  // Authentication gate state (persisted in localStorage so mobile/PWA sessions survive tab suspension)
   const [currentUser, setCurrentUser] = useState<AuthenticatedUser | null>(() => {
     try {
-      const saved = sessionStorage.getItem('smartschool_current_user');
+      const saved =
+        localStorage.getItem('smartschool_current_user') ||
+        sessionStorage.getItem('smartschool_current_user');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -72,9 +77,23 @@ const MainLayout: React.FC = () => {
   });
 
   // Mode switcher across all workspaces
-  const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>(() => {
+  const [workspaceMode, setWorkspaceModeState] = useState<WorkspaceMode>(() => {
+    try {
+      const savedMode = localStorage.getItem('smartschool_workspace_mode') as WorkspaceMode | null;
+      if (savedMode) return savedMode;
+    } catch {
+      // ignore
+    }
     return currentUser?.role || 'super_admin';
   });
+  const setWorkspaceMode = (mode: WorkspaceMode) => {
+    setWorkspaceModeState(mode);
+    try {
+      localStorage.setItem('smartschool_workspace_mode', mode);
+    } catch {
+      // ignore
+    }
+  };
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Security gate: Pending role switch requiring authentication
@@ -96,13 +115,13 @@ const MainLayout: React.FC = () => {
       logoutFromLibrary();
     }
     try {
-      sessionStorage.setItem('smartschool_current_user', JSON.stringify(user));
+      localStorage.setItem('smartschool_current_user', JSON.stringify(user));
     } catch {
       // ignore
     }
   };
 
-  // Keep school synchronized with logged-in user and selected school
+  // Keep school & librarian session synchronized with logged-in user
   React.useEffect(() => {
     if (currentUser?.ecoleId && currentUser.ecoleId !== 'NATIONAL') {
       setCurrentSchoolId(currentUser.ecoleId);
@@ -110,13 +129,18 @@ const MainLayout: React.FC = () => {
     } else if (currentSchool?.id) {
       setActiveSchoolId(currentSchool.id);
     }
-  }, [currentUser?.ecoleId, currentSchool?.id, setCurrentSchoolId, setActiveSchoolId]);
+    if (currentUser?.role === 'librarian') {
+      authorizeLibrarianSession(currentUser);
+    }
+  }, [currentUser?.ecoleId, currentUser?.role, currentSchool?.id, setCurrentSchoolId, setActiveSchoolId]);
 
   const handleLogout = () => {
     logoutFromLibrary();
     setCurrentUser(null);
     setPendingRoleSwitch(null);
     try {
+      localStorage.removeItem('smartschool_current_user');
+      localStorage.removeItem('smartschool_workspace_mode');
       sessionStorage.removeItem('smartschool_current_user');
     } catch {
       // ignore
@@ -157,7 +181,7 @@ const MainLayout: React.FC = () => {
       logoutFromLibrary();
     }
     try {
-      sessionStorage.setItem('smartschool_current_user', JSON.stringify(newUser));
+      localStorage.setItem('smartschool_current_user', JSON.stringify(newUser));
     } catch {
       // ignore
     }
@@ -168,7 +192,14 @@ const MainLayout: React.FC = () => {
   };
 
   if (!currentUser) {
-    return <AuthPortal onLogin={handleLogin} />;
+    return (
+      <>
+        <AuthPortal onLogin={handleLogin} />
+        <OfflineIndicator />
+        <PWAUpdateBanner />
+        <CloudSyncModal />
+      </>
+    );
   }
 
   const handleSwitchToSuperAdmin = () => requestRoleSwitch('super_admin');
@@ -422,6 +453,12 @@ const MainLayout: React.FC = () => {
       {renderCurrentWorkspace()}
       <OfflineIndicator />
       <PWAUpdateBanner />
+      {workspaceMode !== 'super_admin' && (
+        <div className="fixed bottom-4 right-4 z-40 shadow-lg rounded-xl">
+          <CloudSyncButton compact />
+        </div>
+      )}
+      <CloudSyncModal />
       {pendingRoleSwitch && (
         <RoleSwitchAuthModal
           targetRole={pendingRoleSwitch.role}
@@ -441,26 +478,30 @@ const MainLayout: React.FC = () => {
 
 export default function App() {
   return (
-    <AppProvider>
-      <SchoolAdminProvider>
-        <DirectorProvider>
-          <SecretaryProvider>
-            <TeacherProvider>
-              <AccountantProvider>
-                <SupervisorProvider>
-                  <LibrarianProvider>
-                    <ParentProvider>
-                      <StudentProvider>
-                        <MainLayout />
-                      </StudentProvider>
-                    </ParentProvider>
-                  </LibrarianProvider>
-                </SupervisorProvider>
-              </AccountantProvider>
-            </TeacherProvider>
-          </SecretaryProvider>
-        </DirectorProvider>
-      </SchoolAdminProvider>
-    </AppProvider>
+    <ErrorBoundary>
+      <FirebaseProvider>
+        <AppProvider>
+          <SchoolAdminProvider>
+            <DirectorProvider>
+              <SecretaryProvider>
+                <TeacherProvider>
+                  <AccountantProvider>
+                    <SupervisorProvider>
+                      <LibrarianProvider>
+                        <ParentProvider>
+                          <StudentProvider>
+                            <MainLayout />
+                          </StudentProvider>
+                        </ParentProvider>
+                      </LibrarianProvider>
+                    </SupervisorProvider>
+                  </AccountantProvider>
+                </TeacherProvider>
+              </SecretaryProvider>
+            </DirectorProvider>
+          </SchoolAdminProvider>
+        </AppProvider>
+      </FirebaseProvider>
+    </ErrorBoundary>
   );
 }

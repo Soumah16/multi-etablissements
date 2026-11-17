@@ -33,6 +33,7 @@ import {
   initialTeacherSchedule, 
   initialTeacherMessages 
 } from '../data/teacherMockData';
+import { usePersistedState } from '../utils/storage';
 
 interface TeacherContextType {
   activeTeacherTab: TeacherNavTab;
@@ -117,19 +118,19 @@ const TeacherContext = createContext<TeacherContextType | undefined>(undefined);
 
 export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTeacherTab, setActiveTeacherTab] = useState<TeacherNavTab>('dashboard');
-  const [profile, setProfile] = useState<TeacherProfile>(initialTeacherProfile);
+  const [profile, setProfile] = usePersistedState<TeacherProfile>('smartschool_teacher_profile_v1', initialTeacherProfile);
   const [classes] = useState<AssignedClass[]>(initialTeacherClasses);
-  const [selectedClassId, setSelectedClassId] = useState<string>('cls-tsm');
+  const [selectedClassId, setSelectedClassId] = usePersistedState<string>('smartschool_teacher_selected_class_v1', 'cls-tsm');
   const [subjects] = useState<TeacherSubject[]>(initialTeacherSubjects);
   const [rawStudents] = useState<TeacherStudentRosterItem[]>(initialTeacherStudents);
-  const [rawCourses, setCourses] = useState<CourseModuleItem[]>(initialCourses);
-  const [libraryResources, setLibraryResources] = useState<PedagogicalResource[]>(initialLibraryResources);
-  const [rawEvaluations, setEvaluations] = useState<EvaluationSession[]>(initialEvaluations);
-  const [rawLogbookEntries, setLogbookEntries] = useState<LogbookEntry[]>(initialLogbookEntries);
-  const [attendanceByClass, setAttendanceByClass] = useState<Record<string, AttendanceSession>>(initialAttendanceSessions);
-  const [rawHomeworkList, setHomeworkList] = useState<HomeworkItem[]>(initialHomeworkList);
-  const [rawStudentProfiles, setStudentProfiles] = useState<StudentPedagogicalProfile[]>(initialStudentProfiles);
-  const [calendarEvents, setCalendarEvents] = useState<SchoolCalendarEvent[]>(initialSchoolCalendarEvents);
+  const [rawCourses, setCourses] = usePersistedState<CourseModuleItem[]>('smartschool_teacher_courses_v1', initialCourses);
+  const [libraryResources, setLibraryResources] = usePersistedState<PedagogicalResource[]>('smartschool_teacher_resources_v1', initialLibraryResources);
+  const [rawEvaluations, setEvaluations] = usePersistedState<EvaluationSession[]>('smartschool_teacher_evaluations_v1', initialEvaluations);
+  const [rawLogbookEntries, setLogbookEntries] = usePersistedState<LogbookEntry[]>('smartschool_teacher_logbook_v1', initialLogbookEntries);
+  const [attendanceByClass, setAttendanceByClass] = usePersistedState<Record<string, AttendanceSession>>('smartschool_teacher_attendance_v1', initialAttendanceSessions);
+  const [rawHomeworkList, setHomeworkList] = usePersistedState<HomeworkItem[]>('smartschool_teacher_homework_v1', initialHomeworkList);
+  const [rawStudentProfiles, setStudentProfiles] = usePersistedState<StudentPedagogicalProfile[]>('smartschool_teacher_student_profiles_v1', initialStudentProfiles);
+  const [calendarEvents, setCalendarEvents] = usePersistedState<SchoolCalendarEvent[]>('smartschool_teacher_calendar_v1', initialSchoolCalendarEvents);
   const [rawSchedule] = useState<ScheduleSlot[]>(initialTeacherSchedule);
 
   // Strict Teacher Scoping: only assigned classes, assigned subjects, and enrolled students in those classes
@@ -150,27 +151,12 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const activeAttendanceClassId = allowedClassIds.has(selectedClassId) ? selectedClassId : (classes[0]?.id || 'cls-tsm');
   const attendanceSession = attendanceByClass[activeAttendanceClassId] || Object.values(attendanceByClass)[0];
-  const [messages, setMessages] = useState<TeacherMessage[]>(() => {
-    try {
-      const raw = localStorage.getItem('smartschool_teacher_messages_v1');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {
-      // ignore storage errors
-    }
-    return initialTeacherMessages;
-  });
+  const [messages, setMessages] = usePersistedState<TeacherMessage[]>(
+    'smartschool_teacher_messages_v1',
+    initialTeacherMessages,
+    loaded => (Array.isArray(loaded) && loaded.length > 0 ? loaded : initialTeacherMessages)
+  );
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('smartschool_teacher_messages_v1', JSON.stringify(messages));
-    } catch {
-      // ignore storage errors
-    }
-  }, [messages]);
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);

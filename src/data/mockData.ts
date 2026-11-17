@@ -53,7 +53,7 @@ export const initialSubscriptionPlans: SubscriptionPlan[] = [
       'Stockage 5 Go documents',
       'Sauvegarde mensuelle standard'
     ],
-    activeSchoolsCount: 3
+    activeSchoolsCount: 0
   },
   {
     id: 'standard',
@@ -74,7 +74,7 @@ export const initialSubscriptionPlans: SubscriptionPlan[] = [
       'Générateur de cartes scolaires avec QR Code',
       'Stockage 50 Go cloud dédié'
     ],
-    activeSchoolsCount: 7
+    activeSchoolsCount: 0
   },
   {
     id: 'premium',
@@ -95,7 +95,7 @@ export const initialSubscriptionPlans: SubscriptionPlan[] = [
       'Pointage biométrique et scan QR badges',
       'Stockage 250 Go haute vitesse'
     ],
-    activeSchoolsCount: 5
+    activeSchoolsCount: 1
   },
   {
     id: 'entreprise',
@@ -116,7 +116,7 @@ export const initialSubscriptionPlans: SubscriptionPlan[] = [
       'Stockage 1 To extensible',
       'Hébergement dédié avec isolation physique'
     ],
-    activeSchoolsCount: 2
+    activeSchoolsCount: 0
   }
 ];
 
@@ -153,204 +153,6 @@ export const initialSchools: School[] = [
       monthlyRevenueGnf: 4500000,
       activityScore: 96
     }
-  },
-  {
-    id: 'sch-gn-kk-002',
-    code: 'UKAN-NAB',
-    name: "Université Julius Nyerere de Kankan",
-    type: 'Université',
-    logo: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=150&auto=format&fit=crop&q=80',
-    banner: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&auto=format&fit=crop&q=80',
-    address: "Quartier Université, Route Nationale 1",
-    city: "Kankan",
-    prefecture: "Kankan",
-    country: "Guinée",
-    phone: "+224 624 88 12 30",
-    whatsappNumber: "+224 624 88 12 30",
-    email: "rectorat@ujnk-kankan.edu.gn",
-    website: "https://ujnk-kankan.edu.gn",
-    currency: "GNF",
-    primaryLanguage: "fr",
-    createdAt: "2024-10-15",
-    subscriptionTier: "entreprise",
-    subscriptionExpiresAt: "2027-10-15",
-    status: "active",
-    adminId: "adm-002",
-    stats: {
-      studentsCount: 6420,
-      parentsCount: 4100,
-      teachersCount: 320,
-      employeesCount: 95,
-      classesCount: 140,
-      storageUsedMb: 420000,
-      monthlyRevenueGnf: 12000000,
-      activityScore: 92
-    }
-  },
-  {
-    id: 'sch-gn-kd-003',
-    code: 'CSK-KND',
-    name: "Complexe Scolaire Sainte-Marie de Kindia",
-    type: 'Collège',
-    logo: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=150&auto=format&fit=crop&q=80',
-    banner: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800&auto=format&fit=crop&q=80',
-    address: "Avenue Kolié, Quartier Tafory",
-    city: "Kindia",
-    prefecture: "Kindia",
-    country: "Guinée",
-    phone: "+224 628 45 67 89",
-    whatsappNumber: "+224 628 45 67 89",
-    email: "direction@stemarie-kindia.gn",
-    website: "https://stemarie-kindia.gn",
-    currency: "GNF",
-    primaryLanguage: "fr",
-    createdAt: "2025-01-10",
-    subscriptionTier: "standard",
-    subscriptionExpiresAt: "2027-01-10",
-    status: "active",
-    adminId: "adm-003",
-    stats: {
-      studentsCount: 650,
-      parentsCount: 580,
-      teachersCount: 42,
-      employeesCount: 18,
-      classesCount: 18,
-      storageUsedMb: 18200,
-      monthlyRevenueGnf: 1500000,
-      activityScore: 84
-    }
-  },
-  {
-    id: 'sch-gn-lb-004',
-    code: 'IPC-LBE',
-    name: "Institut Polytechnique du Fouta de Labé",
-    type: 'Institut professionnel',
-    logo: 'https://images.unsplash.com/photo-1562774053-701939374585?w=150&auto=format&fit=crop&q=80',
-    banner: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&auto=format&fit=crop&q=80',
-    address: "Quartier Daka, En face du stade régional",
-    city: "Labé",
-    prefecture: "Labé",
-    country: "Guinée",
-    phone: "+224 620 12 34 56",
-    whatsappNumber: "+224 620 12 34 56",
-    email: "admissions@ipf-labe.edu.gn",
-    website: "https://ipf-labe.edu.gn",
-    currency: "GNF",
-    primaryLanguage: "fr",
-    createdAt: "2025-02-18",
-    subscriptionTier: "standard",
-    subscriptionExpiresAt: "2027-02-18",
-    status: "active",
-    adminId: "adm-004",
-    stats: {
-      studentsCount: 480,
-      parentsCount: 310,
-      teachersCount: 38,
-      employeesCount: 14,
-      classesCount: 14,
-      storageUsedMb: 24500,
-      monthlyRevenueGnf: 1500000,
-      activityScore: 78
-    }
-  },
-  {
-    id: 'sch-gn-ck-005',
-    code: 'EPB-MAT',
-    name: "École Primaire Bilingue Franco-Arabe de Matam",
-    type: 'Primaire',
-    logo: 'https://images.unsplash.com/photo-1588072432836-e10032774350?w=150&auto=format&fit=crop&q=80',
-    banner: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&auto=format&fit=crop&q=80',
-    address: "Carrefour Constantin, Matam Centre",
-    city: "Conakry",
-    prefecture: "Matam",
-    country: "Guinée",
-    phone: "+224 622 77 99 00",
-    whatsappNumber: "+224 622 77 99 00",
-    email: "direction@bilingue-matam.gn",
-    website: "https://bilingue-matam.gn",
-    currency: "GNF",
-    primaryLanguage: "ar",
-    createdAt: "2025-03-05",
-    subscriptionTier: "standard",
-    subscriptionExpiresAt: "2026-12-31",
-    status: "active",
-    adminId: "adm-005",
-    stats: {
-      studentsCount: 420,
-      parentsCount: 390,
-      teachersCount: 26,
-      employeesCount: 10,
-      classesCount: 12,
-      storageUsedMb: 11200,
-      monthlyRevenueGnf: 1500000,
-      activityScore: 88
-    }
-  },
-  {
-    id: 'sch-gn-nz-006',
-    code: 'CFP-NZR',
-    name: "Centre de Formation Professionnelle en Forêt",
-    type: 'Centre de formation',
-    logo: 'https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=150&auto=format&fit=crop&q=80',
-    banner: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80',
-    address: "Quartier Mohomou, Sortie Beyla",
-    city: "Nzérékoré",
-    prefecture: "Nzérékoré",
-    country: "Guinée",
-    phone: "+224 625 33 44 55",
-    whatsappNumber: "+224 625 33 44 55",
-    email: "contact@cfp-foret.gn",
-    website: "https://cfp-foret.gn",
-    currency: "GNF",
-    primaryLanguage: "fr",
-    createdAt: "2025-05-12",
-    subscriptionTier: "gratuit",
-    subscriptionExpiresAt: "2026-11-12",
-    status: "suspended",
-    adminId: "adm-006",
-    stats: {
-      studentsCount: 140,
-      parentsCount: 90,
-      teachersCount: 12,
-      employeesCount: 5,
-      classesCount: 6,
-      storageUsedMb: 3400,
-      monthlyRevenueGnf: 0,
-      activityScore: 22
-    }
-  },
-  {
-    id: 'sch-gn-ck-007',
-    code: 'LMA-RTN',
-    name: "Lycée Moderne de Ratoma",
-    type: 'Lycée',
-    logo: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
-    banner: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop&q=80',
-    address: "Carrefour Kipé, Ratoma",
-    city: "Conakry",
-    prefecture: "Ratoma",
-    country: "Guinée",
-    phone: "+224 627 66 11 00",
-    whatsappNumber: "+224 627 66 11 00",
-    email: "administration@lycee-ratoma.edu.gn",
-    website: "https://lycee-ratoma.edu.gn",
-    currency: "GNF",
-    primaryLanguage: "fr",
-    createdAt: "2024-08-20",
-    subscriptionTier: "premium",
-    subscriptionExpiresAt: "2027-08-20",
-    status: "active",
-    adminId: "adm-007",
-    stats: {
-      studentsCount: 2150,
-      parentsCount: 1940,
-      teachersCount: 128,
-      employeesCount: 40,
-      classesCount: 48,
-      storageUsedMb: 84000,
-      monthlyRevenueGnf: 4500000,
-      activityScore: 94
-    }
   }
 ];
 
@@ -367,102 +169,10 @@ export const initialAdmins: SchoolAdmin[] = [
     status: "active",
     createdAt: "2024-09-02",
     lastLogin: "Il y a 14 minutes"
-  },
-  {
-    id: 'adm-002',
-    schoolId: 'sch-gn-kk-002',
-    schoolName: "Université Julius Nyerere de Kankan",
-    firstName: "Pr. Sekou",
-    lastName: "Condé",
-    email: "s.conde@ujnk-kankan.edu.gn",
-    phone: "+224 624 55 66 77",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
-    status: "active",
-    createdAt: "2024-10-16",
-    lastLogin: "Aujourd'hui à 06:12"
-  },
-  {
-    id: 'adm-003',
-    schoolId: 'sch-gn-kd-003',
-    schoolName: "Complexe Scolaire Sainte-Marie de Kindia",
-    firstName: "Sœur Hélène",
-    lastName: "Guilavogui",
-    email: "h.guilavogui@stemarie-kindia.gn",
-    phone: "+224 628 33 22 11",
-    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80",
-    status: "active",
-    createdAt: "2025-01-11",
-    lastLogin: "Hier à 16:40"
-  },
-  {
-    id: 'adm-004',
-    schoolId: 'sch-gn-lb-004',
-    schoolName: "Institut Polytechnique du Fouta de Labé",
-    firstName: "Thierno Amadou",
-    lastName: "Bah",
-    email: "ta.bah@ipf-labe.edu.gn",
-    phone: "+224 620 77 88 99",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80",
-    status: "active",
-    createdAt: "2025-02-19",
-    lastLogin: "Hier à 11:05"
-  },
-  {
-    id: 'adm-005',
-    schoolId: 'sch-gn-ck-005',
-    schoolName: "École Primaire Bilingue Franco-Arabe de Matam",
-    firstName: "Cheick Mohamed",
-    lastName: "Soumah",
-    email: "m.soumah@bilingue-matam.gn",
-    phone: "+224 622 99 88 77",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80",
-    status: "active",
-    createdAt: "2025-03-06",
-    lastLogin: "Aujourd'hui à 05:45"
-  },
-  {
-    id: 'adm-006',
-    schoolId: 'sch-gn-nz-006',
-    schoolName: "Centre de Formation Professionnelle en Forêt",
-    firstName: "Gouly",
-    lastName: "Koivogui",
-    email: "g.koivogui@cfp-foret.gn",
-    phone: "+224 625 11 44 22",
-    avatar: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&auto=format&fit=crop&q=80",
-    status: "suspended",
-    createdAt: "2025-05-13",
-    lastLogin: "Il y a 45 jours"
-  },
-  {
-    id: 'adm-007',
-    schoolId: 'sch-gn-ck-007',
-    schoolName: "Lycée Moderne de Ratoma",
-    firstName: "Mariama",
-    lastName: "Barry",
-    email: "m.barry@lycee-ratoma.edu.gn",
-    phone: "+224 627 55 44 33",
-    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80",
-    status: "active",
-    createdAt: "2024-08-21",
-    lastLogin: "Il y a 32 minutes"
   }
 ];
 
 export const initialTransactions: PaymentTransaction[] = [
-  {
-    id: 'tx-2026-11-001',
-    invoiceNumber: 'FAC-2026-11-089',
-    schoolId: 'sch-gn-kk-002',
-    schoolName: "Université Julius Nyerere de Kankan",
-    planId: 'entreprise',
-    amountGnf: 12000000,
-    date: '2026-11-01',
-    dueDate: '2026-11-05',
-    paymentMethod: 'Virement bancaire',
-    reference: 'VIR-VISTA-98214',
-    status: 'payé',
-    notes: 'Abonnement Mensuel Plateforme Université (Campus Kankan)'
-  },
   {
     id: 'tx-2026-11-002',
     invoiceNumber: 'FAC-2026-11-090',
@@ -476,62 +186,6 @@ export const initialTransactions: PaymentTransaction[] = [
     reference: 'OM-GN-8839201',
     status: 'payé',
     notes: 'Renouvellement mensuel pack Premium + SMS passerelle'
-  },
-  {
-    id: 'tx-2026-11-003',
-    invoiceNumber: 'FAC-2026-11-091',
-    schoolId: 'sch-gn-ck-007',
-    schoolName: "Lycée Moderne de Ratoma",
-    planId: 'premium',
-    amountGnf: 4500000,
-    date: '2026-11-01',
-    dueDate: '2026-11-05',
-    paymentMethod: 'MTN Mobile Money',
-    reference: 'MTN-GN-4519280',
-    status: 'payé',
-    notes: 'Règlement mensuel formule Pro avec accès portail parents'
-  },
-  {
-    id: 'tx-2026-11-004',
-    invoiceNumber: 'FAC-2026-11-092',
-    schoolId: 'sch-gn-kd-003',
-    schoolName: "Complexe Scolaire Sainte-Marie de Kindia",
-    planId: 'standard',
-    amountGnf: 1500000,
-    date: '2026-10-28',
-    dueDate: '2026-11-02',
-    paymentMethod: 'Orange Money Guinée',
-    reference: 'OM-GN-7729103',
-    status: 'payé',
-    notes: 'Abonnement Standard Octobre/Novembre'
-  },
-  {
-    id: 'tx-2026-11-005',
-    invoiceNumber: 'FAC-2026-11-093',
-    schoolId: 'sch-gn-lb-004',
-    schoolName: "Institut Polytechnique du Fouta de Labé",
-    planId: 'standard',
-    amountGnf: 1500000,
-    date: '2026-10-25',
-    dueDate: '2026-10-30',
-    paymentMethod: 'Virement bancaire',
-    reference: 'VIR-BCRG-19401',
-    status: 'payé',
-    notes: 'Licence trimestrielle standard institut'
-  },
-  {
-    id: 'tx-2026-11-006',
-    invoiceNumber: 'FAC-2026-11-094',
-    schoolId: 'sch-gn-ck-005',
-    schoolName: "École Primaire Bilingue Franco-Arabe de Matam",
-    planId: 'standard',
-    amountGnf: 1500000,
-    date: '2026-11-02',
-    dueDate: '2026-11-07',
-    paymentMethod: 'Orange Money Guinée',
-    reference: 'OM-GN-1102948',
-    status: 'en_attente',
-    notes: 'Facture émise en attente de validation USSD Orange Money'
   }
 ];
 
@@ -567,16 +221,6 @@ export const initialAuditLogs: SecurityAuditLog[] = [
     severity: 'info'
   },
   {
-    id: 'log-04',
-    timestamp: '2026-10-31 16:45:10',
-    action: 'Suspension temporaire pour non-renouvellement',
-    actor: 'Dr. Mamadou Cellou Diallo',
-    target: 'Centre de Formation Professionnelle en Forêt',
-    ip: '197.149.198.42',
-    type: 'ecole',
-    severity: 'warning'
-  },
-  {
     id: 'log-05',
     timestamp: '2026-10-30 22:11:00',
     action: 'Blocage automatique IP suspecte (Tentatives Brute-Force)',
@@ -595,8 +239,8 @@ export const initialBackups: BackupArchive[] = [
     createdAt: '2026-11-02 02:00:15',
     sizeMb: 842.6,
     checksum: 'sha256:8f4c2e17a998b123f...',
-    schoolsCount: 7,
-    recordsCount: 48920,
+    schoolsCount: 1,
+    recordsCount: 3580,
     type: 'quotidien',
     status: 'success'
   },
@@ -606,31 +250,9 @@ export const initialBackups: BackupArchive[] = [
     createdAt: '2026-11-01 02:00:18',
     sizeMb: 839.1,
     checksum: 'sha256:3d1e99f012ba441c...',
-    schoolsCount: 7,
-    recordsCount: 48610,
+    schoolsCount: 1,
+    recordsCount: 3550,
     type: 'quotidien',
-    status: 'success'
-  },
-  {
-    id: 'bk-20261026-0300',
-    filename: 'smartschool-weekly-archive-20261026-0300.tar.zst',
-    createdAt: '2026-10-26 03:00:04',
-    sizeMb: 2450.4,
-    checksum: 'sha256:77bc09fa1249bce3...',
-    schoolsCount: 7,
-    recordsCount: 47890,
-    type: 'hebdomadaire',
-    status: 'success'
-  },
-  {
-    id: 'bk-20261001-0000',
-    filename: 'smartschool-monthly-archive-20261001-0000.tar.zst',
-    createdAt: '2026-10-01 00:00:30',
-    sizeMb: 2310.8,
-    checksum: 'sha256:99ab12cd7734fe01...',
-    schoolsCount: 7,
-    recordsCount: 46200,
-    type: 'mensuel',
     status: 'success'
   }
 ];
@@ -666,18 +288,7 @@ export const initialAnnouncements: GlobalAnnouncement[] = [
     channels: ['in_app', 'email'],
     createdAt: '2026-10-29 09:30',
     sentBy: 'Super Admin',
-    deliveryCount: 7
-  },
-  {
-    id: 'ann-02',
-    title: "Maintenance Programmée Serveurs Cloud - Nuit du 15 Novembre",
-    content: "Une opération d'optimisation de l'infrastructure de stockage aura lieu entre 01:00 GMT et 03:00 GMT. Les portails resteront consultables en mode lecture seule pendant 45 minutes.",
-    target: 'all_admins',
-    type: 'maintenance',
-    channels: ['in_app', 'email', 'sms'],
-    createdAt: '2026-10-25 14:00',
-    sentBy: 'Super Admin',
-    deliveryCount: 7
+    deliveryCount: 1
   }
 ];
 

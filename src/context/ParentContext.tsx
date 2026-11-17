@@ -12,6 +12,7 @@ import {
   initialParentPayments, 
   initialParentNotifications 
 } from '../data/parentMockData';
+import { usePersistedState } from '../utils/storage';
 
 interface ParentContextType {
   activeParentTab: ParentNavTab;
@@ -37,21 +38,13 @@ const ParentContext = createContext<ParentContextType | undefined>(undefined);
 export const ParentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeParentTab, setActiveParentTab] = useState<ParentNavTab>('dashboard');
   const [profile] = useState<ParentProfile>(initialParentProfile);
-  const [childrenList, setChildrenList] = useState<ChildSummary[]>(initialChildren);
-  const [selectedChildId, setSelectedChildId] = useState<string>(initialChildren[0].id);
-  const [payments, setPayments] = useState<ParentPaymentItem[]>(initialParentPayments);
-  const [notifications, setNotifications] = useState<ParentNotification[]>(initialParentNotifications);
-  const [sentMessages, setSentMessages] = useState<{ id: string; recipient: string; subject: string; message: string; date: string }[]>(() => {
-    try {
-      const raw = localStorage.getItem('smartschool_parent_messages_v1');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {
-      // ignore storage errors
-    }
-    return [
+  const [childrenList, setChildrenList] = usePersistedState<ChildSummary[]>('smartschool_parent_children_v1', initialChildren);
+  const [selectedChildId, setSelectedChildId] = usePersistedState<string>('smartschool_parent_selected_child_v1', initialChildren[0].id);
+  const [payments, setPayments] = usePersistedState<ParentPaymentItem[]>('smartschool_parent_payments_v1', initialParentPayments);
+  const [notifications, setNotifications] = usePersistedState<ParentNotification[]>('smartschool_parent_notifications_v1', initialParentNotifications);
+  const [sentMessages, setSentMessages] = usePersistedState<{ id: string; recipient: string; subject: string; message: string; date: string }[]>(
+    'smartschool_parent_messages_v1',
+    [
       {
         id: 'msg-001',
         recipient: 'M. Mamadou Lamarana Diallo (Prof. Principal TSM)',
@@ -59,17 +52,18 @@ export const ParentProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         message: 'Bonjour Monsieur, je souhaiterais échanger avec vous sur les choix d’orientation universitaire de Fatoumata Binta en France et au Maroc.',
         date: '01 Nov 2026'
       }
-    ];
-  });
+    ],
+    loaded => (Array.isArray(loaded) && loaded.length > 0 ? loaded : [
+      {
+        id: 'msg-001',
+        recipient: 'M. Mamadou Lamarana Diallo (Prof. Principal TSM)',
+        subject: 'Demande de rendez-vous orientation Bac',
+        message: 'Bonjour Monsieur, je souhaiterais échanger avec vous sur les choix d’orientation universitaire de Fatoumata Binta en France et au Maroc.',
+        date: '01 Nov 2026'
+      }
+    ])
+  );
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('smartschool_parent_messages_v1', JSON.stringify(sentMessages));
-    } catch {
-      // ignore storage errors
-    }
-  }, [sentMessages]);
 
   const selectedChild = childrenList.find(c => c.id === selectedChildId) || childrenList[0];
 

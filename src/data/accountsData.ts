@@ -13,6 +13,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { RoleType, AccountStatus, UserAccount, ROLE_PERMISSIONS_MATRIX, ROLE_LABELS } from '../types/rbac';
+import { saveDualStorage } from '../utils/storage';
 
 export interface DemoAccount extends Omit<UserAccount, 'role'> {
   role: WorkspaceMode;
@@ -456,9 +457,9 @@ export const getStoredAccounts = (): DemoAccount[] => {
 export const saveStoredAccounts = (accounts: DemoAccount[]) => {
   try {
     const serializable = accounts.map(({ icon, ...rest }) => rest);
-    localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(serializable));
+    saveDualStorage(ACCOUNTS_STORAGE_KEY, serializable);
   } catch (err) {
-    console.error('Error saving accounts to localStorage:', err);
+    console.error('Error saving accounts to storage:', err);
   }
 };
 

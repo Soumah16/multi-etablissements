@@ -28,6 +28,48 @@ import {
   initialBadgeTemplate 
 } from '../data/mockData';
 import { translations, Translations } from '../i18n/translations';
+import { usePersistedState } from '../utils/storage';
+
+const EXTRA_MOCK_SCHOOL_IDS = new Set([
+  'sch-gn-kk-002',
+  'sch-gn-kd-003',
+  'sch-gn-lb-004',
+  'sch-gn-ck-005',
+  'sch-gn-nz-006',
+  'sch-gn-ck-007',
+]);
+const EXTRA_MOCK_ADMIN_IDS = new Set([
+  'adm-002',
+  'adm-003',
+  'adm-004',
+  'adm-005',
+  'adm-006',
+  'adm-007',
+]);
+const EXTRA_MOCK_TX_IDS = new Set([
+  'tx-2026-11-001',
+  'tx-2026-11-003',
+  'tx-2026-11-004',
+  'tx-2026-11-005',
+  'tx-2026-11-006',
+]);
+const SINGLE_SCHOOL_MIGRATION_KEY = 'smartschool_single_school_test_v1';
+
+function isSingleSchoolMigrated(): boolean {
+  try {
+    return localStorage.getItem(SINGLE_SCHOOL_MIGRATION_KEY) === 'done';
+  } catch {
+    return false;
+  }
+}
+
+function markSingleSchoolMigrated(): void {
+  try {
+    localStorage.setItem(SINGLE_SCHOOL_MIGRATION_KEY, 'done');
+  } catch {
+    // ignore
+  }
+}
 
 export type NavTab = 
   | 'dashboard' 
@@ -112,104 +154,102 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
-  const [language, setLanguageState] = useState<LanguageCode>('fr');
+  const [language, setLanguageState] = usePersistedState<LanguageCode>('smartschool_language_v1', 'fr');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Data states with persistence or initial mocks
-  const [schools, setSchools] = useState<School[]>(() => {
-    try {
-      const saved = localStorage.getItem('smartschool_schools');
-      if (saved) {
-        const parsed = JSON.parse(saved) as School[];
-        return parsed.map(s => {
-          const fallback = initialSchools.find(init => init.id === s.id);
-          return {
-            ...s,
-            whatsappNumber: s.whatsappNumber || fallback?.whatsappNumber || s.phone || ''
-          };
-        });
-      }
-    } catch {
-      // ignore parse errors
-    }
-    return initialSchools;
-  });
-
-  const [admins, setAdmins] = useState<SchoolAdmin[]>(() => {
-    const saved = localStorage.getItem('smartschool_admins');
-    return saved ? JSON.parse(saved) : initialAdmins;
-  });
-
-  const [plans, setPlans] = useState<SubscriptionPlan[]>(() => {
-    const saved = localStorage.getItem('smartschool_plans');
-    return saved ? JSON.parse(saved) : initialSubscriptionPlans;
-  });
-
-  const [transactions, setTransactions] = useState<PaymentTransaction[]>(() => {
-    const saved = localStorage.getItem('smartschool_transactions');
-    return saved ? JSON.parse(saved) : initialTransactions;
-  });
-
-  const [profile, setProfile] = useState<SuperAdminProfile>(() => {
-    const saved = localStorage.getItem('smartschool_profile');
-    return saved ? JSON.parse(saved) : initialSuperAdminProfile;
-  });
-
-  const [auditLogs, setAuditLogs] = useState<SecurityAuditLog[]>(() => {
-    const saved = localStorage.getItem('smartschool_logs');
-    return saved ? JSON.parse(saved) : initialAuditLogs;
-  });
-
-  const [sessions, setSessions] = useState<SecuritySession[]>(() => {
-    const saved = localStorage.getItem('smartschool_sessions');
-    return saved ? JSON.parse(saved) : initialSessions;
-  });
-
-  const [blockedIps, setBlockedIps] = useState<string[]>(['185.220.101.5', '91.240.118.2']);
-  const [backups, setBackups] = useState<BackupArchive[]>(initialBackups);
-  const [announcements, setAnnouncements] = useState<GlobalAnnouncement[]>(initialAnnouncements);
-  const [settings, setSettings] = useState<GlobalSettings>(() => {
-    try {
-      const saved = localStorage.getItem('smartschool_global_settings');
-      if (saved) {
-        const parsed = JSON.parse(saved);
+  const [schools, setSchools] = usePersistedState<School[]>(
+    'smartschool_schools',
+    initialSchools,
+    loaded => {
+      const migratedAlready = isSingleSchoolMigrated();
+      const baseList = Array.isArray(loaded) && loaded.length > 0 ? loaded : initialSchools;
+      const filtered = migratedAlready
+        ? baseList
+        : baseList.filter(s => !EXTRA_MOCK_SCHOOL_IDS.has(s.id));
+      const finalSchools = filtered.length > 0 ? filtered : initialSchools;
+      return finalSchools.map(s => {
+        const fallback = initialSchools.find(init => init.id === s.id);
         return {
-          ...initialSettings,
-          ...parsed,
-          homepagePhotos: {
-            ...initialSettings.homepagePhotos,
-            ...(parsed.homepagePhotos || {}),
-          },
+          ...s,
+          whatsappNumber: s.whatsappNumber || fallback?.whatsappNumber || s.phone || ''
         };
+      });
+    }
+  );
+
+  const [admins, setAdmins] = usePersistedState<SchoolAdmin[]>(
+    'smartschool_admins',
+    initialAdmins,
+    loaded => {
+      const migratedAlready = isSingleSchoolMigrated();
+      const baseList = Array.isArray(loaded) && loaded.length > 0 ? loaded : initialAdmins;
+      const filtered = migratedAlready
+        ? baseList
+        : baseList.filter(a => !EXTRA_MOCK_ADMIN_IDS.has(a.id));
+      return filtered.length > 0 ? filtered : initialAdmins;
+    }
+  );
+
+  const [plans, setPlans] = usePersistedState<SubscriptionPlan[]>('smartschool_plans', initialSubscriptionPlans);
+
+  const [transactions, setTransactions] = usePersistedState<PaymentTransaction[]>(
+    'smartschool_transactions',
+    initialTransactions,
+    loaded => {
+      const migratedAlready = isSingleSchoolMigrated();
+      const baseList = Array.isArray(loaded) ? loaded : initialTransactions;
+      return migratedAlready
+        ? baseList
+        : baseList.filter(tx => !EXTRA_MOCK_TX_IDS.has(tx.id));
+    }
+  );
+
+  useEffect(() => {
+    if (!isSingleSchoolMigrated()) {
+      markSingleSchoolMigrated();
+    }
+  }, []);
+
+  const [profile, setProfile] = usePersistedState<SuperAdminProfile>('smartschool_profile', initialSuperAdminProfile);
+
+  const [auditLogs, setAuditLogs] = usePersistedState<SecurityAuditLog[]>(
+    'smartschool_audit_logs_v1',
+    () => {
+      try {
+        const legacy = localStorage.getItem('smartschool_audit_logs') || localStorage.getItem('smartschool_logs');
+        if (legacy) return JSON.parse(legacy);
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore parse errors
+      return initialAuditLogs;
     }
-    return initialSettings;
-  });
-  const [badgeTemplate, setBadgeTemplate] = useState<BadgeTemplateConfig>(initialBadgeTemplate);
+  );
+
+  const [sessions, setSessions] = usePersistedState<SecuritySession[]>('smartschool_sessions', initialSessions);
+  const [blockedIps, setBlockedIps] = usePersistedState<string[]>('smartschool_blocked_ips_v1', ['185.220.101.5', '91.240.118.2']);
+  const [backups, setBackups] = usePersistedState<BackupArchive[]>('smartschool_backups_v1', initialBackups);
+  const [announcements, setAnnouncements] = usePersistedState<GlobalAnnouncement[]>('smartschool_announcements_v1', initialAnnouncements);
+
+  const [settings, setSettings] = usePersistedState<GlobalSettings>(
+    'smartschool_global_settings',
+    initialSettings,
+    parsed => ({
+      ...initialSettings,
+      ...parsed,
+      homepagePhotos: {
+        hero: parsed?.homepagePhotos?.hero ?? initialSettings.homepagePhotos?.hero ?? '',
+        classroom: parsed?.homepagePhotos?.classroom ?? initialSettings.homepagePhotos?.classroom ?? '',
+        teacher: parsed?.homepagePhotos?.teacher ?? initialSettings.homepagePhotos?.teacher ?? '',
+        library: parsed?.homepagePhotos?.library ?? initialSettings.homepagePhotos?.library ?? '',
+      },
+    })
+  );
+
+  const [badgeTemplate, setBadgeTemplate] = usePersistedState<BadgeTemplateConfig>(
+    'smartschool_badge_template_v1',
+    initialBadgeTemplate
+  );
   const [selectedSchoolForAudit, setSelectedSchoolForAudit] = useState<School | null>(null);
-
-  // Sync state to local storage
-  useEffect(() => {
-    localStorage.setItem('smartschool_schools', JSON.stringify(schools));
-  }, [schools]);
-
-  useEffect(() => {
-    localStorage.setItem('smartschool_admins', JSON.stringify(admins));
-  }, [admins]);
-
-  useEffect(() => {
-    localStorage.setItem('smartschool_transactions', JSON.stringify(transactions));
-  }, [transactions]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('smartschool_global_settings', JSON.stringify(settings));
-    } catch {
-      // ignore storage quota errors gracefully
-    }
-  }, [settings]);
 
   // Set RTL attribute and lang on html document element
   const isRtl = language === 'ar';
@@ -247,15 +287,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       type,
       severity
     };
-    setAuditLogs(prev => {
-      const updated = [newEntry, ...prev];
-      try {
-        localStorage.setItem('smartschool_audit_logs', JSON.stringify(updated.slice(0, 150)));
-      } catch {
-        // ignore
-      }
-      return updated;
-    });
+    setAuditLogs(prev => [newEntry, ...prev].slice(0, 150));
   };
 
   // School actions

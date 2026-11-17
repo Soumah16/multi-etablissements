@@ -16,6 +16,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 
+import { saveDualStorage, subscribeStorageKey } from '../../utils/storage';
+
 const SUPERADMIN_2FA_STORAGE_KEY = 'smartschool_superadmin_security_v1';
 
 export interface SuperAdminSecurityStorage {
@@ -52,11 +54,7 @@ export function loadSuperAdminSecurityConfig(): SuperAdminSecurityStorage {
 }
 
 export function saveSuperAdminSecurityConfig(cfg: SuperAdminSecurityStorage): void {
-  try {
-    localStorage.setItem(SUPERADMIN_2FA_STORAGE_KEY, JSON.stringify(cfg));
-  } catch {
-    // ignore
-  }
+  saveDualStorage(SUPERADMIN_2FA_STORAGE_KEY, cfg, Date.now(), 'local');
 }
 
 export const SecurityView: React.FC = () => {
@@ -84,8 +82,29 @@ export const SecurityView: React.FC = () => {
   const [remainingSeconds, setRemainingSeconds] = useState(30);
   const [testCode, setTestCode] = useState('');
   const [testFeedback, setTestFeedback] = useState<{ text: string; error: boolean } | null>(null);
+  const mounted2faRef = React.useRef(false);
+  const remote2faUpdateRef = React.useRef(false);
 
   useEffect(() => {
+    return subscribeStorageKey(SUPERADMIN_2FA_STORAGE_KEY, (data, _ts, source) => {
+      if (source !== 'remote' || !data || typeof data !== 'object') return;
+      const incoming = data as Partial<SuperAdminSecurityStorage>;
+      remote2faUpdateRef.current = true;
+      if (typeof incoming.totpSecret === 'string' && incoming.totpSecret.length >= 16) {
+        setTotpSecret(incoming.totpSecret);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!mounted2faRef.current) {
+      mounted2faRef.current = true;
+      return;
+    }
+    if (remote2faUpdateRef.current) {
+      remote2faUpdateRef.current = false;
+      return;
+    }
     saveSuperAdminSecurityConfig({
       twoFactorEnabled: profile.twoFactorEnabled,
       totpSecret

@@ -21,6 +21,7 @@ import {
   initialScholarships, 
   initialFinancialAuditLogs 
 } from '../data/accountantMockData';
+import { usePersistedState } from '../utils/storage';
 
 interface PinActionPending {
   type: 'cancel_payment' | 'delete_expense' | 'modify_fee';
@@ -77,14 +78,14 @@ const AccountantContext = createContext<AccountantContextType | undefined>(undef
 
 export const AccountantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeAccountantTab, setActiveAccountantTab] = useState<AccountantNavTab>('dashboard');
-  const [profile, setProfile] = useState<AccountantProfile>(initialAccountantProfile);
-  const [fees, setFees] = useState<FeeConfiguration[]>(initialFeeConfigurations);
-  const [payments, setPayments] = useState<PaymentRecord[]>(initialPayments);
-  const [debtors, setDebtors] = useState<DebtorStudent[]>(initialDebtors);
-  const [expenses, setExpenses] = useState<ExpenseRecord[]>(initialExpenses);
-  const [salaries, setSalaries] = useState<SalaryRecord[]>(initialSalaries);
-  const [scholarships, setScholarships] = useState<ScholarshipRecord[]>(initialScholarships);
-  const [auditLogs, setAuditLogs] = useState<FinancialAuditLog[]>(initialFinancialAuditLogs);
+  const [profile, setProfile] = usePersistedState<AccountantProfile>('smartschool_accountant_profile_v1', initialAccountantProfile);
+  const [fees, setFees] = usePersistedState<FeeConfiguration[]>('smartschool_accountant_fees_v1', initialFeeConfigurations);
+  const [payments, setPayments] = usePersistedState<PaymentRecord[]>('smartschool_accountant_payments_v1', initialPayments);
+  const [debtors, setDebtors] = usePersistedState<DebtorStudent[]>('smartschool_accountant_debtors_v1', initialDebtors);
+  const [expenses, setExpenses] = usePersistedState<ExpenseRecord[]>('smartschool_accountant_expenses_v1', initialExpenses);
+  const [salaries, setSalaries] = usePersistedState<SalaryRecord[]>('smartschool_accountant_salaries_v1', initialSalaries);
+  const [scholarships, setScholarships] = usePersistedState<ScholarshipRecord[]>('smartschool_accountant_scholarships_v1', initialScholarships);
+  const [auditLogs, setAuditLogs] = usePersistedState<FinancialAuditLog[]>('smartschool_accountant_logs_v1', initialFinancialAuditLogs);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Sensitive action with 6-digit PIN protection

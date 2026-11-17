@@ -14,6 +14,7 @@ import {
   initialStudentGrades, 
   initialStudentAttendance 
 } from '../data/studentMockData';
+import { usePersistedState } from '../utils/storage';
 
 interface StudentContextType {
   activeStudentTab: StudentNavTab;
@@ -44,22 +45,14 @@ const StudentContext = createContext<StudentContextType | undefined>(undefined);
 
 export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeStudentTab, setActiveStudentTab] = useState<StudentNavTab>('dashboard');
-  const [profile, setProfile] = useState<StudentProfile>(initialStudentProfile);
+  const [profile, setProfile] = usePersistedState<StudentProfile>('smartschool_student_profile_v1', initialStudentProfile);
   const [courses] = useState<StudentCourseResource[]>(initialStudentCourses);
-  const [homeworks, setHomeworks] = useState<StudentHomeworkSubmission[]>(initialStudentHomeworks);
+  const [homeworks, setHomeworks] = usePersistedState<StudentHomeworkSubmission[]>('smartschool_student_homeworks_v1', initialStudentHomeworks);
   const [grades] = useState<StudentGradeRecord[]>(initialStudentGrades);
   const [attendances] = useState<StudentAttendanceItem[]>(initialStudentAttendance);
-  const [messages, setMessages] = useState<{ id: string; sender: string; text: string; time: string; isStudent: boolean }[]>(() => {
-    try {
-      const raw = localStorage.getItem('smartschool_student_messages_v1');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {
-      // ignore storage errors
-    }
-    return [
+  const [messages, setMessages] = usePersistedState<{ id: string; sender: string; text: string; time: string; isStudent: boolean }[]>(
+    'smartschool_student_messages_v1',
+    [
       {
         id: 'm-1',
         sender: 'M. Mamadou Lamarana Diallo (Maths)',
@@ -74,42 +67,53 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         time: 'Hier 21:15',
         isStudent: true
       }
-    ];
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('smartschool_student_messages_v1', JSON.stringify(messages));
-    } catch {
-      // ignore storage errors
-    }
-  }, [messages]);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 'not-1',
-      title: 'Nouvelle note disponible',
-      text: 'Composition de Mathématiques Trimestre 1 : 18.5/20',
-      time: 'Il y a 2 heures',
-      type: 'grade',
-      read: false
-    },
-    {
-      id: 'not-2',
-      title: 'Nouveau support de cours publié',
-      text: 'Dr. Traoré a publié : Chapitre 3 Physique - Champs B',
-      time: 'Hier',
-      type: 'course',
-      read: false
-    },
-    {
-      id: 'not-3',
-      title: 'Rappel Devoir Maison',
-      text: 'Devoir de Physique à rendre avant le 08 Novembre',
-      time: 'Il y a 2 jours',
-      type: 'homework',
-      read: true
-    }
-  ]);
+    ],
+    loaded => (Array.isArray(loaded) && loaded.length > 0 ? loaded : [
+      {
+        id: 'm-1',
+        sender: 'M. Mamadou Lamarana Diallo (Maths)',
+        text: 'Bonjour Fatoumata, n’hésite pas à revoir l’exercice 4 sur les intégrales pour la composition de vendredi.',
+        time: 'Hier 16:30',
+        isStudent: false
+      },
+      {
+        id: 'm-2',
+        sender: 'Fatoumata Binta Diallo',
+        text: 'Merci beaucoup M. Diallo, j’ai appliqué la formule d’intégration par parties et j’ai téléversé ma copie sur le portail.',
+        time: 'Hier 21:15',
+        isStudent: true
+      }
+    ])
+  );
+  const [notifications, setNotifications] = usePersistedState(
+    'smartschool_student_notifications_v1',
+    [
+      {
+        id: 'not-1',
+        title: 'Nouvelle note disponible',
+        text: 'Composition de Mathématiques Trimestre 1 : 18.5/20',
+        time: 'Il y a 2 heures',
+        type: 'grade',
+        read: false
+      },
+      {
+        id: 'not-2',
+        title: 'Nouveau support de cours publié',
+        text: 'Dr. Traoré a publié : Chapitre 3 Physique - Champs B',
+        time: 'Hier',
+        type: 'course',
+        read: false
+      },
+      {
+        id: 'not-3',
+        title: 'Rappel Devoir Maison',
+        text: 'Devoir de Physique à rendre avant le 08 Novembre',
+        time: 'Il y a 2 jours',
+        type: 'homework',
+        read: true
+      }
+    ]
+  );
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {

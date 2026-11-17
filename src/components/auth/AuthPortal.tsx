@@ -22,6 +22,7 @@ import {
 } from '../../data/accountsData';
 import { useApp } from '../../context/AppContext';
 import { PWAInstallButton } from '../common/PWAInstallButton';
+import { CloudSyncButton } from '../common/CloudSyncModal';
 import { getCanonicalSchoolId, loadSchoolSecurityConfig, appendSchoolLoginLog } from '../../context/SchoolAdminContext';
 import { loadSuperAdminSecurityConfig } from '../security/SecurityView';
 import { verifyTotpCode } from '../../utils/totp';
@@ -93,26 +94,14 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
   // Ref to scroll to login box
   const loginSectionRef = useRef<HTMLDivElement>(null);
 
-  const primaryIds = ['sch-gn-ck-001', 'sch-gn-kd-003', 'sch-gn-ck-005'];
-  const extraSchools = schools.filter(s => !primaryIds.includes(s.id) && s.status !== 'archived');
-
   const schoolsList = [
-    {
-      id: 'ECOLE-001',
-      name: schools.find(s => s.id === 'sch-gn-ck-001')?.name || "Lycée d'Excellence de Conakry",
-      city: schools.find(s => s.id === 'sch-gn-ck-001')?.city || 'Kaloum, Conakry'
-    },
-    {
-      id: 'ECOLE-002',
-      name: schools.find(s => s.id === 'sch-gn-kd-003')?.name || 'Collège & Lycée Sainte-Marie',
-      city: schools.find(s => s.id === 'sch-gn-kd-003')?.city || 'Dixinn, Conakry'
-    },
-    {
-      id: 'ECOLE-003',
-      name: schools.find(s => s.id === 'sch-gn-ck-005')?.name || 'Groupe Scolaire Hadja Mafory Bangoura',
-      city: schools.find(s => s.id === 'sch-gn-ck-005')?.city || 'Matam, Conakry'
-    },
-    ...extraSchools.map(s => ({ id: s.id, name: s.name, city: s.city })),
+    ...schools
+      .filter(s => s.status !== 'archived')
+      .map(s => ({
+        id: s.id === 'sch-gn-ck-001' ? 'ECOLE-001' : s.id,
+        name: s.name,
+        city: s.city
+      })),
     { id: 'NATIONAL', name: 'Direction Nationale MEPU-A (Niveau Central)', city: 'Conakry' }
   ];
 
@@ -333,6 +322,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
 
         {/* Right Header Navigation */}
         <div className="flex items-center gap-2 shrink-0">
+          <CloudSyncButton compact />
           <PWAInstallButton variant="header" />
           <button
             type="button"
@@ -597,12 +587,12 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
                 </button>
               </form>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+              <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Isolation Multi-Tenant Active</span>
                 </span>
-                <span className="font-mono text-blue-700 font-bold">MEPU-A Guinée</span>
+                <CloudSyncButton compact />
               </div>
             </div>
           </div>

@@ -420,32 +420,38 @@ export const DashboardView: React.FC = () => {
           </div>
 
           <div className="space-y-3 mt-3">
-            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs flex items-start gap-3">
-              <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-              <div>
-                <div className="font-medium text-amber-700">Renouvellement Abonnement requis</div>
-                <div className="text-slate-700 text-[11px] mt-0.5">
-                  L'établissement « École Primaire Bilingue Franco-Arabe de Matam » arrive à échéance le 31/12/2026.
+            {schools
+              .filter(s => s.status === 'suspended')
+              .map(s => (
+                <div key={`susp-${s.id}`} className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs flex items-start gap-3">
+                  <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-medium text-rose-700">Établissement Suspendu</div>
+                    <div className="text-slate-700 text-[11px] mt-0.5">
+                      « {s.name} » ({s.city}) est actuellement hors-ligne suite à décision administrative.
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              ))}
 
-            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs flex items-start gap-3">
-              <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-              <div>
-                <div className="font-medium text-rose-700">Établissement Suspendu</div>
-                <div className="text-slate-700 text-[11px] mt-0.5">
-                  « Centre de Formation Professionnelle en Forêt » (Nzérékoré) est actuellement hors-ligne suite à décision administrative.
+            {schools.every(s => s.status !== 'suspended') && (
+              <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs flex items-start gap-3">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-medium text-emerald-700">Réseau Établissements Conforme</div>
+                  <div className="text-slate-700 text-[11px] mt-0.5">
+                    {schools.filter(s => s.status === 'active').length} établissement(s) actif(s) · Aucun incident ou suspension en cours.
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs flex items-start gap-3">
               <Clock className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
               <div>
-                <div className="font-medium text-blue-700">Dernière Sauvegarde Chiffrée</div>
+                <div className="font-medium text-blue-700">Sauvegarde Locale & Indexée Active</div>
                 <div className="text-slate-700 text-[11px] mt-0.5">
-                  Snapshot multi-tenant exécuté automatiquement avec succès ce matin à 02:00 GMT (842.6 Mo, SHA-256 certifié).
+                  Toutes les modifications et créations sont enregistrées automatiquement dans le stockage persistant sécurisé.
                 </div>
               </div>
             </div>

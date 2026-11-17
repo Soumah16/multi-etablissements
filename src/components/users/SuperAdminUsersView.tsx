@@ -9,6 +9,7 @@ import {
   getCategoryForRole,
   DEMO_ACCOUNTS
 } from '../../data/accountsData';
+import { subscribeStorageKey } from '../../utils/storage';
 import { WorkspaceMode } from '../../App';
 import { 
   UserCheck, 
@@ -45,6 +46,14 @@ interface SuperAdminUsersViewProps {
 export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwitchToUser }) => {
   const { schools, showToast, addLog } = useApp();
   const [accounts, setAccounts] = useState<DemoAccount[]>(() => getStoredAccounts());
+
+  useEffect(() => {
+    return subscribeStorageKey('smartschool_accounts_v3', (_data, _ts, source) => {
+      if (source === 'remote') {
+        setAccounts(getStoredAccounts());
+      }
+    });
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [schoolFilter, setSchoolFilter] = useState<string>('all');

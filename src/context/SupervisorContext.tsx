@@ -20,6 +20,7 @@ import {
   initialSecurityPatrols, 
   initialDisciplinaryMeetings 
 } from '../data/supervisorMockData';
+import { usePersistedState } from '../utils/storage';
 
 interface SupervisorContextType {
   activeSupervisorTab: SupervisorNavTab;
@@ -66,14 +67,14 @@ const SupervisorContext = createContext<SupervisorContextType | undefined>(undef
 
 export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeSupervisorTab, setActiveSupervisorTab] = useState<SupervisorNavTab>('dashboard');
-  const [profile, setProfile] = useState<SupervisorProfile>(initialSupervisorProfile);
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecordItem[]>(initialAttendanceRecords);
-  const [admissionSlips, setAdmissionSlips] = useState<AdmissionSlip[]>(initialAdmissionSlips);
-  const [incidents, setIncidents] = useState<DisciplinaryIncident[]>(initialDisciplinaryIncidents);
-  const [watchlist, setWatchlist] = useState<WatchlistStudent[]>(initialWatchlist);
-  const [confiscatedItems, setConfiscatedItems] = useState<ConfiscatedItem[]>(initialConfiscatedItems);
-  const [patrols, setPatrols] = useState<SecurityPatrol[]>(initialSecurityPatrols);
-  const [meetings, setMeetings] = useState<DisciplinaryParentMeeting[]>(initialDisciplinaryMeetings);
+  const [profile, setProfile] = usePersistedState<SupervisorProfile>('smartschool_supervisor_profile_v1', initialSupervisorProfile);
+  const [attendanceRecords, setAttendanceRecords] = usePersistedState<AttendanceRecordItem[]>('smartschool_supervisor_attendance_v1', initialAttendanceRecords);
+  const [admissionSlips, setAdmissionSlips] = usePersistedState<AdmissionSlip[]>('smartschool_supervisor_slips_v1', initialAdmissionSlips);
+  const [incidents, setIncidents] = usePersistedState<DisciplinaryIncident[]>('smartschool_supervisor_incidents_v1', initialDisciplinaryIncidents);
+  const [watchlist, setWatchlist] = usePersistedState<WatchlistStudent[]>('smartschool_supervisor_watchlist_v1', initialWatchlist);
+  const [confiscatedItems, setConfiscatedItems] = usePersistedState<ConfiscatedItem[]>('smartschool_supervisor_confiscated_v1', initialConfiscatedItems);
+  const [patrols, setPatrols] = usePersistedState<SecurityPatrol[]>('smartschool_supervisor_patrols_v1', initialSecurityPatrols);
+  const [meetings, setMeetings] = usePersistedState<DisciplinaryParentMeeting[]>('smartschool_supervisor_meetings_v1', initialDisciplinaryMeetings);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const triggerToast = (msg: string) => {

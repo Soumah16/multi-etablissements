@@ -14,6 +14,7 @@ import {
 } from '../data/librarianMockData';
 import { AuthenticatedUser } from '../components/auth/AuthPortal';
 import { authenticateUser } from '../data/accountsData';
+import { idbGetRecord, saveDualStorage, subscribeStorageKey } from '../utils/storage';
 
 export interface LibraryAccessLog {
   id: string;
@@ -108,28 +109,81 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Every visitor entering the library MUST sign in with their own personal account
   const [libraryUser, setLibraryUser] = useState<AuthenticatedUser | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [hydratedSchoolKey, setHydratedSchoolKey] = useState<string | null>(null);
+  const skipPersistRef = React.useRef<boolean>(true);
 
-  // Reload school-scoped library data when school changes
+  // Reload school-scoped library data when school changes (checking IndexedDB for large ebooks/PDFs)
   useEffect(() => {
+    skipPersistRef.current = true;
+    setHydratedSchoolKey(null);
     setProfile(safeLoadJson(`smartschool_lib_profile_${schoolKey}`, initialLibrarianProfile));
     setBooks(safeLoadJson(`smartschool_lib_books_${schoolKey}`, initialBooks));
     setEbooks(safeLoadJson(`smartschool_lib_ebooks_${schoolKey}`, initialEbooks));
     setLoans(safeLoadJson(`smartschool_lib_loans_${schoolKey}`, initialLoanRecords));
     setLibraryAuditLogs(safeLoadJson(`smartschool_lib_logs_${schoolKey}`, []));
+
+    let active = true;
+    const localProfileTs = Number(localStorage.getItem(`smartschool_lib_profile_${schoolKey}__ts`)?.replace('idb:', '') || 0);
+    const localBooksTs = Number(localStorage.getItem(`smartschool_lib_books_${schoolKey}__ts`)?.replace('idb:', '') || 0);
+    const localEbooksTs = Number(localStorage.getItem(`smartschool_lib_ebooks_${schoolKey}__ts`)?.replace('idb:', '') || 0);
+    const localLoansTs = Number(localStorage.getItem(`smartschool_lib_loans_${schoolKey}__ts`)?.replace('idb:', '') || 0);
+    const localLogsTs = Number(localStorage.getItem(`smartschool_lib_logs_${schoolKey}__ts`)?.replace('idb:', '') || 0);
+
+    void Promise.all([
+      idbGetRecord<LibrarianProfile>(`smartschool_lib_profile_${schoolKey}`),
+      idbGetRecord<BookItem[]>(`smartschool_lib_books_${schoolKey}`),
+      idbGetRecord<EbookItem[]>(`smartschool_lib_ebooks_${schoolKey}`),
+      idbGetRecord<LoanRecord[]>(`smartschool_lib_loans_${schoolKey}`),
+      idbGetRecord<LibraryAccessLog[]>(`smartschool_lib_logs_${schoolKey}`),
+    ]).then(([pRec, bRec, eRec, lRec, logRec]) => {
+      if (!active) return;
+      skipPersistRef.current = true;
+      if (pRec?.data && pRec.updatedAt > localProfileTs) setProfile(pRec.data);
+      if (bRec?.data && bRec.updatedAt > localBooksTs) setBooks(bRec.data);
+      if (eRec?.data && eRec.updatedAt > localEbooksTs) setEbooks(eRec.data);
+      if (lRec?.data && lRec.updatedAt > localLoansTs) setLoans(lRec.data);
+      if (logRec?.data && logRec.updatedAt > localLogsTs) setLibraryAuditLogs(logRec.data);
+      setHydratedSchoolKey(schoolKey);
+    });
+
+    const unsubs = [
+      subscribeStorageKey(`smartschool_lib_profile_${schoolKey}`, (d, _t, src) => {
+        if (src === 'remote') { skipPersistRef.current = true; setProfile(d as LibrarianProfile); }
+      }),
+      subscribeStorageKey(`smartschool_lib_books_${schoolKey}`, (d, _t, src) => {
+        if (src === 'remote') { skipPersistRef.current = true; setBooks(d as BookItem[]); }
+      }),
+      subscribeStorageKey(`smartschool_lib_ebooks_${schoolKey}`, (d, _t, src) => {
+        if (src === 'remote') { skipPersistRef.current = true; setEbooks(d as EbookItem[]); }
+      }),
+      subscribeStorageKey(`smartschool_lib_loans_${schoolKey}`, (d, _t, src) => {
+        if (src === 'remote') { skipPersistRef.current = true; setLoans(d as LoanRecord[]); }
+      }),
+      subscribeStorageKey(`smartschool_lib_logs_${schoolKey}`, (d, _t, src) => {
+        if (src === 'remote') { skipPersistRef.current = true; setLibraryAuditLogs(d as LibraryAccessLog[]); }
+      }),
+    ];
+
+    return () => {
+      active = false;
+      unsubs.forEach(u => u());
+    };
   }, [schoolKey]);
 
-  // Persist school-scoped library data
+  // Persist school-scoped library data to localStorage, IndexedDB, and Cloud Sync only after real local mutations
   useEffect(() => {
-    try {
-      localStorage.setItem(`smartschool_lib_profile_${schoolKey}`, JSON.stringify(profile));
-      localStorage.setItem(`smartschool_lib_books_${schoolKey}`, JSON.stringify(books));
-      localStorage.setItem(`smartschool_lib_ebooks_${schoolKey}`, JSON.stringify(ebooks));
-      localStorage.setItem(`smartschool_lib_loans_${schoolKey}`, JSON.stringify(loans));
-      localStorage.setItem(`smartschool_lib_logs_${schoolKey}`, JSON.stringify(libraryAuditLogs));
-    } catch {
-      // ignore storage quota errors
+    if (hydratedSchoolKey !== schoolKey) return;
+    if (skipPersistRef.current) {
+      skipPersistRef.current = false;
+      return;
     }
-  }, [schoolKey, profile, books, ebooks, loans, libraryAuditLogs]);
+    const now = Date.now();
+    saveDualStorage(`smartschool_lib_profile_${schoolKey}`, profile, now, 'local');
+    saveDualStorage(`smartschool_lib_books_${schoolKey}`, books, now, 'local');
+    saveDualStorage(`smartschool_lib_ebooks_${schoolKey}`, ebooks, now, 'local');
+    saveDualStorage(`smartschool_lib_loans_${schoolKey}`, loans, now, 'local');
+    saveDualStorage(`smartschool_lib_logs_${schoolKey}`, libraryAuditLogs, now, 'local');
+  }, [hydratedSchoolKey, schoolKey, profile, books, ebooks, loans, libraryAuditLogs]);
 
   // STRICT RULE: ONLY the Librarian Admin belonging to THIS school can modify anything in the library.
   // Nobody else (neither Student, Teacher, Parent, Director, Accountant, Supervisor, School Admin, nor Super Admin) can modify library data!

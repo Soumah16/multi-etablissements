@@ -13,6 +13,7 @@ import {
 
 import { WorkspaceMode } from '../../App';
 import { PWAInstallButton } from '../common/PWAInstallButton';
+import { CloudSyncButton } from '../common/CloudSyncModal';
 
 interface HeaderProps {
   currentUserRole?: WorkspaceMode;
@@ -122,6 +123,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Zone 3: Primary Action & Profile Switcher */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        <CloudSyncButton compact />
         <PWAInstallButton variant="compact" />
         {/* Language selector */}
         <div className="relative">

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useApp } from './AppContext';
 import { resolveSchoolForContext } from '../utils/whatsapp';
 import { generateTotpSecret, verifyTotpCode } from '../utils/totp';
+import { saveDualStorage, usePersistedState } from '../utils/storage';
 import { 
   StaffMember, 
   SchoolClass, 
@@ -116,11 +117,7 @@ export function loadSchoolSecurityConfig(schoolIdOrAlias?: string): SchoolSecuri
 }
 
 export function saveSchoolSecurityConfig(schoolIdOrAlias: string | undefined, config: SchoolSecurityConfig): void {
-  try {
-    localStorage.setItem(securityStorageKey(schoolIdOrAlias), JSON.stringify(config));
-  } catch {
-    // ignore storage write errors
-  }
+  saveDualStorage(securityStorageKey(schoolIdOrAlias), config);
 }
 
 export function appendSchoolLoginLog(
@@ -237,7 +234,10 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { schools, showToast } = useApp();
 
   const [activeSchoolTab, setActiveSchoolTab] = useState<SchoolAdminNavTab>('dashboard');
-  const [currentSchoolId, setCurrentSchoolId] = useState<string>(schools[0]?.id || 'sch-gn-ck-001');
+  const [currentSchoolId, setCurrentSchoolId] = usePersistedState<string>(
+    'smartschool_current_school_id_v1',
+    schools[0]?.id || 'sch-gn-ck-001'
+  );
 
   // Find active school (supports both ECOLE-001 aliases and sch-gn-* IDs)
   const currentSchool = resolveSchoolForContext(schools, currentSchoolId) || schools[0];
@@ -281,58 +281,17 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     saveSchoolSecurityConfig(canonicalSchoolId, securityConfig);
   }, [canonicalSchoolId, securityConfig]);
 
-  // Entities states with local storage caching
-  const [staff, setStaff] = useState<StaffMember[]>(() => {
-    const saved = localStorage.getItem('smartschool_staff');
-    return saved ? JSON.parse(saved) : initialStaffMembers;
-  });
-
-  const [classes, setClasses] = useState<SchoolClass[]>(() => {
-    const saved = localStorage.getItem('smartschool_classes');
-    return saved ? JSON.parse(saved) : initialClasses;
-  });
-
-  const [subjects, setSubjects] = useState<SchoolSubject[]>(() => {
-    const saved = localStorage.getItem('smartschool_subjects');
-    return saved ? JSON.parse(saved) : initialSubjects;
-  });
-
-  const [rooms, setRooms] = useState<SchoolRoom[]>(() => {
-    const saved = localStorage.getItem('smartschool_rooms');
-    return saved ? JSON.parse(saved) : initialRooms;
-  });
-
-  const [academicYears, setAcademicYears] = useState<AcademicYear[]>(() => {
-    const saved = localStorage.getItem('smartschool_academic_years');
-    return saved ? JSON.parse(saved) : initialAcademicYears;
-  });
-
-  const [events, setEvents] = useState<AdministrativeEvent[]>(initialAdministrativeEvents);
-  const [documentTemplates, setDocumentTemplates] = useState<AdministrativeDocumentTemplate[]>(initialDocumentTemplates);
+  // Entities states with dual localStorage + IndexedDB persistence
+  const [staff, setStaff] = usePersistedState<StaffMember[]>('smartschool_staff', initialStaffMembers);
+  const [classes, setClasses] = usePersistedState<SchoolClass[]>('smartschool_classes', initialClasses);
+  const [subjects, setSubjects] = usePersistedState<SchoolSubject[]>('smartschool_subjects', initialSubjects);
+  const [rooms, setRooms] = usePersistedState<SchoolRoom[]>('smartschool_rooms', initialRooms);
+  const [academicYears, setAcademicYears] = usePersistedState<AcademicYear[]>('smartschool_academic_years', initialAcademicYears);
+  const [events, setEvents] = usePersistedState<AdministrativeEvent[]>('smartschool_school_events_v1', initialAdministrativeEvents);
+  const [documentTemplates, setDocumentTemplates] = usePersistedState<AdministrativeDocumentTemplate[]>('smartschool_doc_templates_v1', initialDocumentTemplates);
 
   const [selectedStaffForBadge, setSelectedStaffForBadge] = useState<StaffMember | null>(null);
   const [viewingDocumentTemplate, setViewingDocumentTemplate] = useState<AdministrativeDocumentTemplate | null>(null);
-
-  // Sync to local storage
-  useEffect(() => {
-    localStorage.setItem('smartschool_staff', JSON.stringify(staff));
-  }, [staff]);
-
-  useEffect(() => {
-    localStorage.setItem('smartschool_classes', JSON.stringify(classes));
-  }, [classes]);
-
-  useEffect(() => {
-    localStorage.setItem('smartschool_subjects', JSON.stringify(subjects));
-  }, [subjects]);
-
-  useEffect(() => {
-    localStorage.setItem('smartschool_rooms', JSON.stringify(rooms));
-  }, [rooms]);
-
-  useEffect(() => {
-    localStorage.setItem('smartschool_academic_years', JSON.stringify(academicYears));
-  }, [academicYears]);
 
   const recordLog = (userName: string, status: 'succes' | 'echec', deviceLabel: string) => {
     const entry = appendSchoolLoginLog(canonicalSchoolId, {
