@@ -212,6 +212,26 @@ export function loadLocalStorage<T>(
   return transform ? transform(initial) : initial;
 }
 
+export async function readDualStorageValue(key: string): Promise<{ found: boolean; value: unknown }> {
+  if (typeof window === 'undefined') return { found: false, value: null };
+  try {
+    const tsMarker = localStorage.getItem(tsKey(key));
+    if (tsMarker && tsMarker.startsWith('idb:')) {
+      const idbRec = await idbGetRecord<unknown>(key);
+      if (idbRec) return { found: true, value: idbRec.data };
+    }
+    const raw = localStorage.getItem(key);
+    if (raw !== null) {
+      return { found: true, value: JSON.parse(raw) };
+    }
+  } catch {
+    // ignore parse/storage error and try IDB fallback
+  }
+  const idbRec = await idbGetRecord<unknown>(key);
+  if (idbRec) return { found: true, value: idbRec.data };
+  return { found: false, value: null };
+}
+
 export function saveDualStorage<T>(
   key: string,
   value: T,

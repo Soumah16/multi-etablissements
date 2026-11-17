@@ -9,7 +9,7 @@ import {
   DisciplinaryIncident,
   DirectorNewsItem
 } from '../types/director';
-import { SchoolClass, SchoolRoom } from '../types';
+import { School, SchoolClass, SchoolRoom, SubscriptionPlan } from '../types';
 
 export interface DirectorReportLiveData {
   reportCards: StudentReportCard[];
@@ -1440,4 +1440,146 @@ export function downloadUsersExcel(
   XLSX.writeFile(wb, filename);
   return filename;
 }
+
+export function downloadSchoolsListPdf(params: {
+  schools: School[];
+  plans: SubscriptionPlan[];
+  filterSummary?: string;
+}): string {
+  const { schools, plans, filterSummary } = params;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const generatedAt = new Date().toLocaleString('fr-FR');
+
+  // Top Header Banner
+  doc.setFillColor(15, 39, 86);
+  doc.rect(0, 0, pageWidth, 26, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text(pdfSafe('SMARTSCHOOL ERP GUINEE (MEPU-A) - RAPPORT DES ETABLISSEMENTS'), 14, 11);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.text(pdfSafe(`Généré le ${generatedAt}${filterSummary ? `  |  Filtre : ${filterSummary}` : ''}`), 14, 19);
+
+  // Summary Strip
+  const activeCount = schools.filter(s => s.status === 'active').length;
+  const suspendedCount = schools.filter(s => s.status === 'suspended').length;
+  const archivedCount = schools.filter(s => s.status === 'archived').length;
+  const totalStudents = schools.reduce((sum, s) => sum + (s.stats?.studentsCount || 0), 0);
+  const totalTeachers = schools.reduce((sum, s) => sum + (s.stats?.teachersCount || 0), 0);
+  const totalRevenue = schools.reduce((sum, s) => sum + (s.stats?.monthlyRevenueGnf || 0), 0);
+
+  doc.setFillColor(240, 245, 250);
+  doc.roundedRect(14, 31, pageWidth - 28, 12, 2, 2, 'F');
+  doc.setTextColor(15, 39, 86);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.text(
+    pdfSafe(
+      `Établissements : ${schools.length} (Actifs: ${activeCount}, Suspendus: ${suspendedCount}, Archivés: ${archivedCount})   |   Élèves : ${totalStudents.toLocaleString('fr-FR')}   |   Enseignants : ${totalTeachers.toLocaleString('fr-FR')}   |   Revenu Mensuel : ${totalRevenue.toLocaleString('fr-FR')} GNF`
+    ),
+    18,
+    38.5
+  );
+
+  const statusLabel = (status: School['status']) =>
+    status === 'active' ? 'Actif' : status === 'suspended' ? 'Suspendu' : 'Archivé';
+
+  autoTable(doc, {
+    startY: 48,
+    head: [[
+      '#',
+      'Code',
+      'Établissement',
+      'Type',
+      'Ville / Préfecture',
+      'Téléphone / Email',
+      'Élèves',
+      'Profs',
+      'Formule SaaS',
+      'Revenu / mois',
+      'Statut',
+    ]],
+    body: schools.map((s, idx) => {
+      const plan = plans.find(p => p.id === s.subscriptionTier);
+      const planName = plan ? plan.name.split('(')[0].trim() : s.subscriptionTier.toUpperCase();
+      return [
+        String(idx + 1),
+        pdfSafe(s.code),
+        pdfSafe(s.name),
+        pdfSafe(s.type),
+        pdfSafe(`${s.city}, ${s.prefecture}`),
+        pdfSafe([s.phone, s.email].filter(Boolean).join(' / ') || '-'),
+        (s.stats?.studentsCount || 0).toLocaleString('fr-FR'),
+        (s.stats?.teachersCount || 0).toLocaleString('fr-FR'),
+        pdfSafe(planName),
+        `${(s.stats?.monthlyRevenueGnf || 0).toLocaleString('fr-FR')} GNF`,
+        statusLabel(s.status),
+      ];
+    }),
+    theme: 'grid',
+    styles: {
+      fontSize: 7.5,
+      cellPadding: 2.2,
+      textColor: [30, 41, 59],
+      valign: 'middle',
+    },
+    headStyles: {
+      fillColor: [30, 64, 175],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 7.5,
+    },
+    alternateRowStyles: {
+      fillColor: [248, 250, 252],
+    },
+    columnStyles: {
+      0: { halign: 'center', cellWidth: 9 },
+      1: { cellWidth: 22 },
+      2: { cellWidth: 48, fontStyle: 'bold' },
+      3: { cellWidth: 22 },
+      4: { cellWidth: 34 },
+      5: { cellWidth: 48 },
+      6: { halign: 'right', cellWidth: 16 },
+      7: { halign: 'right', cellWidth: 14 },
+      8: { cellWidth: 22 },
+      9: { halign: 'right', cellWidth: 28 },
+      10: { halign: 'center', cellWidth: 18 },
+    },
+    margin: { left: 14, right: 14, bottom: 16 },
+    didDrawPage: () => {
+      const pageNum = doc.getNumberOfPages();
+      doc.setFontSize(7.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text(
+        pdfSafe('SmartSchool ERP Guinée - Rapport administratif officiel imprimable'),
+        14,
+        pageHeight - 8
+      );
+      doc.text(
+        pdfSafe(`Page ${pageNum}`),
+        pageWidth - 14,
+        pageHeight - 8,
+        { align: 'right' }
+      );
+    },
+  });
+
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFillColor(255, 255, 255);
+    doc.rect(pageWidth - 45, pageHeight - 12, 32, 6, 'F');
+    doc.setFontSize(7.5);
+    doc.setTextColor(100, 116, 139);
+    doc.text(pdfSafe(`Page ${i} / ${totalPages}`), pageWidth - 14, pageHeight - 8, { align: 'right' });
+  }
+
+  const filename = `Liste_Ecoles_SmartSchool_${new Date().toISOString().split('T')[0]}.pdf`;
+  doc.save(filename);
+  return filename;
+}
+
 

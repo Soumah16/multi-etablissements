@@ -20,10 +20,12 @@ import {
   ExternalLink,
   ShieldCheck,
   CheckCircle2,
-  LogIn
+  LogIn,
+  FileDown
 } from 'lucide-react';
 import { SchoolFormModal } from './SchoolFormModal';
 import { SchoolDetailModal } from './SchoolDetailModal';
+import { downloadSchoolsListPdf } from '../../utils/exportDocuments';
 
 interface SchoolsManagementViewProps {
   onSwitchToSchoolAdmin?: (schoolId: string) => void;
@@ -37,6 +39,7 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
     archiveSchool, 
     deleteSchool, 
     plans,
+    showToast,
     t 
   } = useApp();
 
@@ -94,6 +97,28 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
     return new Intl.NumberFormat('fr-FR').format(amount) + ' GNF';
   };
 
+  const handleExportPdf = () => {
+    if (filteredSchools.length === 0) {
+      showToast?.('Aucun établissement à exporter avec les filtres actuels.');
+      return;
+    }
+    const filterParts: string[] = [];
+    if (filterType !== 'all') filterParts.push(`Type: ${filterType}`);
+    if (filterStatus !== 'all') {
+      filterParts.push(
+        `Statut: ${filterStatus === 'active' ? 'Actives' : filterStatus === 'suspended' ? 'Suspendues' : 'Archivées'}`
+      );
+    }
+    if (searchTerm.trim()) filterParts.push(`Recherche: "${searchTerm.trim()}"`);
+
+    const filename = downloadSchoolsListPdf({
+      schools: filteredSchools,
+      plans,
+      filterSummary: filterParts.length > 0 ? filterParts.join(' · ') : 'Liste complète',
+    });
+    showToast?.(`Rapport PDF exporté : ${filename}`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with Title and Create Button */}
@@ -107,13 +132,27 @@ export const SchoolsManagementView: React.FC<SchoolsManagementViewProps> = ({ on
           </p>
         </div>
 
-        <button
-          onClick={handleOpenCreate}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-sm transition-colors whitespace-nowrap self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t.schools.createSchool}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={handleExportPdf}
+            disabled={filteredSchools.length === 0}
+            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-blue-900 bg-white hover:bg-blue-50 border border-blue-200 rounded-lg shadow-xs transition-colors whitespace-nowrap disabled:opacity-50 cursor-pointer"
+            title="Télécharger la liste des établissements au format PDF imprimable"
+          >
+            <FileDown className="w-4 h-4 text-blue-600" />
+            <span>Exporter PDF ({filteredSchools.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleOpenCreate}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-sm transition-colors whitespace-nowrap cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t.schools.createSchool}</span>
+          </button>
+        </div>
       </div>
 
       {/* Search & Filter Toolbar */}

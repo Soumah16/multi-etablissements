@@ -106,11 +106,25 @@ export default defineConfig(() => {
           ],
         },
         devOptions: {
-          enabled: true,
-          type: 'module',
+          enabled: false,
         },
       }),
     ],
+    optimizeDeps: {
+      include: [
+        'react',
+        'react-dom',
+        'react-dom/client',
+        'lucide-react',
+        'firebase/app',
+        'firebase/auth',
+        'firebase/firestore',
+        'jspdf',
+        'jspdf-autotable',
+        'xlsx',
+        'qrcode',
+      ],
+    },
     resolve: {
       alias: {
         '@': path.resolve(import.meta.dirname, '.'),

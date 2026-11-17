@@ -19,6 +19,7 @@ import {
   getLocalTimestamp,
   isSyncableKey,
   listModifiedSyncableKeys,
+  readDualStorageValue,
   removePendingCloudKeys,
   saveDualStorage,
 } from './storage';
@@ -423,9 +424,8 @@ export async function pushAllLocalKeysToCloud(params: {
 
   for (const key of candidateKeys) {
     try {
-      const raw = localStorage.getItem(key);
-      if (raw === null) continue;
-      const parsed = JSON.parse(raw);
+      const { found, value } = await readDualStorageValue(key);
+      if (!found) continue;
       const localTs = getLocalTimestamp(key) || Date.now();
       const remoteMeta = knownSyncMeta.get(sanitizeDocId(key));
       if (remoteMeta && remoteMeta.clientUpdatedAt >= localTs) {
@@ -438,7 +438,7 @@ export async function pushAllLocalKeysToCloud(params: {
         workspaceOwnerUid,
         memberUids,
         rawKey: key,
-        value: parsed,
+        value,
         clientUpdatedAt: localTs,
         knownSyncMeta,
       });

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  AlertTriangle,
   Check,
   Cloud,
   CloudOff,
   Copy,
+  ExternalLink,
   KeyRound,
   LogOut,
   RefreshCw,
@@ -14,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { useFirebase } from '../../context/FirebaseContext';
+import { firebaseConfig } from '../../firebase';
 import { DEFAULT_WORKSPACE_ID } from '../../utils/cloudSync';
 
 export const CloudSyncButton: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
@@ -60,6 +63,8 @@ export const CloudSyncModal: React.FC = () => {
     lastSyncedAt,
     workspace,
     cloudError,
+    domainCheck,
+    recheckDomainAuthorization,
     showCloudModal,
     setShowCloudModal,
     signInWithGoogle,
@@ -78,9 +83,20 @@ export const CloudSyncModal: React.FC = () => {
   const [joinWsId, setJoinWsId] = useState(DEFAULT_WORKSPACE_ID);
   const [joinCode, setJoinCode] = useState('');
 
+  const isConnected = Boolean(firebaseUser && firebaseUser.emailVerified);
+
+  useEffect(() => {
+    if (showCloudModal && !isConnected) {
+      void recheckDomainAuthorization();
+    }
+  }, [showCloudModal, isConnected, recheckDomainAuthorization]);
+
   if (!showCloudModal) return null;
 
-  const isConnected = Boolean(firebaseUser && firebaseUser.emailVerified);
+  const officialSharedDomain =
+    domainCheck?.authorizedDomains.find(d => d.startsWith('ais-pre-')) ||
+    domainCheck?.authorizedDomains.find(d => d.startsWith('ais-dev-')) ||
+    '';
 
   const handleCopy = (label: string, value: string) => {
     navigator.clipboard?.writeText(value);
@@ -94,9 +110,12 @@ export const CloudSyncModal: React.FC = () => {
     try {
       await signInWithGoogle();
       setFeedback({ text: 'Compte Google connecté. Synchronisation temps réel activée.' });
-    } catch {
+    } catch (err) {
       setFeedback({
-        text: 'Impossible d’ouvrir la fenêtre Google. Autorisez les popups pour ce site et réessayez.',
+        text:
+          err instanceof Error && err.message
+            ? err.message
+            : 'Erreur lors de la connexion Google. Vérifiez votre navigateur et réessayez.',
         isError: true,
       });
     } finally {
@@ -208,6 +227,72 @@ export const CloudSyncModal: React.FC = () => {
 
           {!isConnected ? (
             <div className="space-y-4">
+              {domainCheck && !domainCheck.authorized && (
+                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2.5 text-amber-950">
+                  <div className="flex items-start gap-2 font-bold">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span>
+                      Domaine non autorisé par Firebase ({domainCheck.currentHostname})
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-amber-900 leading-relaxed">
+                    Firebase affiche <strong>« The requested action is invalid »</strong> tant que l’adresse actuelle n’est pas dans la liste des domaines autorisés.
+                  </p>
+                  <div className="space-y-2 pt-1">
+                    {officialSharedDomain && (
+                      <div className="p-2.5 rounded-xl bg-white border border-amber-200 flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="text-[10px] font-bold uppercase text-amber-700">
+                            Solution rapide : ouvrir l’URL officielle autorisée
+                          </div>
+                          <div className="font-mono text-[11px] text-slate-700 truncate">
+                            https://{officialSharedDomain}
+                          </div>
+                        </div>
+                        <a
+                          href={`https://${officialSharedDomain}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] shrink-0"
+                        >
+                          <span>Ouvrir</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
+                    <div className="p-2.5 rounded-xl bg-white border border-amber-200 space-y-1.5">
+                      <div className="text-[10px] font-bold uppercase text-slate-600">
+                        Ou autoriser ce domaine dans Firebase Console → Authentication → Settings → Authorized domains
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <code className="text-[11px] font-mono text-slate-800 truncate">
+                          {domainCheck.currentHostname}
+                        </code>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleCopy('host', domainCheck.currentHostname)}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] cursor-pointer"
+                          >
+                            {copiedId === 'host' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                            <span>{copiedId === 'host' ? 'Copié' : 'Copier'}</span>
+                          </button>
+                          <a
+                            href={`https://console.firebase.google.com/project/${firebaseConfig.projectId}/authentication/settings`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px]"
+                          >
+                            <span>Firebase</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="p-4 rounded-2xl bg-blue-50/80 border border-blue-100 space-y-2">
                 <div className="flex items-center gap-2 font-bold text-blue-950">
                   <Smartphone className="w-4 h-4 text-blue-600 shrink-0" />

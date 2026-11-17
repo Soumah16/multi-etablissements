@@ -16,6 +16,18 @@ export function initPWAUpdates(): void {
   initialized = true;
 
   const hasServiceWorker = 'serviceWorker' in navigator;
+
+  if (import.meta.env.DEV) {
+    if (hasServiceWorker) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(reg => {
+          void reg.unregister();
+        });
+      }).catch(() => {});
+    }
+    return;
+  }
+
   const hadController = hasServiceWorker && Boolean(navigator.serviceWorker.controller);
   const bootTime = Date.now();
   let lastCheckAt = 0;

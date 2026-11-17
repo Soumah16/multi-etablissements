@@ -1,6 +1,17 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut, User } from 'firebase/auth';
-import { auth, googleProvider } from '../firebase';
+import {
+  browserPopupRedirectResolver,
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut,
+  User,
+} from 'firebase/auth';
+import {
+  auth,
+  checkDomainAuthorized,
+  DomainAuthorizationCheck,
+  googleProvider,
+} from '../firebase';
 import {
   attachWorkspaceSyncListeners,
   bootstrapOrResolveWorkspace,
@@ -14,9 +25,41 @@ import {
   SyncMetaRecord,
   WorkspaceInfo,
 } from '../utils/cloudSync';
-import { getLocalTimestamp, onLocalStorageMutation } from '../utils/storage';
+import { getLocalTimestamp, onLocalStorageMutation, readDualStorageValue } from '../utils/storage';
 
 export type CloudSyncStatus = 'disconnected' | 'connecting' | 'synced' | 'syncing' | 'error';
+
+export function formatFirebaseAuthError(err: unknown, hostname = ''): string {
+  const code =
+    typeof err === 'object' && err !== null && 'code' in err
+      ? String((err as { code?: unknown }).code || '')
+      : '';
+  const rawMessage = err instanceof Error ? err.message : String(err || '');
+
+  switch (code) {
+    case 'auth/unauthorized-domain':
+      return hostname
+        ? `Le domaine actuel (${hostname}) n’est pas autorisé dans Firebase Authentication (ce qui provoque l’erreur « The requested action is invalid »). Utilisez l’URL officielle partagée de l’application ou ajoutez ce domaine dans Firebase Console → Authentication → Settings → Authorized domains.`
+        : 'Ce domaine n’est pas autorisé dans Firebase Authentication. Ajoutez-le dans Firebase Console → Authentication → Settings → Authorized domains.';
+    case 'auth/popup-blocked':
+      return 'La fenêtre de connexion Google a été bloquée par votre navigateur. Autorisez les popups pour ce site puis réessayez.';
+    case 'auth/popup-closed-by-user':
+      return 'La fenêtre Google a été fermée avant la fin de la connexion. Réessayez sans fermer la fenêtre.';
+    case 'auth/cancelled-popup-request':
+      return 'Une autre fenêtre de connexion était déjà ouverte. Veuillez réessayer.';
+    case 'auth/web-storage-unsupported':
+      return 'Les cookies ou le stockage navigateur sont bloqués (mode privé ou restriction Safari/mobile). Autorisez les cookies pour ce site.';
+    case 'auth/operation-not-allowed':
+      return 'La connexion Google n’est pas activée dans Firebase Authentication (Console → Sign-in method → Google).';
+    case 'auth/network-request-failed':
+      return 'Connexion réseau impossible vers Google/Firebase. Vérifiez votre connexion Internet.';
+    default:
+      if (rawMessage.includes('unauthorized-domain') || rawMessage.includes('requested action is invalid')) {
+        return formatFirebaseAuthError({ code: 'auth/unauthorized-domain' }, hostname);
+      }
+      return code ? `Erreur Google (${code}) : ${rawMessage}` : rawMessage || 'Erreur de connexion Google.';
+  }
+}
 
 interface FirebaseContextValue {
   firebaseUser: User | null;
@@ -25,6 +68,8 @@ interface FirebaseContextValue {
   lastSyncedAt: number | null;
   workspace: WorkspaceInfo | null;
   cloudError: string | null;
+  domainCheck: DomainAuthorizationCheck | null;
+  recheckDomainAuthorization: () => Promise<DomainAuthorizationCheck>;
   showCloudModal: boolean;
   setShowCloudModal: (open: boolean) => void;
   signInWithGoogle: () => Promise<void>;
@@ -43,7 +88,14 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   const [workspace, setWorkspace] = useState<WorkspaceInfo | null>(null);
   const [cloudError, setCloudError] = useState<string | null>(null);
+  const [domainCheck, setDomainCheck] = useState<DomainAuthorizationCheck | null>(null);
   const [showCloudModal, setShowCloudModal] = useState<boolean>(false);
+
+  const recheckDomainAuthorization = useCallback(async () => {
+    const result = await checkDomainAuthorized();
+    setDomainCheck(result);
+    return result;
+  }, []);
 
   const knownSyncMetaRef = useRef<Map<string, SyncMetaRecord>>(new Map());
   const workspaceRef = useRef<WorkspaceInfo | null>(null);
@@ -67,9 +119,8 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setSyncStatus('syncing');
     for (const key of keysToPush) {
       try {
-        const raw = localStorage.getItem(key);
-        if (raw === null) continue;
-        const parsed = JSON.parse(raw);
+        const { found, value } = await readDualStorageValue(key);
+        if (!found) continue;
         const ts = getLocalTimestamp(key) || Date.now();
         await pushSyncKeyToCloud({
           user,
@@ -77,7 +128,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           workspaceOwnerUid: ws.ownerUid,
           memberUids: ws.memberUids,
           rawKey: key,
-          value: parsed,
+          value,
           clientUpdatedAt: ts,
           knownSyncMeta: knownSyncMetaRef.current,
         });
@@ -206,13 +257,21 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCloudError(null);
     setSyncStatus('connecting');
     try {
-      await signInWithPopup(auth, googleProvider);
+      const check = await recheckDomainAuthorization();
+      if (!check.authorized) {
+        const domainErr = Object.assign(
+          new Error(formatFirebaseAuthError({ code: 'auth/unauthorized-domain' }, check.currentHostname)),
+          { code: 'auth/unauthorized-domain' }
+        );
+        throw domainErr;
+      }
+      await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
     } catch (err) {
       setSyncStatus('error');
-      const message =
-        err instanceof Error ? err.message : 'Connexion Google annulée ou bloquée par le navigateur.';
+      const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+      const message = formatFirebaseAuthError(err, hostname);
       setCloudError(message);
-      throw err;
+      throw new Error(message);
     }
   };
 
@@ -304,6 +363,8 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         lastSyncedAt,
         workspace,
         cloudError,
+        domainCheck,
+        recheckDomainAuthorization,
         showCloudModal,
         setShowCloudModal,
         signInWithGoogle,

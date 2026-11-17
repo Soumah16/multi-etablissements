@@ -6,10 +6,59 @@ import firebaseConfig from '../firebase-applet-config.json';
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
+auth.languageCode = 'fr';
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 export { firebaseConfig };
+
+export interface DomainAuthorizationCheck {
+  authorized: boolean;
+  currentHostname: string;
+  currentOrigin: string;
+  authorizedDomains: string[];
+}
+
+function matchesAuthorizedDomain(hostname: string, protocol: string, expected: string): boolean {
+  if (!/^https?:$/.test(protocol)) return false;
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(expected)) {
+    return hostname.toLowerCase() === expected.toLowerCase();
+  }
+  const escaped = expected.replace(/\./g, '\\.');
+  const regex = new RegExp(`^(.+\\.${escaped}|${escaped})$`, 'i');
+  return regex.test(hostname);
+}
+
+export async function checkDomainAuthorized(): Promise<DomainAuthorizationCheck> {
+  if (typeof window === 'undefined') {
+    return { authorized: true, currentHostname: '', currentOrigin: '', authorizedDomains: [] };
+  }
+  const currentHostname = window.location.hostname;
+  const currentOrigin = window.location.origin;
+  const protocol = window.location.protocol;
+
+  try {
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/projects?key=${encodeURIComponent(firebaseConfig.apiKey)}`
+    );
+    if (!res.ok) {
+      return { authorized: true, currentHostname, currentOrigin, authorizedDomains: [] };
+    }
+    const data = (await res.json()) as { authorizedDomains?: unknown };
+    const authorizedDomains = Array.isArray(data.authorizedDomains)
+      ? data.authorizedDomains.filter((d): d is string => typeof d === 'string')
+      : [];
+    if (authorizedDomains.length === 0) {
+      return { authorized: true, currentHostname, currentOrigin, authorizedDomains: [] };
+    }
+    const authorized = authorizedDomains.some(domain =>
+      matchesAuthorizedDomain(currentHostname, protocol, domain)
+    );
+    return { authorized, currentHostname, currentOrigin, authorizedDomains };
+  } catch {
+    return { authorized: true, currentHostname, currentOrigin, authorizedDomains: [] };
+  }
+}
 
 export enum OperationType {
   CREATE = 'create',
