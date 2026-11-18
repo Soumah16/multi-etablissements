@@ -14,7 +14,19 @@ import {
   initialStudentGrades, 
   initialStudentAttendance 
 } from '../data/studentMockData';
-import { usePersistedState } from '../utils/storage';
+import { subscribeStorageKey, usePersistedState } from '../utils/storage';
+import { propagateRoleProfileToAccount } from '../utils/accountSync';
+import {
+  HubRole,
+  SHARED_HOMEWORK_SUBMISSIONS_KEY,
+  SHARED_MESSAGES_KEY,
+  SharedHomeworkSubmission,
+  SharedMessage,
+  loadHomeworkSubmissionRecords,
+  loadSharedMessages,
+  pushHomeworkSubmissionRecord,
+  pushSharedMessage
+} from '../utils/communicationHub';
 
 interface StudentContextType {
   activeStudentTab: StudentNavTab;
@@ -116,13 +128,96 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   );
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    const syncIncomingMessages = (list: SharedMessage[]) => {
+      const relevant = list.filter(
+        m => m.senderRole !== 'student' && m.recipientRoles.includes('student')
+      );
+      if (relevant.length === 0) return;
+      setNotifications(prev => {
+        const ids = new Set(prev.map(n => n.id));
+        const additions = relevant
+          .filter(m => !ids.has(`smsg-${m.id}`))
+          .map(m => ({
+            id: `smsg-${m.id}`,
+            title: m.subject,
+            text: `${m.senderName} : ${m.content}`,
+            time: new Date(m.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+            type: 'course',
+            read: false
+          }));
+        return additions.length > 0 ? [...additions, ...prev].slice(0, 60) : prev;
+      });
+      setMessages(prev => {
+        const ids = new Set(prev.map(m => m.id));
+        const additions = relevant
+          .filter(m => m.senderRole === 'teacher' && !ids.has(`smsg-${m.id}`))
+          .map(m => ({
+            id: `smsg-${m.id}`,
+            sender: m.senderName,
+            text: `${m.subject} — ${m.content}`,
+            time: new Date(m.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+            isStudent: false
+          }));
+        return additions.length > 0 ? [...prev, ...additions] : prev;
+      });
+    };
+
+    const syncGradedHomeworks = (subs: SharedHomeworkSubmission[]) => {
+      const mine = subs.filter(
+        s =>
+          s.status === 'corrige' &&
+          s.studentMatricule.toLowerCase() === profile.matricule.toLowerCase()
+      );
+      if (mine.length === 0) return;
+      setHomeworks(prev =>
+        prev.map(hw => {
+          const match = mine.find(
+            s =>
+              s.homeworkId === hw.id ||
+              (s.subject.toLowerCase() === hw.subject.toLowerCase() &&
+                s.homeworkTitle.toLowerCase() === hw.title.toLowerCase())
+          );
+          if (!match) return hw;
+          return {
+            ...hw,
+            status: 'corrige',
+            score: match.grade,
+            teacherFeedback: match.teacherComment || hw.teacherFeedback
+          };
+        })
+      );
+    };
+
+    syncIncomingMessages(loadSharedMessages());
+    syncGradedHomeworks(loadHomeworkSubmissionRecords());
+
+    const unsubMsgs = subscribeStorageKey(SHARED_MESSAGES_KEY, data => {
+      if (Array.isArray(data)) syncIncomingMessages(data as SharedMessage[]);
+    });
+    const unsubHw = subscribeStorageKey(SHARED_HOMEWORK_SUBMISSIONS_KEY, data => {
+      if (Array.isArray(data)) syncGradedHomeworks(data as SharedHomeworkSubmission[]);
+    });
+
+    return () => {
+      unsubMsgs();
+      unsubHw();
+    };
+  }, [profile.matricule, setHomeworks, setMessages, setNotifications]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
   const updateProfilePhoto = (newPhotoUrl: string) => {
-    setProfile(prev => ({ ...prev, photo: newPhotoUrl }));
+    const nextProfile: StudentProfile = { ...profile, photo: newPhotoUrl };
+    setProfile(nextProfile);
+    propagateRoleProfileToAccount(
+      'student',
+      nextProfile,
+      { matricule: profile.matricule }
+    );
     showToast('Photo de profil élève mise à jour.');
   };
 
@@ -135,6 +230,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     fileSize?: string
   ) => {
     const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const targetHw = homeworks.find(h => h.id === homeworkId);
     setHomeworks(prev => prev.map(hw => {
       if (hw.id === homeworkId) {
         return {
@@ -151,6 +247,21 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
       return hw;
     }));
+
+    pushHomeworkSubmissionRecord({
+      homeworkId,
+      homeworkTitle: targetHw?.title || 'Devoir Maison',
+      subject: targetHw?.subject || 'Matière',
+      studentId: profile.id,
+      studentName: `${profile.firstName} ${profile.lastName}`,
+      studentMatricule: profile.matricule,
+      fileName,
+      fileUrl: fileData || '#',
+      fileType: fileType || 'pdf',
+      fileNote,
+      maxScore: targetHw?.maxScore || 20
+    });
+
     showToast(`Devoir « ${fileName} » remis avec succès.`);
   };
 
@@ -163,6 +274,20 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isStudent: true
     };
     setMessages(prev => [...prev, newMsg]);
+    const targetRole: HubRole = recipient.toLowerCase().includes('surveillant')
+      ? 'supervisor'
+      : 'teacher';
+    pushSharedMessage({
+      schoolId: 'sch-gn-ck-001',
+      senderRole: 'student',
+      senderName: `${profile.firstName} ${profile.lastName}`,
+      recipientRoles: [targetRole],
+      recipientLabel: recipient,
+      subject: `Message élève pour ${recipient}`,
+      content: text,
+      channel: 'in_app',
+      priority: 'normal'
+    });
     showToast(`Message envoyé à « ${recipient} ».`);
   };
 

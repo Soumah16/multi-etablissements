@@ -12,6 +12,18 @@ export interface PrintOptions {
 }
 
 /**
+ * Escape HTML special characters to prevent XSS in printable headers/titles
+ */
+export const escapeHtml = (unsafe: string): string => {
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
+/**
  * Clean printable template with official MEPU-A styling and high-contrast typography
  */
 export const buildPrintableHtml = (
@@ -19,6 +31,7 @@ export const buildPrintableHtml = (
   bodyContent: string,
   pvcMode: 'landscape' | 'portrait' | false = false
 ): string => {
+  const safeTitle = escapeHtml(title);
   let extractedStyles = '';
   try {
     if (typeof document !== 'undefined') {
@@ -78,7 +91,7 @@ export const buildPrintableHtml = (
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
+  <title>${safeTitle}</title>
   ${extractedStyles}
   <style>
     @page {
@@ -198,7 +211,7 @@ export const exportPrintableDocument = (
 };
 
 /**
- * Shows a lightweight floating notification on screen
+ * Shows a lightweight floating notification on screen (safe DOM textContent construction)
  */
 const showPrintFeedback = (title: string, pvcMode: 'landscape' | 'portrait' | false = false) => {
   const existing = document.getElementById('smartschool-print-toast');
@@ -226,14 +239,47 @@ const showPrintFeedback = (title: string, pvcMode: 'landscape' | 'portrait' | fa
     gap: 12px;
   `);
 
-  toast.innerHTML = `
-    <div style="font-size: 20px;">🖨️</div>
-    <div style="flex: 1;">
-      <div style="font-weight: bold; color: #60a5fa; margin-bottom: 2px;">${pvcMode ? 'Carte PVC CR-80 prête (85.6 × 53.98 mm) !' : "Ordre d'impression transmis !"}</div>
-      <div style="color: #cbd5e1;">Le document <strong>${title}</strong> est prêt. ${pvcMode ? 'Taille PVC normalisée conservée (imprimer à 100%).' : 'Le fichier autonome a été téléchargé pour impression directe ou PDF.'}</div>
-    </div>
-    <button style="background: none; border: none; color: #94a3b8; font-size: 16px; cursor: pointer; padding: 0 4px;" onclick="this.parentElement.remove()">✕</button>
-  `;
+  const iconDiv = document.createElement('div');
+  iconDiv.style.fontSize = '20px';
+  iconDiv.textContent = '🖨️';
+
+  const bodyDiv = document.createElement('div');
+  bodyDiv.style.flex = '1';
+
+  const headingDiv = document.createElement('div');
+  headingDiv.style.fontWeight = 'bold';
+  headingDiv.style.color = '#60a5fa';
+  headingDiv.style.marginBottom = '2px';
+  headingDiv.textContent = pvcMode
+    ? 'Carte PVC CR-80 prête (85.6 × 53.98 mm) !'
+    : "Ordre d'impression transmis !";
+
+  const msgDiv = document.createElement('div');
+  msgDiv.style.color = '#cbd5e1';
+  msgDiv.appendChild(document.createTextNode('Le document '));
+  const titleStrong = document.createElement('strong');
+  titleStrong.textContent = title;
+  msgDiv.appendChild(titleStrong);
+  msgDiv.appendChild(
+    document.createTextNode(
+      pvcMode
+        ? ' est prêt. Taille PVC normalisée conservée (imprimer à 100%).'
+        : ' est prêt. Le fichier autonome a été téléchargé pour impression directe ou PDF.'
+    )
+  );
+
+  bodyDiv.appendChild(headingDiv);
+  bodyDiv.appendChild(msgDiv);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.setAttribute('style', 'background: none; border: none; color: #94a3b8; font-size: 16px; cursor: pointer; padding: 0 4px;');
+  closeBtn.textContent = '✕';
+  closeBtn.addEventListener('click', () => toast.remove());
+
+  toast.appendChild(iconDiv);
+  toast.appendChild(bodyDiv);
+  toast.appendChild(closeBtn);
 
   document.body.appendChild(toast);
   setTimeout(() => {

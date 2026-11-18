@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useFirebase } from '../../context/FirebaseContext';
 import { firebaseConfig } from '../../firebase';
-import { DEFAULT_WORKSPACE_ID } from '../../utils/cloudSync';
+import { DEFAULT_WORKSPACE_ID, parseInviteAccessInput } from '../../utils/cloudSync';
 
 export const CloudSyncButton: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { firebaseUser, syncStatus, setShowCloudModal } = useFirebase();
@@ -80,10 +80,26 @@ export const CloudSyncModal: React.FC = () => {
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showJoinForm, setShowJoinForm] = useState(false);
-  const [joinWsId, setJoinWsId] = useState(DEFAULT_WORKSPACE_ID);
+  const [joinWsId, setJoinWsId] = useState('');
   const [joinCode, setJoinCode] = useState('');
 
   const isConnected = Boolean(firebaseUser && firebaseUser.emailVerified);
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const wsParam = params.get('syncWs');
+      const inviteParam = params.get('syncInvite');
+      if (wsParam && inviteParam) {
+        setJoinWsId(wsParam);
+        setJoinCode(inviteParam.toUpperCase());
+        setShowJoinForm(true);
+        setShowCloudModal(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, [setShowCloudModal]);
 
   useEffect(() => {
     if (showCloudModal && !isConnected) {
@@ -160,6 +176,20 @@ export const CloudSyncModal: React.FC = () => {
       });
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleJoinFieldChange = (field: 'ws' | 'code', val: string) => {
+    const parsed = parseInviteAccessInput(field === 'ws' ? val : joinWsId, field === 'code' ? val : joinCode);
+    if (/ID\s*Espace\s*:/i.test(val) && /INV-/i.test(val)) {
+      setJoinWsId(parsed.workspaceId);
+      setJoinCode(parsed.inviteCode);
+      return;
+    }
+    if (field === 'ws') {
+      setJoinWsId(val);
+    } else {
+      setJoinCode(val.toUpperCase());
     }
   };
 
@@ -400,17 +430,21 @@ export const CloudSyncModal: React.FC = () => {
                   className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2.5"
                 >
                   <div className="font-bold text-blue-950">Rejoindre avec un code d’invitation</div>
+                  <p className="text-[11px] text-slate-600 leading-snug">
+                    Collez directement le texte copié via « Copier l’accès » sur l’autre appareil, ou saisissez l’ID de l’espace (ne mettez pas votre email) et le code.
+                  </p>
                   <input
                     type="text"
                     value={joinWsId}
-                    onChange={e => setJoinWsId(e.target.value)}
-                    placeholder="ID de l’espace (ex: smartschool-guinee-main)"
-                    className="w-full px-3 py-2 rounded-xl border border-blue-200 bg-white text-xs text-slate-800"
+                    onChange={e => handleJoinFieldChange('ws', e.target.value)}
+                    placeholder="ID de l’espace (ex: ws-... ou smartschool-guinee-main)"
+                    required
+                    className="w-full px-3 py-2 rounded-xl border border-blue-200 bg-white text-xs text-slate-800 font-mono"
                   />
                   <input
                     type="text"
                     value={joinCode}
-                    onChange={e => setJoinCode(e.target.value.toUpperCase())}
+                    onChange={e => handleJoinFieldChange('code', e.target.value)}
                     placeholder="Code d’invitation (ex: INV-XXXXXX)"
                     required
                     className="w-full px-3 py-2 rounded-xl border border-blue-200 bg-white text-xs font-mono text-slate-800"
@@ -452,27 +486,30 @@ export const CloudSyncModal: React.FC = () => {
                 </div>
 
                 {generatedCode && workspace && (
-                  <div className="p-3 rounded-xl bg-white border border-emerald-200 flex items-center justify-between gap-2">
-                    <div className="text-[11px] font-mono text-slate-700">
-                      Code : <strong className="text-emerald-700">{generatedCode}</strong>
+                  <div className="p-3 rounded-xl bg-white border border-emerald-200 space-y-2">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="text-[11px] font-mono text-slate-700">
+                        Espace : <strong className="text-slate-900">{workspace.id}</strong> · Code :{' '}
+                        <strong className="text-emerald-700">{generatedCode}</strong>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleCopy(
+                            'invite',
+                            `ID Espace: ${workspace.id} | Code d'invitation: ${generatedCode}`
+                          )
+                        }
+                        className="text-emerald-700 font-bold inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        {copiedId === 'invite' ? (
+                          <Check className="w-3.5 h-3.5" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                        <span>{copiedId === 'invite' ? 'Copié' : 'Copier l’accès'}</span>
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleCopy(
-                          'invite',
-                          `ID Espace: ${workspace.id} | Code d'invitation: ${generatedCode}`
-                        )
-                      }
-                      className="text-emerald-700 font-bold inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      {copiedId === 'invite' ? (
-                        <Check className="w-3.5 h-3.5" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" />
-                      )}
-                      <span>{copiedId === 'invite' ? 'Copié' : 'Copier l’accès'}</span>
-                    </button>
                   </div>
                 )}
               </form>

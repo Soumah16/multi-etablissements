@@ -14,10 +14,16 @@ import {
 } from 'lucide-react';
 import { RoleType, AccountStatus, UserAccount, ROLE_PERMISSIONS_MATRIX, ROLE_LABELS } from '../types/rbac';
 import { saveDualStorage } from '../utils/storage';
+import {
+  hashPasswordSync,
+  isSaltedPasswordHash,
+  verifySaltedPasswordHash
+} from '../utils/passwordCrypto';
 
 export interface DemoAccount extends Omit<UserAccount, 'role'> {
   role: WorkspaceMode;
   name: string;
+  username?: string;
   password: string;
   plainPassword: string;
   category: 'Direction & Administration' | 'Pédagogie & Encadrement' | 'Finances & Ressources' | 'Famille & Apprenant';
@@ -27,6 +33,20 @@ export interface DemoAccount extends Omit<UserAccount, 'role'> {
   provisionedBy: string;
   permissionsSummary: string;
 }
+
+export const normalizeSchoolId = (schoolId?: string): string => {
+  if (!schoolId) return '';
+  const trimmed = schoolId.trim();
+  const upper = trimmed.toUpperCase();
+  if (
+    upper === 'ECOLE-001' ||
+    trimmed.toLowerCase() === 'sch-gn-ck-001' ||
+    upper === 'LEC-CKY'
+  ) {
+    return 'ECOLE-001';
+  }
+  return trimmed;
+};
 
 const RAW_DEMO_ACCOUNTS: Omit<DemoAccount, 'password'>[] = [
   {
@@ -363,7 +383,9 @@ const RAW_DEMO_ACCOUNTS: Omit<DemoAccount, 'password'>[] = [
 
 export const DEMO_ACCOUNTS: DemoAccount[] = RAW_DEMO_ACCOUNTS.map(a => ({
   ...a,
-  password: a.plainPassword
+  passwordHash: hashPasswordSync(a.plainPassword),
+  password: '',
+  plainPassword: ''
 }));
 
 export const getIconForRole = (role: WorkspaceMode): React.ComponentType<{ className?: string }> => {
@@ -418,7 +440,7 @@ export const getCategoryForRole = (role: WorkspaceMode): DemoAccount['category']
   }
 };
 
-const ACCOUNTS_STORAGE_KEY = 'smartschool_accounts_v3';
+export const ACCOUNTS_STORAGE_KEY = 'smartschool_accounts_v3';
 const DEMO_MODE_STORAGE_KEY = 'smartschool_mode_demo_flag';
 
 export const isDemoModeActive = (): boolean => {
@@ -433,19 +455,45 @@ export const setDemoModeActive = (_active: boolean): void => {
   }
 };
 
+function sanitizeAccountCredentialState(item: any): DemoAccount {
+  const mustChange = Boolean(item.mustChangePassword);
+  const rawPlain = String(item.plainPassword ?? item.password ?? '').trim();
+  const hasSaltedHash = isSaltedPasswordHash(item.passwordHash);
+
+  let passwordHash = hasSaltedHash ? item.passwordHash : '';
+  if (!passwordHash && rawPlain) {
+    passwordHash = hashPasswordSync(rawPlain);
+  }
+  if (!passwordHash) {
+    const seedMatch = RAW_DEMO_ACCOUNTS.find(
+      r =>
+        r.id === item.id ||
+        r.email.toLowerCase() === String(item.email || '').toLowerCase() ||
+        r.matricule.toLowerCase() === String(item.matricule || '').toLowerCase()
+    );
+    passwordHash = hashPasswordSync(seedMatch?.plainPassword || 'Smart@2026');
+  }
+
+  // Only keep temporary plainPassword while mustChangePassword === true (initial issuance slip)
+  const visibleTempPass = mustChange ? rawPlain : '';
+
+  return {
+    ...item,
+    name: item.name || `${item.firstName || ''} ${item.lastName || ''}`.trim(),
+    passwordHash,
+    password: visibleTempPass,
+    plainPassword: visibleTempPass,
+    icon: getIconForRole(item.role)
+  };
+}
+
 export const getStoredAccounts = (): DemoAccount[] => {
   try {
     const raw = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map((item: any) => ({
-          ...item,
-          name: item.name || `${item.firstName || ''} ${item.lastName || ''}`.trim(),
-          password: item.password || item.plainPassword,
-          plainPassword: item.plainPassword || item.password,
-          icon: getIconForRole(item.role)
-        }));
+        return parsed.map(sanitizeAccountCredentialState);
       }
     }
   } catch (err) {
@@ -456,23 +504,38 @@ export const getStoredAccounts = (): DemoAccount[] => {
 
 export const saveStoredAccounts = (accounts: DemoAccount[]) => {
   try {
-    const serializable = accounts.map(({ icon, ...rest }) => rest);
+    const serializable = accounts.map(({ icon, ...rest }) => {
+      const sanitized = sanitizeAccountCredentialState(rest);
+      const { icon: _drop, ...cleanRest } = sanitized;
+      return cleanRest;
+    });
     saveDualStorage(ACCOUNTS_STORAGE_KEY, serializable);
   } catch (err) {
     console.error('Error saving accounts to storage:', err);
   }
 };
 
-export const getAccountByRole = (role: WorkspaceMode): DemoAccount | undefined => {
+export const getAccountByRole = (role: WorkspaceMode, schoolId?: string): DemoAccount | undefined => {
   const all = getStoredAccounts();
+  if (schoolId && schoolId !== 'ALL' && schoolId !== 'NATIONAL') {
+    const targetCanonical = normalizeSchoolId(schoolId);
+    const exactMatch = all.find(
+      a => a.role === role && normalizeSchoolId(a.ecoleId) === targetCanonical
+    );
+    if (exactMatch) return exactMatch;
+  }
   return all.find(a => a.role === role);
 };
 
 export const getAccountByIdentifier = (identifier: string): DemoAccount | undefined => {
   const clean = identifier.trim().toLowerCase();
+  if (!clean) return undefined;
   const all = getStoredAccounts();
   return all.find(
-    a => a.email.toLowerCase() === clean || a.matricule.toLowerCase() === clean
+    a =>
+      a.email.toLowerCase() === clean ||
+      a.matricule.toLowerCase() === clean ||
+      (a.username && a.username.toLowerCase() === clean)
   );
 };
 
@@ -498,9 +561,12 @@ export const authenticateUser = (
 ): AuthResult => {
   const accounts = getStoredAccounts();
   const cleanId = identifier.trim().toLowerCase();
-  
+
   const user = accounts.find(
-    a => a.email.toLowerCase() === cleanId || a.matricule.toLowerCase() === cleanId
+    a =>
+      a.email.toLowerCase() === cleanId ||
+      a.matricule.toLowerCase() === cleanId ||
+      (a.username && a.username.toLowerCase() === cleanId)
   );
 
   // 1. Check if user exists
@@ -527,16 +593,31 @@ export const authenticateUser = (
     };
   }
 
-  // 4. Check password
-  const passwordMatches = 
-    user.plainPassword === rawPassword || 
-    (rawPassword === 'Smart@2026' && user.mustChangePassword);
+  // 4. Check password (salted SHA-256 verification first, with legacy migration support)
+  const storedPassword = String(user.plainPassword || user.password || '');
+  const trimmedInput = rawPassword.trim();
+  const hasSalted = isSaltedPasswordHash(user.passwordHash);
+
+  const saltedMatch =
+    hasSalted &&
+    rawPassword.length > 0 &&
+    (verifySaltedPasswordHash(rawPassword, user.passwordHash) ||
+      (trimmedInput.length > 0 && verifySaltedPasswordHash(trimmedInput, user.passwordHash)));
+
+  const legacyPlainMatch =
+    rawPassword.length > 0 &&
+    ((storedPassword.length > 0 &&
+      (storedPassword === rawPassword ||
+        (trimmedInput.length > 0 && storedPassword.trim() === trimmedInput))) ||
+      (!storedPassword && !hasSalted && trimmedInput === 'Smart@2026' && user.mustChangePassword));
+
+  const passwordMatches = saltedMatch || legacyPlainMatch;
 
   if (!passwordMatches) {
     // Increment failed login attempts
     const updatedAttempts = (user.failedLoginAttempts || 0) + 1;
     const shouldLock = updatedAttempts >= 5;
-    
+
     const updatedAccounts = accounts.map(a => {
       if (a.id === user.id) {
         return {
@@ -562,20 +643,28 @@ export const authenticateUser = (
     };
   }
 
-  // 5. Check school isolation (if a specific school was chosen and not a national super admin)
-  if (targetSchoolId && targetSchoolId !== 'ALL' && user.ecoleId !== 'NATIONAL' && user.ecoleId !== targetSchoolId) {
+  // 5. Check school isolation (with canonical school ID normalization so ECOLE-001 === sch-gn-ck-001)
+  if (
+    targetSchoolId &&
+    targetSchoolId !== 'ALL' &&
+    user.ecoleId !== 'NATIONAL' &&
+    normalizeSchoolId(user.ecoleId) !== normalizeSchoolId(targetSchoolId)
+  ) {
     return {
       success: false,
       errorMessage: 'Établissement non autorisé pour ce compte. Vous ne pouvez pas accéder à un autre établissement.'
     };
   }
 
-  // 6. Reset failed attempts on success and record last login
+  // 6. Reset failed attempts on success, upgrade legacy password hashes to salted SHA-256, and record last login
   const now = new Date().toISOString();
+  const upgradedHash = hasSalted ? user.passwordHash : hashPasswordSync(trimmedInput || rawPassword);
   const updatedAccounts = accounts.map(a => {
     if (a.id === user.id) {
       return {
         ...a,
+        passwordHash: upgradedHash,
+        ...(a.mustChangePassword ? {} : { plainPassword: '', password: '' }),
         failedLoginAttempts: 0,
         lastLogin: now
       };
@@ -586,9 +675,212 @@ export const authenticateUser = (
 
   return {
     success: true,
-    user,
+    user: {
+      ...user,
+      passwordHash: upgradedHash
+    },
     mustChangePassword: user.mustChangePassword
   };
+};
+
+export interface AccountMatchCriteria {
+  id?: string;
+  email?: string;
+  matricule?: string;
+  username?: string;
+  role?: WorkspaceMode;
+  ecoleId?: string;
+}
+
+export const matchesAccountCriteria = (acc: DemoAccount, criteria: AccountMatchCriteria): boolean => {
+  if (criteria.id && acc.id === criteria.id) return true;
+  if (criteria.email && acc.email.toLowerCase() === criteria.email.trim().toLowerCase()) return true;
+  if (criteria.matricule && acc.matricule.toLowerCase() === criteria.matricule.trim().toLowerCase()) return true;
+  if (criteria.username && acc.username && acc.username.toLowerCase() === criteria.username.trim().toLowerCase()) {
+    return true;
+  }
+  if (criteria.role && acc.role === criteria.role) {
+    if (!criteria.ecoleId) return true;
+    return normalizeSchoolId(acc.ecoleId) === normalizeSchoolId(criteria.ecoleId);
+  }
+  return false;
+};
+
+export const upsertUserAccount = (
+  accountData: {
+    id?: string;
+    role: WorkspaceMode;
+    firstName: string;
+    lastName: string;
+    name?: string;
+    email: string;
+    username?: string;
+    phone?: string;
+    matricule: string;
+    ecoleId: string;
+    schoolName: string;
+    title?: string;
+    photo?: string;
+    plainPassword?: string;
+    mustChangePassword?: boolean;
+    status?: AccountStatus;
+    provisionedBy?: string;
+  },
+  matchCriteria?: AccountMatchCriteria
+): DemoAccount => {
+  const accounts = getStoredAccounts();
+  const existingIdx = accounts.findIndex(a =>
+    matchCriteria
+      ? matchesAccountCriteria(a, matchCriteria)
+      : a.email.toLowerCase() === accountData.email.trim().toLowerCase() ||
+        a.matricule.toLowerCase() === accountData.matricule.trim().toLowerCase()
+  );
+
+  const roleTitles: Record<WorkspaceMode, string> = {
+    super_admin: 'Super Administrateur Global',
+    school_admin: 'Admin École (Fondateur)',
+    director: 'Directeur des Études',
+    secretary: 'Secrétaire Générale',
+    teacher: 'Enseignant Titulaire',
+    supervisor: 'Surveillant Général',
+    accountant: 'Chef Comptable',
+    librarian: 'Bibliothécaire',
+    parent: 'Espace Parent (Tuteur)',
+    student: 'Espace Élève (Apprenant)'
+  };
+
+  const fullName = (accountData.name || `${accountData.firstName} ${accountData.lastName}`).trim();
+  const today = new Date().toISOString().split('T')[0];
+
+  if (existingIdx >= 0) {
+    const existing = accounts[existingIdx];
+    const nextMustChange =
+      accountData.mustChangePassword !== undefined ? accountData.mustChangePassword : existing.mustChangePassword;
+    const hasIncomingPassword =
+      typeof accountData.plainPassword === 'string' && accountData.plainPassword.trim().length > 0;
+    const incomingPass = hasIncomingPassword ? accountData.plainPassword!.trim() : '';
+
+    const nextHash = hasIncomingPassword
+      ? hashPasswordSync(incomingPass)
+      : existing.passwordHash;
+    const nextTempVisible = nextMustChange
+      ? (hasIncomingPassword ? incomingPass : existing.plainPassword || existing.password || '')
+      : '';
+
+    const updated: DemoAccount = {
+      ...existing,
+      role: accountData.role,
+      firstName: accountData.firstName.trim() || existing.firstName,
+      lastName: accountData.lastName.trim() || existing.lastName,
+      name: fullName || existing.name,
+      email: accountData.email.trim().toLowerCase() || existing.email,
+      username: accountData.username !== undefined ? accountData.username.trim().toLowerCase() : existing.username,
+      phone: accountData.phone !== undefined ? accountData.phone : existing.phone,
+      matricule: accountData.matricule.trim().toUpperCase() || existing.matricule,
+      ecoleId: accountData.ecoleId || existing.ecoleId,
+      schoolName: accountData.schoolName || existing.schoolName,
+      title: accountData.title || existing.title,
+      photo: accountData.photo || existing.photo,
+      passwordHash: nextHash,
+      password: nextTempVisible,
+      plainPassword: nextTempVisible,
+      mustChangePassword: nextMustChange,
+      status: accountData.status || existing.status,
+      failedLoginAttempts: accountData.status === 'actif' ? 0 : existing.failedLoginAttempts,
+      updatedAt: today,
+      icon: getIconForRole(accountData.role),
+      badgeColor: getBadgeColorForRole(accountData.role),
+      category: getCategoryForRole(accountData.role)
+    };
+
+    const nextAccounts = accounts.map((a, idx) => (idx === existingIdx ? updated : a));
+    saveStoredAccounts(nextAccounts);
+    return updated;
+  }
+
+  const initialPassword = (accountData.plainPassword || `Smart#${Math.floor(1000 + Math.random() * 9000)}`).trim();
+  const cleanMat = accountData.matricule.trim().toUpperCase();
+  const initialMustChange = accountData.mustChangePassword ?? true;
+
+  const created: DemoAccount = {
+    id: accountData.id || `USR-${Date.now()}-${Math.floor(10 + Math.random() * 90)}`,
+    role: accountData.role,
+    matricule: cleanMat,
+    ecoleId: accountData.ecoleId,
+    title: accountData.title || roleTitles[accountData.role] || 'Utilisateur',
+    name: fullName,
+    firstName: accountData.firstName.trim(),
+    lastName: accountData.lastName.trim(),
+    email: accountData.email.trim().toLowerCase(),
+    username: accountData.username?.trim().toLowerCase(),
+    phone: accountData.phone || '+224 620 00 00 00',
+    schoolName: accountData.schoolName,
+    password: initialMustChange ? initialPassword : '',
+    plainPassword: initialMustChange ? initialPassword : '',
+    passwordHash: hashPasswordSync(initialPassword),
+    status: accountData.status || 'actif',
+    mustChangePassword: initialMustChange,
+    failedLoginAttempts: 0,
+    badgeNumber: `BDG-${cleanMat.replace(/[^A-Z0-9]/g, '')}`,
+    nationalUid: `GN-MEPUA-${cleanMat.replace(/[^A-Z0-9]/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`,
+    createdAt: today,
+    updatedAt: today,
+    permissions: [],
+    category: getCategoryForRole(accountData.role),
+    badgeColor: getBadgeColorForRole(accountData.role),
+    icon: getIconForRole(accountData.role),
+    description: `Compte officiel habilité pour ${fullName}.`,
+    photo: accountData.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',
+    provisionedBy: accountData.provisionedBy || 'Administration SmartSchool ERP',
+    permissionsSummary: `Accès habilité au portail ${accountData.title || roleTitles[accountData.role]}`
+  };
+
+  saveStoredAccounts([created, ...accounts]);
+  return created;
+};
+
+export const updateAccountPassword = (
+  criteria: AccountMatchCriteria,
+  newPassword: string,
+  mustChangePassword = false
+): DemoAccount | null => {
+  const cleanPass = newPassword.trim();
+  if (!cleanPass) return null;
+  const accounts = getStoredAccounts();
+  let updatedAccount: DemoAccount | null = null;
+  const nextHash = hashPasswordSync(cleanPass);
+  const nextVisibleTemp = mustChangePassword ? cleanPass : '';
+
+  const nextAccounts = accounts.map(a => {
+    if (matchesAccountCriteria(a, criteria)) {
+      updatedAccount = {
+        ...a,
+        passwordHash: nextHash,
+        password: nextVisibleTemp,
+        plainPassword: nextVisibleTemp,
+        mustChangePassword,
+        failedLoginAttempts: 0,
+        status: a.status === 'verrouille' ? ('actif' as AccountStatus) : a.status,
+        updatedAt: new Date().toISOString().split('T')[0]
+      };
+      return updatedAccount;
+    }
+    return a;
+  });
+  if (updatedAccount) {
+    saveStoredAccounts(nextAccounts);
+  }
+  return updatedAccount;
+};
+
+export const removeAccountByMatch = (criteria: AccountMatchCriteria): boolean => {
+  const accounts = getStoredAccounts();
+  const next = accounts.filter(a => !matchesAccountCriteria(a, criteria));
+  if (next.length !== accounts.length) {
+    saveStoredAccounts(next);
+    return true;
+  }
+  return false;
 };
 
 /**

@@ -21,7 +21,8 @@ import {
   X, 
   Check, 
   HeartPulse,
-  QrCode
+  QrCode,
+  Copy
 } from 'lucide-react';
 
 export const StudentEnrollmentView: React.FC = () => {
@@ -45,6 +46,8 @@ export const StudentEnrollmentView: React.FC = () => {
   // Modal registration / edit
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentEnrollment | null>(null);
+  const [createdCredentialsStudent, setCreatedCredentialsStudent] = useState<StudentEnrollment | null>(null);
+  const [copiedPwd, setCopiedPwd] = useState(false);
 
   // Transfer modal
   const [transferModalStudent, setTransferModalStudent] = useState<StudentEnrollment | null>(null);
@@ -160,7 +163,7 @@ export const StudentEnrollmentView: React.FC = () => {
         missingDocuments: missingDocsArray
       });
     } else {
-      createStudent({
+      const created = createStudent({
         firstName,
         lastName,
         dateOfBirth,
@@ -169,7 +172,7 @@ export const StudentEnrollmentView: React.FC = () => {
         nationality,
         address,
         phone,
-        email: email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@eleve.lycee-excellence.gn`,
+        email: email.trim() || `${firstName.toLowerCase().replace(/[^a-z0-9]/g, '')}.${lastName.toLowerCase().replace(/[^a-z0-9]/g, '')}@eleve.lycee-excellence.gn`,
         classId: 'cls-001',
         className,
         bloodGroup,
@@ -181,6 +184,8 @@ export const StudentEnrollmentView: React.FC = () => {
         dossierStatus: missingDocsArray.length > 0 ? 'incomplet' : dossierStatus,
         missingDocuments: missingDocsArray
       });
+      setCopiedPwd(false);
+      setCreatedCredentialsStudent(created);
     }
 
     setIsModalOpen(false);
@@ -789,6 +794,73 @@ export const StudentEnrollmentView: React.FC = () => {
               >
                 <ArrowRightLeft className="w-4 h-4" />
                 <span>Valider le Transfert</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Created Student Credentials Modal */}
+      {createdCredentialsStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="bg-white border border-emerald-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <div className="flex items-center gap-2 text-emerald-700">
+                <CheckCircle2 className="w-5 h-5" />
+                <h3 className="text-sm font-bold text-blue-950">Compte Élève Créé avec Succès</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCreatedCredentialsStudent(null)}
+                className="text-slate-500 hover:text-blue-950"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+              <div>
+                <span className="text-slate-500">Élève :</span>{' '}
+                <strong className="text-blue-950">{createdCredentialsStudent.firstName} {createdCredentialsStudent.lastName}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500">Matricule :</span>{' '}
+                <strong className="font-mono text-teal-700">{createdCredentialsStudent.matricule}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500">Email :</span>{' '}
+                <strong className="font-mono text-blue-950">{createdCredentialsStudent.email}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500">Identifiant :</span>{' '}
+                <strong className="font-mono text-blue-950">{createdCredentialsStudent.credentials.username}</strong>
+              </div>
+              <div className="pt-2 border-t border-slate-200 flex items-center justify-between gap-2">
+                <div>
+                  <span className="text-slate-500 block">Mot de passe initial :</span>
+                  <strong className="font-mono text-sm text-emerald-700">{createdCredentialsStudent.credentials.tempPassword}</strong>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(createdCredentialsStudent.credentials.tempPassword || '');
+                    setCopiedPwd(true);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-500 text-white font-semibold flex items-center gap-1"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>{copiedPwd ? 'Copié ✓' : 'Copier'}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setCreatedCredentialsStudent(null)}
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold"
+              >
+                Fermer
               </button>
             </div>
           </div>

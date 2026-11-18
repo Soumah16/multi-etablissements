@@ -23,6 +23,17 @@ import {
 } from '../data/secretaryMockData';
 import { useSchoolAdmin } from './SchoolAdminContext';
 import { usePersistedState } from '../utils/storage';
+import {
+  propagateParentRecordChange,
+  propagateRoleProfileToAccount,
+  propagateStudentRecordChange
+} from '../utils/accountSync';
+import {
+  HubRole,
+  pushSharedMessage,
+  pushSharedRequest,
+  updateSharedRequestStatus
+} from '../utils/communicationHub';
 
 interface SecretaryContextType {
   activeSecretaryTab: SecretaryNavTab;
@@ -178,7 +189,14 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const updateProfile = (partial: Partial<SecretaryProfile>) => {
-    setProfile(prev => ({ ...prev, ...partial }));
+    const nextProfile: SecretaryProfile = { ...profile, ...partial };
+    setProfile(nextProfile);
+    propagateRoleProfileToAccount(
+      'secretary',
+      nextProfile,
+      { email: profile.email, matricule: profile.matricule },
+      nextProfile.schoolId || currentSchool?.id
+    );
     showToast('Profil Secrétariat mis à jour.');
   };
 
@@ -228,6 +246,12 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
 
     setStudents(prev => [newStudent, ...prev]);
+
+    propagateStudentRecordChange({
+      student: newStudent,
+      schoolId: currentSchool?.id || profile.schoolId,
+      schoolName: currentSchool?.name || profile.schoolName
+    });
     
     // Automatically link to parent if parentId is known
     if (data.parentId) {
@@ -250,9 +274,18 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updateStudent = (id: string, partial: Partial<StudentEnrollment>) => {
     const existing = students.find(s => s.id === id);
-    const updatedName = `${partial.firstName ?? existing?.firstName ?? ''} ${partial.lastName ?? existing?.lastName ?? ''}`.trim();
+    if (!existing) return;
+    const updatedStudent: StudentEnrollment = { ...existing, ...partial };
+    const updatedName = `${updatedStudent.firstName} ${updatedStudent.lastName}`.trim();
 
-    setStudents(prev => prev.map(s => s.id === id ? { ...s, ...partial } : s));
+    setStudents(prev => prev.map(s => (s.id === id ? updatedStudent : s)));
+    propagateStudentRecordChange({
+      oldEmail: existing.email,
+      oldMatricule: existing.matricule,
+      student: updatedStudent,
+      schoolId: currentSchool?.id || profile.schoolId,
+      schoolName: currentSchool?.name || profile.schoolName
+    });
 
     if (partial.parentId !== undefined) {
       setParents(prev => prev.map(p => {
@@ -281,13 +314,33 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const archiveStudent = (id: string) => {
-    setStudents(prev => prev.map(s => s.id === id ? { ...s, status: 'archive' } : s));
+    const existing = students.find(s => s.id === id);
+    if (!existing) return;
+    const updatedStudent: StudentEnrollment = { ...existing, status: 'archive' };
+    setStudents(prev => prev.map(s => (s.id === id ? updatedStudent : s)));
+    propagateStudentRecordChange({
+      oldEmail: existing.email,
+      oldMatricule: existing.matricule,
+      student: updatedStudent,
+      schoolId: currentSchool?.id || profile.schoolId,
+      schoolName: currentSchool?.name || profile.schoolName
+    });
     addSecurityLog(`Archivage du dossier élève #${id}`);
     showToast('Élève archivé.');
   };
 
   const restoreStudent = (id: string) => {
-    setStudents(prev => prev.map(s => s.id === id ? { ...s, status: 'actif' } : s));
+    const existing = students.find(s => s.id === id);
+    if (!existing) return;
+    const updatedStudent: StudentEnrollment = { ...existing, status: 'actif' };
+    setStudents(prev => prev.map(s => (s.id === id ? updatedStudent : s)));
+    propagateStudentRecordChange({
+      oldEmail: existing.email,
+      oldMatricule: existing.matricule,
+      student: updatedStudent,
+      schoolId: currentSchool?.id || profile.schoolId,
+      schoolName: currentSchool?.name || profile.schoolName
+    });
     addSecurityLog(`Réactivation du dossier élève #${id}`);
     showToast('Élève réactivé avec succès.');
   };
@@ -367,24 +420,44 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
 
     setParents(prev => [newParent, ...prev]);
+    propagateParentRecordChange({
+      parent: newParent,
+      schoolId: currentSchool?.id || profile.schoolId,
+      schoolName: currentSchool?.name || profile.schoolName
+    });
     addSecurityLog(`Création compte parent : ${newParent.firstName} ${newParent.lastName}`);
     showToast(`Compte parent créé pour ${newParent.firstName} ${newParent.lastName}.`);
     return newParent;
   };
 
   const updateParent = (id: string, partial: Partial<ParentRecord>) => {
-    setParents(prev => prev.map(p => p.id === id ? { ...p, ...partial } : p));
+    const existing = parents.find(p => p.id === id);
+    if (!existing) return;
+    const updatedParent: ParentRecord = { ...existing, ...partial };
+    setParents(prev => prev.map(p => (p.id === id ? updatedParent : p)));
+    propagateParentRecordChange({
+      oldEmail: existing.email,
+      oldUsername: existing.credentials?.username,
+      parent: updatedParent,
+      schoolId: currentSchool?.id || profile.schoolId,
+      schoolName: currentSchool?.name || profile.schoolName
+    });
     showToast('Informations parent mises à jour.');
   };
 
   const toggleParentStatus = (id: string) => {
-    setParents(prev => prev.map(p => {
-      if (p.id === id) {
-        const nextStatus = p.status === 'actif' ? 'desactive' : 'actif';
-        return { ...p, status: nextStatus };
-      }
-      return p;
-    }));
+    const existing = parents.find(p => p.id === id);
+    if (!existing) return;
+    const nextStatus = existing.status === 'actif' ? 'desactive' : 'actif';
+    const updatedParent: ParentRecord = { ...existing, status: nextStatus };
+    setParents(prev => prev.map(p => (p.id === id ? updatedParent : p)));
+    propagateParentRecordChange({
+      oldEmail: existing.email,
+      oldUsername: existing.credentials?.username,
+      parent: updatedParent,
+      schoolId: currentSchool?.id || profile.schoolId,
+      schoolName: currentSchool?.name || profile.schoolName
+    });
     showToast('Statut du compte parent modifié.');
   };
 
@@ -521,6 +594,17 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
 
     setTransfers(prev => [newTransfer, ...prev]);
+    pushSharedRequest({
+      id: newTransfer.id,
+      schoolId: currentSchool?.id || profile.schoolId,
+      category: 'transfert',
+      title: `Transfert ${data.type} : ${data.studentName} (${data.className})`,
+      description: `De ${data.previousSchool} vers ${data.targetSchool}. Motif : ${data.reason}`,
+      requesterName: profile.name,
+      requesterRole: 'secretary',
+      targetRoles: ['director', 'school_admin'],
+      status: 'approuve'
+    });
     addSecurityLog(`Enregistrement transfert ${data.type} pour ${data.studentName}`);
     showToast(`Transfert ${data.type} enregistré pour ${data.studentName}.`);
     return newTransfer;
@@ -528,6 +612,7 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updateTransferStatus = (id: string, status: 'approuve' | 'rejete') => {
     setTransfers(prev => prev.map(t => t.id === id ? { ...t, status } : t));
+    updateSharedRequestStatus(id, status, profile.name, `Transfert ${status} par le secrétariat.`);
     showToast(`Statut du transfert mis à jour : ${status}`);
   };
 
@@ -549,12 +634,29 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       status: 'programme'
     };
     setAppointments(prev => [newApp, ...prev]);
+    pushSharedRequest({
+      id: newApp.id,
+      schoolId: currentSchool?.id || profile.schoolId,
+      category: 'rendez_vous',
+      title: `RDV : ${data.title} (${data.visitorName})`,
+      description: `Prévu le ${data.date} à ${data.time} (${data.location}). ${data.notes || ''}`.trim(),
+      requesterName: data.visitorName,
+      requesterRole: 'parent',
+      targetRoles: ['secretary', 'director', 'school_admin'],
+      status: 'en_cours'
+    });
     showToast('Rendez-vous planifié au secrétariat.');
     return newApp;
   };
 
   const updateAppointmentStatus = (id: string, status: 'termine' | 'annule') => {
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+    updateSharedRequestStatus(
+      id,
+      status === 'termine' ? 'approuve' : 'rejete',
+      profile.name,
+      status === 'termine' ? 'Rendez-vous honoré.' : 'Rendez-vous annulé.'
+    );
     showToast('Statut du rendez-vous mis à jour.');
   };
 
@@ -575,6 +677,19 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       status: 'envoye'
     };
     setMessages(prev => [newMsg, ...prev]);
+    const recipientRoles: HubRole[] =
+      data.target === 'all_students' ? ['student'] : ['parent', 'director', 'school_admin'];
+    pushSharedMessage({
+      schoolId: currentSchool?.id || profile.schoolId,
+      senderRole: 'secretary',
+      senderName: profile.name,
+      recipientRoles,
+      recipientLabel: data.targetDetail || (data.target === 'all_students' ? 'Élèves' : "Parents d'élèves"),
+      subject: data.title,
+      content: data.content,
+      channel: data.channels.includes('email') ? 'email' : data.channels.includes('sms') ? 'sms' : 'in_app',
+      priority: 'officiel'
+    });
     addSecurityLog(`Diffusion message administratif : ${data.title}`);
     showToast('Message administratif transmis sur tous les canaux.');
   };

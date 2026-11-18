@@ -18,7 +18,9 @@ import {
   X, 
   Check, 
   Eye,
-  KeyRound
+  KeyRound,
+  Copy,
+  CheckCircle2
 } from 'lucide-react';
 
 export const ParentManagementView: React.FC = () => {
@@ -35,6 +37,8 @@ export const ParentManagementView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingParent, setEditingParent] = useState<ParentRecord | null>(null);
+  const [createdCredentialsParent, setCreatedCredentialsParent] = useState<ParentRecord | null>(null);
+  const [copiedPwd, setCopiedPwd] = useState(false);
 
   // Link children modal
   const [linkingParent, setLinkingParent] = useState<ParentRecord | null>(null);
@@ -91,16 +95,18 @@ export const ParentManagementView: React.FC = () => {
         photo
       });
     } else {
-      createParent({
+      const created = createParent({
         firstName,
         lastName,
         phone,
-        email: email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@parent.gn`,
+        email: email.trim() || `${firstName.toLowerCase().replace(/[^a-z0-9]/g, '')}.${lastName.toLowerCase().replace(/[^a-z0-9]/g, '')}@parent.gn`,
         address,
         profession,
         photo,
         childrenIds: selectedChildIds
       });
+      setCopiedPwd(false);
+      setCreatedCredentialsParent(created);
     }
 
     setIsModalOpen(false);
@@ -482,6 +488,69 @@ export const ParentManagementView: React.FC = () => {
               >
                 <LinkIcon className="w-4 h-4" />
                 <span>Rattacher l'Enfant</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Created Parent Credentials Modal */}
+      {createdCredentialsParent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="bg-white border border-emerald-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <div className="flex items-center gap-2 text-emerald-700">
+                <CheckCircle2 className="w-5 h-5" />
+                <h3 className="text-sm font-bold text-blue-950">Compte Parent Créé avec Succès</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCreatedCredentialsParent(null)}
+                className="text-slate-500 hover:text-blue-950"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+              <div>
+                <span className="text-slate-500">Parent / Tuteur :</span>{' '}
+                <strong className="text-blue-950">{createdCredentialsParent.firstName} {createdCredentialsParent.lastName}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500">Email :</span>{' '}
+                <strong className="font-mono text-blue-950">{createdCredentialsParent.email}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500">Identifiant :</span>{' '}
+                <strong className="font-mono text-blue-950">{createdCredentialsParent.credentials.username}</strong>
+              </div>
+              <div className="pt-2 border-t border-slate-200 flex items-center justify-between gap-2">
+                <div>
+                  <span className="text-slate-500 block">Mot de passe initial :</span>
+                  <strong className="font-mono text-sm text-emerald-700">{createdCredentialsParent.credentials.tempPassword}</strong>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(createdCredentialsParent.credentials.tempPassword || '');
+                    setCopiedPwd(true);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center gap-1"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>{copiedPwd ? 'Copié ✓' : 'Copier'}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setCreatedCredentialsParent(null)}
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold"
+              >
+                Fermer
               </button>
             </div>
           </div>

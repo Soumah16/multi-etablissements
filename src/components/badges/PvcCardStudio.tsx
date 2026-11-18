@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { 
@@ -38,7 +38,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
-import { DEMO_ACCOUNTS, DemoAccount } from '../../data/accountsData';
+import { ACCOUNTS_STORAGE_KEY, DemoAccount, getStoredAccounts } from '../../data/accountsData';
+import { subscribeStorageKey } from '../../utils/storage';
 
 export type CardCategory = 'professionnelle' | 'enseignant' | 'eleve' | 'parent' | 'administrative';
 export type CardFace = 'recto' | 'verso' | 'both';
@@ -133,7 +134,16 @@ export const PvcCardStudio: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<CardCategory>('eleve');
   const [activeFace, setActiveFace] = useState<CardFace>('both');
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>(currentSchool?.id || schools[0]?.id || 'ECOLE-001');
+  const [accountsList, setAccountsList] = useState<DemoAccount[]>(() => getStoredAccounts());
   const [selectedAccountId, setSelectedAccountId] = useState<string>('USR-ELV-001');
+
+  useEffect(() => {
+    return subscribeStorageKey(ACCOUNTS_STORAGE_KEY, (data) => {
+      if (Array.isArray(data)) {
+        setAccountsList(data as DemoAccount[]);
+      }
+    });
+  }, []);
 
   // Customization Toggles
   const [showWatermark, setShowWatermark] = useState<boolean>(true);
@@ -161,7 +171,7 @@ export const PvcCardStudio: React.FC = () => {
 
   const handleApplyAccount = (accId: string) => {
     setSelectedAccountId(accId);
-    const acc = DEMO_ACCOUNTS.find(a => a.id === accId);
+    const acc = accountsList.find(a => a.id === accId);
     if (!acc) return;
 
     setCustomName(acc.name);
@@ -463,7 +473,7 @@ export const PvcCardStudio: React.FC = () => {
               onChange={(e) => handleApplyAccount(e.target.value)}
               className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-hidden focus:border-blue-500 cursor-pointer font-medium"
             >
-              {DEMO_ACCOUNTS.map(acc => (
+              {accountsList.map(acc => (
                 <option key={acc.id} value={acc.id}>
                   {acc.name} — {acc.title} ({acc.matricule})
                 </option>

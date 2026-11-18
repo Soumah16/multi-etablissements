@@ -171,7 +171,7 @@ export const PinVerificationModal: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => sendSchool2faOtp('sms')}
+                    onClick={() => { void sendSchool2faOtp('sms'); }}
                     className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded bg-white hover:bg-blue-100 border border-blue-200 text-blue-700 cursor-pointer"
                   >
                     <Smartphone className="w-3 h-3" />
@@ -179,7 +179,7 @@ export const PinVerificationModal: React.FC = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => sendSchool2faOtp('email')}
+                    onClick={() => { void sendSchool2faOtp('email'); }}
                     className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded bg-white hover:bg-indigo-100 border border-indigo-200 text-indigo-700 cursor-pointer"
                   >
                     <Mail className="w-3 h-3" />
@@ -188,14 +188,12 @@ export const PinVerificationModal: React.FC = () => {
                 </div>
 
                 {lastSentOtp && (
-                  <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-1 truncate">
+                  <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 space-y-0.5">
+                    <div className="flex items-center gap-1 font-semibold">
                       <Send className="w-3 h-3 text-emerald-600 shrink-0" />
-                      <span>{lastSentOtp.method.toUpperCase()} → {lastSentOtp.destination}</span>
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded bg-white border border-emerald-300 font-mono font-black text-emerald-800">
-                      {lastSentOtp.code}
-                    </span>
+                      <span>{lastSentOtp.method.toUpperCase()} → {lastSentOtp.maskedDestination} ({lastSentOtp.sentAt})</span>
+                    </div>
+                    <div className="text-[10px] text-emerald-700">{lastSentOtp.message}</div>
                   </div>
                 )}
               </div>

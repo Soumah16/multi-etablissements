@@ -47,6 +47,7 @@ export const DirectorSecurityView: React.FC = () => {
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [liveTotpCode, setLiveTotpCode] = useState<string>('------');
   const [remainingSeconds, setRemainingSeconds] = useState<number>(30);
+  const [showTotpSecrets, setShowTotpSecrets] = useState<boolean>(false);
 
   useEffect(() => {
     setSelectedMethod(profile.twoFactorMethod);
@@ -333,15 +334,25 @@ export const DirectorSecurityView: React.FC = () => {
                 <Smartphone className="w-4 h-4 text-blue-600" />
                 <span>Appairage Google / Microsoft Authenticator (TOTP)</span>
               </div>
-              <button
-                type="button"
-                onClick={regenerateTotpSecret}
-                className="flex items-center gap-1 text-[11px] text-blue-700 hover:text-blue-900 font-semibold cursor-pointer"
-                title="Générer une nouvelle clé secrète Authenticator"
-              >
-                <RefreshCw className="w-3 h-3" />
-                <span>Nouvelle clé</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowTotpSecrets(s => !s)}
+                  className="flex items-center gap-1 text-[11px] text-slate-600 hover:text-blue-950 font-semibold cursor-pointer"
+                >
+                  {showTotpSecrets ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  <span>{showTotpSecrets ? 'Masquer' : 'Révéler'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={regenerateTotpSecret}
+                  className="flex items-center gap-1 text-[11px] text-blue-700 hover:text-blue-900 font-semibold cursor-pointer"
+                  title="Générer une nouvelle clé secrète Authenticator"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Nouvelle clé</span>
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -367,7 +378,7 @@ export const DirectorSecurityView: React.FC = () => {
                 <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5">
                   <span className="text-[10px] text-slate-400">Clé :</span>
                   <code className="font-mono text-[11px] font-bold text-blue-950 tracking-wider flex-1 truncate">
-                    {totpSecret}
+                    {showTotpSecrets ? totpSecret : '••••••••••••••••'}
                   </code>
                   <button
                     type="button"
@@ -383,14 +394,14 @@ export const DirectorSecurityView: React.FC = () => {
                 <div className="p-2.5 rounded-lg bg-white border border-blue-200 space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] uppercase font-bold text-slate-500">
-                      Code Authenticator en direct :
+                      Code Authenticator de secours :
                     </span>
                     <span className="text-[10px] font-mono font-semibold text-blue-700">
                       Expire dans {remainingSeconds}s
                     </span>
                   </div>
                   <div className="text-xl font-black font-mono tracking-[0.3em] text-blue-950 text-center">
-                    {liveTotpCode}
+                    {showTotpSecrets ? liveTotpCode : '••••••'}
                   </div>
                   <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                     <div

@@ -20,9 +20,11 @@ import {
   X,
   Lock,
   Globe,
-  MessageCircle
+  MessageCircle,
+  MessageSquare
 } from 'lucide-react';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
+import { normalizeSchoolId } from '../../data/accountsData';
 import { SchoolAdminDashboard } from './SchoolAdminDashboard';
 import { StaffManagementView } from './StaffManagementView';
 import { ClassesManagementView } from './ClassesManagementView';
@@ -36,6 +38,7 @@ import { SchoolReportsView } from './SchoolReportsView';
 import { SchoolSecurityView } from './SchoolSecurityView';
 import { SchoolSettingsView } from './SchoolSettingsView';
 import { PinVerificationModal } from './PinVerificationModal';
+import { CrossRoleHubPanel } from '../common/CrossRoleHubPanel';
 import { ArrowRightLeft, ChevronDown, LogOut } from 'lucide-react';
 
 interface SchoolAdminLayoutProps {
@@ -66,7 +69,9 @@ export const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
     classes 
   } = useSchoolAdmin();
   const { schools, admins } = useApp();
-  const assignedAdmin = admins.find(a => a.schoolId === currentSchool.id);
+  const assignedAdmin = admins.find(
+    a => normalizeSchoolId(a.schoolId) === normalizeSchoolId(currentSchool.id)
+  );
   const schoolWaPhone = getSchoolWhatsAppNumber(currentSchool);
   const schoolWaUrl = buildWhatsAppUrl(
     schoolWaPhone,
@@ -106,6 +111,7 @@ export const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
     {
       groupTitle: 'ADMINISTRATION & RAPPORTS',
       items: [
+        { tab: 'communication', label: 'Messages & Requêtes', icon: <MessageSquare className="w-4 h-4 text-blue-600" /> },
         { tab: 'documents', label: 'Documents & Certificats', icon: <FileText className="w-4 h-4 text-teal-600" /> },
         { tab: 'events', label: 'Événements & Notes', icon: <Megaphone className="w-4 h-4 text-rose-600" /> },
         { tab: 'reports', label: 'Rapports & Exports', icon: <BarChart3 className="w-4 h-4 text-amber-600" /> }
@@ -129,6 +135,17 @@ export const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
       case 'rooms': return <RoomsManagementView />;
       case 'years': return <AcademicYearsView />;
       case 'assignments': return <AssignmentsView />;
+      case 'communication':
+        return (
+          <CrossRoleHubPanel
+            role="school_admin"
+            userName={assignedAdmin ? `${assignedAdmin.firstName} ${assignedAdmin.lastName}` : 'Admin École'}
+            schoolId={currentSchool.id}
+            schoolName={currentSchool.name}
+            canManageRequests
+            defaultRecipientRoles={['director', 'secretary', 'super_admin']}
+          />
+        );
       case 'documents': return <AdministrativeDocumentsView />;
       case 'events': return <AdministrativeEventsView />;
       case 'reports': return <SchoolReportsView />;

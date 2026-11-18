@@ -29,6 +29,12 @@ import {
 } from '../data/mockData';
 import { translations, Translations } from '../i18n/translations';
 import { usePersistedState } from '../utils/storage';
+import {
+  propagateSchoolAdminChange,
+  propagateSchoolRename,
+  propagateSuperAdminProfileChange
+} from '../utils/accountSync';
+import { dispatchServerNotification, HubRole, pushSharedMessage } from '../utils/communicationHub';
 
 const EXTRA_MOCK_SCHOOL_IDS = new Set([
   'sch-gn-kk-002',
@@ -106,7 +112,10 @@ interface AppContextType {
   setSelectedSchoolForAudit: (school: School | null) => void;
   // Admins
   admins: SchoolAdmin[];
-  createAdmin: (admin: Omit<SchoolAdmin, 'id' | 'createdAt' | 'lastLogin'>) => void;
+  createAdmin: (
+    admin: Omit<SchoolAdmin, 'id' | 'createdAt' | 'lastLogin'>,
+    initialPassword?: string
+  ) => { admin: SchoolAdmin; initialPassword: string };
   updateAdmin: (id: string, updates: Partial<SchoolAdmin>) => void;
   suspendAdmin: (id: string) => void;
   reactivateAdmin: (id: string) => void;
@@ -258,6 +267,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
   }, [language, isRtl]);
 
+  // Sync WAF blocked IPs to Express server middleware
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    void fetch('/api/security/blocklist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ blockedIps })
+    }).catch(() => undefined);
+  }, [blockedIps]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
@@ -315,6 +334,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateSchool = (id: string, updates: Partial<School>) => {
     setSchools(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+    if (updates.name) {
+      setAdmins(prev => prev.map(a => a.schoolId === id ? { ...a, schoolName: updates.name! } : a));
+      propagateSchoolRename(id, updates.name);
+    }
     addLog(`Modification paramètres établissement [ID: ${id}]`, id, 'ecole', 'info');
     showToast("Établissement mis à jour");
   };
@@ -342,51 +365,98 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteSchool = (id: string) => {
     const school = schools.find(s => s.id === id);
+    const removedAdmins = admins.filter(a => a.schoolId === id);
     setSchools(prev => prev.filter(s => s.id !== id));
     setAdmins(prev => prev.filter(a => a.schoolId !== id));
+    removedAdmins.forEach(a => {
+      propagateSchoolAdminChange({ oldEmail: a.email, oldSchoolId: a.schoolId, admin: a, removed: true });
+    });
     addLog(`Suppression définitive de l'établissement [${school?.name || id}]`, school?.name || id, 'ecole', 'critical');
     showToast(`Établissement supprimé`);
   };
 
   // School Admin actions
-  const createAdmin = (adminData: Omit<SchoolAdmin, 'id' | 'createdAt' | 'lastLogin'>) => {
+  const createAdmin = (
+    adminData: Omit<SchoolAdmin, 'id' | 'createdAt' | 'lastLogin'>,
+    initialPassword?: string
+  ) => {
+    const resolvedPassword = initialPassword?.trim() || `SmartPass#${Math.floor(100000 + Math.random() * 900000)}`;
     const newAdmin: SchoolAdmin = {
       ...adminData,
-      id: `adm-${String(admins.length + 1).padStart(3, '0')}`,
+      id: `adm-${Date.now().toString().slice(-6)}`,
       createdAt: new Date().toISOString().split('T')[0],
-      lastLogin: 'Jamais connecté (Compte neuf)'
+      lastLogin: 'Jamais connecté (Compte neuf)',
+      passwordResetRequired: true
     };
     setAdmins(prev => [newAdmin, ...prev]);
     // Link to school
     setSchools(prev => prev.map(s => s.id === adminData.schoolId ? { ...s, adminId: newAdmin.id } : s));
+    propagateSchoolAdminChange({
+      admin: newAdmin,
+      plainPassword: resolvedPassword,
+      mustChangePassword: true
+    });
     addLog(`Création d'un Admin École [${newAdmin.firstName} ${newAdmin.lastName}] pour ${newAdmin.schoolName}`, newAdmin.email, 'admin', 'info');
     showToast(`Admin ${newAdmin.firstName} ${newAdmin.lastName} créé avec succès`);
+    return { admin: newAdmin, initialPassword: resolvedPassword };
   };
 
   const updateAdmin = (id: string, updates: Partial<SchoolAdmin>) => {
+    const existing = admins.find(a => a.id === id);
     setAdmins(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
+    if (existing) {
+      const updatedAdmin: SchoolAdmin = { ...existing, ...updates };
+      propagateSchoolAdminChange({
+        oldEmail: existing.email,
+        oldSchoolId: existing.schoolId,
+        admin: updatedAdmin
+      });
+    }
     addLog(`Modification profil Admin École [ID: ${id}]`, id, 'admin', 'info');
     showToast("Profil administrateur d'école mis à jour");
   };
 
   const suspendAdmin = (id: string) => {
-    setAdmins(prev => prev.map(a => a.id === id ? { ...a, status: 'suspended' } : a));
     const admin = admins.find(a => a.id === id);
+    setAdmins(prev => prev.map(a => a.id === id ? { ...a, status: 'suspended' } : a));
+    if (admin) {
+      propagateSchoolAdminChange({
+        oldEmail: admin.email,
+        oldSchoolId: admin.schoolId,
+        admin: { ...admin, status: 'suspended' }
+      });
+    }
     addLog(`Suspension du compte Admin École [${admin?.firstName} ${admin?.lastName}]`, admin?.email || id, 'admin', 'warning');
     showToast(`Compte admin suspendu`);
   };
 
   const reactivateAdmin = (id: string) => {
-    setAdmins(prev => prev.map(a => a.id === id ? { ...a, status: 'active' } : a));
     const admin = admins.find(a => a.id === id);
+    setAdmins(prev => prev.map(a => a.id === id ? { ...a, status: 'active' } : a));
+    if (admin) {
+      propagateSchoolAdminChange({
+        oldEmail: admin.email,
+        oldSchoolId: admin.schoolId,
+        admin: { ...admin, status: 'active' }
+      });
+    }
     addLog(`Réactivation du compte Admin École [${admin?.firstName} ${admin?.lastName}]`, admin?.email || id, 'admin', 'info');
     showToast(`Compte admin réactivé`);
   };
 
   const resetAdminPassword = (id: string) => {
     const tempPassword = `SmartPass#${Math.floor(100000 + Math.random() * 900000)}`;
-    setAdmins(prev => prev.map(a => a.id === id ? { ...a, passwordResetRequired: true } : a));
     const admin = admins.find(a => a.id === id);
+    setAdmins(prev => prev.map(a => a.id === id ? { ...a, passwordResetRequired: true } : a));
+    if (admin) {
+      propagateSchoolAdminChange({
+        oldEmail: admin.email,
+        oldSchoolId: admin.schoolId,
+        admin: { ...admin, passwordResetRequired: true },
+        plainPassword: tempPassword,
+        mustChangePassword: true
+      });
+    }
     addLog(`Génération nouveau mot de passe temporaire pour [${admin?.email}]`, admin?.email || id, 'securite', 'info');
     showToast(`Mot de passe réinitialisé : ${tempPassword}`);
     return tempPassword;
@@ -394,9 +464,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const changeAdminSchool = (adminId: string, newSchoolId: string) => {
     const targetSchool = schools.find(s => s.id === newSchoolId);
+    const existing = admins.find(a => a.id === adminId);
     if (!targetSchool) return;
     setAdmins(prev => prev.map(a => a.id === adminId ? { ...a, schoolId: newSchoolId, schoolName: targetSchool.name } : a));
     setSchools(prev => prev.map(s => s.id === newSchoolId ? { ...s, adminId } : s));
+    if (existing) {
+      propagateSchoolAdminChange({
+        oldEmail: existing.email,
+        oldSchoolId: existing.schoolId,
+        admin: { ...existing, schoolId: newSchoolId, schoolName: targetSchool.name }
+      });
+    }
     addLog(`Mutation Admin École [ID: ${adminId}] vers [${targetSchool.name}]`, targetSchool.name, 'admin', 'info');
     showToast(`Admin muté vers ${targetSchool.name}`);
   };
@@ -404,6 +482,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const deleteAdmin = (id: string) => {
     const admin = admins.find(a => a.id === id);
     setAdmins(prev => prev.filter(a => a.id !== id));
+    if (admin) {
+      propagateSchoolAdminChange({
+        oldEmail: admin.email,
+        oldSchoolId: admin.schoolId,
+        admin,
+        removed: true
+      });
+    }
     addLog(`Suppression du compte Admin École [${admin?.firstName} ${admin?.lastName}]`, admin?.email || id, 'admin', 'warning');
     showToast(`Compte admin supprimé`);
   };
@@ -511,7 +597,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Profile
   const updateProfile = (updates: Partial<SuperAdminProfile>) => {
-    setProfile(prev => ({ ...prev, ...updates }));
+    const previousEmail = profile.email;
+    const nextProfile: SuperAdminProfile = { ...profile, ...updates };
+    setProfile(nextProfile);
+    propagateSuperAdminProfileChange(nextProfile, previousEmail);
     addLog(`Mise à jour profil Super Administrateur`, 'Profil', 'securite', 'info');
     showToast("Profil Super Admin sauvegardé");
   };
@@ -525,11 +614,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const toggleBlockIp = (ip: string) => {
     if (blockedIps.includes(ip)) {
-      setBlockedIps(prev => prev.filter(item => item !== ip));
+      const next = blockedIps.filter(item => item !== ip);
+      setBlockedIps(next);
       addLog(`Déblocage de l'adresse IP [${ip}]`, ip, 'securite', 'info');
       showToast(`IP ${ip} débloquée`);
     } else {
-      setBlockedIps(prev => [...prev, ip]);
+      const next = [...blockedIps, ip];
+      setBlockedIps(next);
       addLog(`Blocage immédiat de l'adresse IP [${ip}]`, ip, 'securite', 'critical');
       showToast(`IP ${ip} ajoutée à la liste de blocage`);
     }
@@ -570,6 +661,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deliveryCount: data.target === 'all_schools' ? schools.length : (data.targetSchoolIds?.length || 1)
     };
     setAnnouncements(prev => [newAnn, ...prev]);
+
+    const recipientRoles: HubRole[] =
+      data.target === 'all_admins'
+        ? ['school_admin', 'director']
+        : ['school_admin', 'director', 'secretary', 'teacher', 'parent', 'student'];
+    const targetSchoolIds =
+      data.target === 'selected_schools' && data.targetSchoolIds?.length
+        ? data.targetSchoolIds
+        : ['NATIONAL'];
+
+    targetSchoolIds.forEach(sId => {
+      pushSharedMessage({
+        schoolId: sId,
+        senderRole: 'super_admin',
+        senderName: profile.name,
+        recipientRoles,
+        recipientLabel:
+          data.target === 'all_admins'
+            ? 'Administrateurs d’établissements'
+            : 'Tous les établissements & utilisateurs',
+        subject: data.title,
+        content: data.content,
+        channel: data.channels.includes('email') ? 'email' : data.channels.includes('sms') ? 'sms' : 'in_app',
+        priority: data.type === 'urgent' ? 'urgent' : 'officiel'
+      });
+    });
+
+    if (data.channels.includes('email') || data.channels.includes('sms')) {
+      void dispatchServerNotification({
+        channel: data.channels.includes('email') ? 'email' : 'sms',
+        subject: data.title,
+        body: `[Super Admin - ${profile.name}] ${data.content}`
+      });
+    }
+
     addLog(`Diffusion annonce globale [${newAnn.title}] vers ${newAnn.deliveryCount} établissements`, newAnn.title, 'info' as any, 'info');
     showToast("Annonce globale transmise aux destinataires");
   };

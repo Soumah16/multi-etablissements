@@ -14,10 +14,14 @@ import {
   Info
 } from 'lucide-react';
 
+import { getAccountByRole, updateAccountPassword } from '../../data/accountsData';
+import { syncCurrentUserSession } from '../../utils/accountSync';
+
 export const SecretarySecurityView: React.FC = () => {
-  const { profile, updateProfile, securityLogs, showToast } = useSecretary();
+  const { profile, updateProfile, securityLogs, addSecurityLog, showToast } = useSecretary();
   const [selectedMethod, setSelectedMethod] = useState<'sms' | 'email' | 'app'>(profile.twoFactorMethod);
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -30,12 +34,50 @@ export const SecretarySecurityView: React.FC = () => {
 
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentPassword || !newPassword) return;
-    if (newPassword !== confirmPassword) {
-      showToast('Les nouveaux mots de passe ne correspondent pas.');
+    setPasswordError('');
+    setPasswordChangeSuccess(false);
+
+    const trimmedCurrent = currentPassword.trim();
+    const trimmedNew = newPassword.trim();
+    if (!trimmedCurrent || !trimmedNew) return;
+
+    const acc = getAccountByRole('secretary', profile.schoolId);
+    const expectedPwd = acc?.plainPassword || 'Smart@2026';
+    if (trimmedCurrent !== expectedPwd && currentPassword !== expectedPwd) {
+      setPasswordError('Le mot de passe actuel saisi est incorrect.');
       return;
     }
 
+    if (trimmedNew.length < 8) {
+      setPasswordError('Le nouveau mot de passe doit contenir au moins 8 caractères.');
+      return;
+    }
+
+    if (trimmedNew !== confirmPassword.trim()) {
+      setPasswordError('Les nouveaux mots de passe ne correspondent pas.');
+      return;
+    }
+
+    const updatedAcc = updateAccountPassword(
+      {
+        id: acc?.id,
+        role: 'secretary',
+        email: profile.email,
+        matricule: profile.matricule,
+        ecoleId: profile.schoolId
+      },
+      trimmedNew,
+      false
+    );
+
+    if (updatedAcc) {
+      syncCurrentUserSession(
+        { id: updatedAcc.id, email: updatedAcc.email, role: 'secretary', ecoleId: updatedAcc.ecoleId },
+        { mustChangePassword: false }
+      );
+    }
+
+    addSecurityLog('Modification du mot de passe de connexion du Secrétariat');
     setPasswordChangeSuccess(true);
     setCurrentPassword('');
     setNewPassword('');
@@ -165,6 +207,13 @@ export const SecretarySecurityView: React.FC = () => {
           </div>
 
           <form onSubmit={handleChangePassword} className="space-y-3 text-xs">
+            {passwordError && (
+              <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{passwordError}</span>
+              </div>
+            )}
+
             {passwordChangeSuccess && (
               <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />

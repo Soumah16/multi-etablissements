@@ -71,9 +71,9 @@ export const DirectorPinModal: React.FC = () => {
     setActiveDirectorTab('security');
   };
 
-  const handleSendOtp = (channel: 'sms' | 'email') => {
+  const handleSendOtp = async (channel: 'sms' | 'email') => {
     setError(null);
-    sendVerificationOtp(channel);
+    await sendVerificationOtp(channel);
   };
 
   return (
@@ -212,17 +212,15 @@ export const DirectorPinModal: React.FC = () => {
             </div>
 
             {lastSentOtpInfo && (
-              <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 flex items-center justify-between gap-2">
+              <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 space-y-0.5">
                 <div className="flex items-center gap-1.5">
                   <Send className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   <span>
                     Envoyé ({lastSentOtpInfo.method.toUpperCase()}) à{' '}
-                    <strong>{lastSentOtpInfo.destination}</strong> à {lastSentOtpInfo.sentAt}
+                    <strong>{lastSentOtpInfo.maskedDestination}</strong> ({lastSentOtpInfo.sentAt})
                   </span>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-white border border-emerald-300 font-mono font-black text-emerald-800">
-                  {lastSentOtpInfo.code}
-                </span>
+                <div className="text-[10px] text-emerald-700">{lastSentOtpInfo.message}</div>
               </div>
             )}
           </div>

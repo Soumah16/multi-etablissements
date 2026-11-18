@@ -1426,7 +1426,7 @@ export function downloadUsersExcel(
       a.role,
       a.matricule,
       a.email,
-      a.plainPassword || a.password || 'Smart@2026',
+      a.plainPassword || a.password || 'Personnel (Chiffré SHA-256)',
       a.schoolName,
       a.status
     ])

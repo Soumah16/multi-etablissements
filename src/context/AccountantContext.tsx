@@ -22,6 +22,7 @@ import {
   initialFinancialAuditLogs 
 } from '../data/accountantMockData';
 import { usePersistedState } from '../utils/storage';
+import { propagateRoleProfileToAccount } from '../utils/accountSync';
 
 interface PinActionPending {
   type: 'cancel_payment' | 'delete_expense' | 'modify_fee';
@@ -106,7 +107,14 @@ export const AccountantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const updateProfile = (updated: Partial<AccountantProfile>) => {
-    setProfile(prev => ({ ...prev, ...updated }));
+    const nextProfile: AccountantProfile = { ...profile, ...updated };
+    setProfile(nextProfile);
+    propagateRoleProfileToAccount(
+      'accountant',
+      nextProfile,
+      { email: profile.email, matricule: profile.matricule },
+      nextProfile.schoolId
+    );
     triggerToast('Profil comptable mis à jour.');
   };
 

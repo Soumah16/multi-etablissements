@@ -18,14 +18,18 @@ import {
 } from 'lucide-react';
 import { 
   DemoAccount, 
-  authenticateUser 
+  authenticateUser,
+  updateAccountPassword
 } from '../../data/accountsData';
+import { syncCurrentUserSession } from '../../utils/accountSync';
 import { useApp } from '../../context/AppContext';
 import { PWAInstallButton } from '../common/PWAInstallButton';
 import { CloudSyncButton } from '../common/CloudSyncModal';
 import { getCanonicalSchoolId, loadSchoolSecurityConfig, appendSchoolLoginLog } from '../../context/SchoolAdminContext';
 import { loadSuperAdminSecurityConfig } from '../security/SecurityView';
 import { verifyTotpCode } from '../../utils/totp';
+import { requestServerOtp, verifyServerOtp, maskDestinationLabel } from '../../utils/otpClient';
+import { validatePasswordStrength } from '../../utils/passwordCrypto';
 import heroImg from '../../assets/images/guinea_school_hero_1794497471323.jpg';
 import classroomImg from '../../assets/images/students_modern_classroom_1794497472286.jpg';
 import teacherImg from '../../assets/images/teacher_excellence_portrait_1794497472066.jpg';
@@ -89,7 +93,14 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
   const [login2faCode, setLogin2faCode] = useState('');
   const [login2faError, setLogin2faError] = useState<string | null>(null);
   const [login2faVerifying, setLogin2faVerifying] = useState(false);
-  const [dispatchedLoginOtp, setDispatchedLoginOtp] = useState<{ method: 'sms' | 'email'; destination: string; code: string } | null>(null);
+  const [sendingLoginOtp, setSendingLoginOtp] = useState(false);
+  const [dispatchedLoginOtp, setDispatchedLoginOtp] = useState<{
+    challengeToken: string;
+    method: 'sms' | 'email';
+    maskedDestination: string;
+    message: string;
+    sentAt: string;
+  } | null>(null);
 
   // Ref to scroll to login box
   const loginSectionRef = useRef<HTMLDivElement>(null);
@@ -143,7 +154,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
     if (user.role === 'super_admin') {
       const superCfg = loadSuperAdminSecurityConfig();
       if (superCfg.twoFactorEnabled) {
-        setTwoFactorMethodLabel('authenticator');
+        setTwoFactorMethodLabel(superCfg.twoFactorMethod);
         setTwoFactorSecret(superCfg.totpSecret);
         setLogin2faCode('');
         setLogin2faError(null);
@@ -155,15 +166,44 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
     handleCompleteLogin(user);
   };
 
-  const handleSendLogin2faOtp = (channel: 'sms' | 'email') => {
+  const handleSendLogin2faOtp = async (channel: 'sms' | 'email') => {
     if (!pending2faUser) return;
-    const code = String(Math.floor(100000 + Math.random() * 900000));
-    const destination =
-      channel === 'email'
-        ? pending2faUser.email
-        : schools.find(s => s.id === pending2faUser.ecoleId || s.code === pending2faUser.ecoleId)?.phone || '+224 622 00 00 00';
-    setDispatchedLoginOtp({ method: channel, destination, code });
     setLogin2faError(null);
+
+    let destination = pending2faUser.email;
+    if (channel === 'sms') {
+      if (pending2faUser.role === 'super_admin') {
+        const superCfg = loadSuperAdminSecurityConfig();
+        destination = superCfg.twoFactorPhone || pending2faUser.phone || '+224 624 00 11 22';
+      } else {
+        destination =
+          schools.find(s => s.id === pending2faUser.ecoleId || s.code === pending2faUser.ecoleId)?.phone ||
+          pending2faUser.phone ||
+          '+224 622 00 00 00';
+      }
+    }
+
+    setSendingLoginOtp(true);
+    try {
+      const res = await requestServerOtp({
+        channel,
+        destination,
+        purpose: `Connexion ${pending2faUser.role}`
+      });
+      if (!res.ok || !res.challengeToken) {
+        setLogin2faError(res.error || "Impossible d'envoyer le code 2FA.");
+        return;
+      }
+      setDispatchedLoginOtp({
+        challengeToken: res.challengeToken,
+        method: channel,
+        maskedDestination: res.maskedDestination || maskDestinationLabel(channel, destination),
+        message: res.message || 'Code envoyé.',
+        sentAt: res.sentAt || new Date().toLocaleTimeString('fr-FR')
+      });
+    } finally {
+      setSendingLoginOtp(false);
+    }
   };
 
   const handleVerifyLogin2fa = async (e: React.FormEvent) => {
@@ -180,12 +220,18 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
     setLogin2faVerifying(true);
     try {
       let ok = false;
+      let otpError: string | undefined;
       if (twoFactorMethodLabel === 'authenticator') {
-        const totpOk = await verifyTotpCode(twoFactorSecret, clean, 1);
-        const otpOk = dispatchedLoginOtp !== null && clean === dispatchedLoginOtp.code;
-        ok = totpOk || otpOk;
-      } else {
-        ok = dispatchedLoginOtp !== null && clean === dispatchedLoginOtp.code;
+        ok = await verifyTotpCode(twoFactorSecret, clean, 1);
+        if (!ok && dispatchedLoginOtp?.challengeToken) {
+          const otpRes = await verifyServerOtp({ challengeToken: dispatchedLoginOtp.challengeToken, code: clean });
+          ok = otpRes.ok;
+          otpError = otpRes.error;
+        }
+      } else if (dispatchedLoginOtp?.challengeToken) {
+        const otpRes = await verifyServerOtp({ challengeToken: dispatchedLoginOtp.challengeToken, code: clean });
+        ok = otpRes.ok;
+        otpError = otpRes.error;
       }
 
       if (!ok) {
@@ -202,9 +248,10 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
           });
         }
         setLogin2faError(
-          twoFactorMethodLabel === 'authenticator'
-            ? 'Code Authenticator incorrect ou expiré. Vérifiez votre application ou demandez un code SMS / Email.'
-            : 'Code OTP incorrect. Cliquez d’abord sur « Envoyer un code par SMS / Email ».'
+          otpError ||
+            (twoFactorMethodLabel === 'authenticator'
+              ? 'Code Authenticator incorrect ou expiré. Vérifiez votre application ou demandez un code SMS / Email.'
+              : 'Code OTP incorrect. Cliquez d’abord sur « Recevoir code par SMS / Email ».')
         );
         return;
       }
@@ -224,6 +271,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
 
       const verifiedUser = pending2faUser;
       setPending2faUser(null);
+      setDispatchedLoginOtp(null);
       handleCompleteLogin(verifiedUser);
     } finally {
       setLogin2faVerifying(false);
@@ -264,28 +312,37 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
   const handleApplyNewPassword = (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordChangeError(null);
+    const trimmedNew = newPassword.trim();
 
-    if (newPassword.length < 8) {
-      setPasswordChangeError('Le mot de passe doit contenir au minimum 8 caractères.');
+    const strength = validatePasswordStrength(trimmedNew);
+    if (!strength.valid) {
+      setPasswordChangeError(strength.reason || 'Mot de passe trop faible.');
       return;
     }
-    if (newPassword === 'Smart@2026') {
-      setPasswordChangeError('Vous ne pouvez pas réutiliser le mot de passe temporaire initial.');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
+    if (trimmedNew !== confirmPassword.trim()) {
       setPasswordChangeError('Les deux mots de passe ne correspondent pas.');
       return;
     }
 
     if (pendingFirstLoginUser) {
-      const updatedUser: DemoAccount = {
+      const persisted = updateAccountPassword(
+        { id: pendingFirstLoginUser.id, email: pendingFirstLoginUser.email, matricule: pendingFirstLoginUser.matricule },
+        trimmedNew,
+        false
+      );
+      const updatedUser: DemoAccount = persisted || {
         ...pendingFirstLoginUser,
-        plainPassword: newPassword,
-        password: newPassword,
+        plainPassword: '',
+        password: '',
         mustChangePassword: false
       };
+      syncCurrentUserSession(
+        { id: updatedUser.id, email: updatedUser.email, matricule: updatedUser.matricule },
+        { mustChangePassword: false }
+      );
       setPendingFirstLoginUser(null);
+      setNewPassword('');
+      setConfirmPassword('');
       proceedAfterPasswordCheck(updatedUser);
     }
   };
@@ -980,16 +1037,18 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => handleSendLogin2faOtp('sms')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-semibold text-[11px] cursor-pointer"
+                  disabled={sendingLoginOtp}
+                  onClick={() => { void handleSendLogin2faOtp('sms'); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 disabled:opacity-50 border border-blue-200 text-blue-700 font-semibold text-[11px] cursor-pointer"
                 >
                   <Smartphone className="w-3.5 h-3.5" />
-                  <span>Recevoir code par SMS</span>
+                  <span>{sendingLoginOtp ? 'Envoi...' : 'Recevoir code par SMS'}</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleSendLogin2faOtp('email')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-semibold text-[11px] cursor-pointer"
+                  disabled={sendingLoginOtp}
+                  onClick={() => { void handleSendLogin2faOtp('email'); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50 border border-indigo-200 text-indigo-700 font-semibold text-[11px] cursor-pointer"
                 >
                   <Mail className="w-3.5 h-3.5" />
                   <span>Recevoir par Email</span>
@@ -997,14 +1056,14 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
               </div>
 
               {dispatchedLoginOtp && (
-                <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-[11px] flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-1.5 truncate">
+                <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-[11px] space-y-0.5">
+                  <div className="flex items-center gap-1.5 font-semibold">
                     <Send className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>Code envoyé ({dispatchedLoginOtp.method.toUpperCase()}) à {dispatchedLoginOtp.destination}</span>
-                  </span>
-                  <span className="px-2 py-0.5 rounded bg-white border border-emerald-300 font-mono font-black text-emerald-800">
-                    {dispatchedLoginOtp.code}
-                  </span>
+                    <span>
+                      OTP ({dispatchedLoginOtp.method.toUpperCase()}) → {dispatchedLoginOtp.maskedDestination} ({dispatchedLoginOtp.sentAt})
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-emerald-700">{dispatchedLoginOtp.message}</div>
                 </div>
               )}
 

@@ -14,9 +14,10 @@ import {
 } from 'lucide-react';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
+import { CrossRoleHubPanel } from '../common/CrossRoleHubPanel';
 
 export const ParentCommunicationView: React.FC = () => {
-  const { sentMessages, sendMessageToStaff, notifications, markNotificationRead, selectedChild } = useParent();
+  const { sentMessages, sendMessageToStaff, notifications, markNotificationRead, selectedChild, profile } = useParent();
   const { currentSchool } = useSchoolAdmin();
   const schoolWaNumber = getSchoolWhatsAppNumber(currentSchool);
   const schoolWaUrl = buildWhatsAppUrl(
@@ -200,6 +201,15 @@ export const ParentCommunicationView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Synchronized Cross-Role Messages & Requests Hub */}
+      <CrossRoleHubPanel
+        role="parent"
+        userName={profile.name}
+        schoolId={currentSchool.id}
+        schoolName={currentSchool.name}
+        defaultRecipientRoles={['secretary', 'director', 'teacher']}
+      />
     </div>
   );
 };

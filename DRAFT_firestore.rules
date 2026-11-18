@@ -262,8 +262,13 @@ service cloud.firestore {
         (
           isBootstrappedAdmin() ||
           isAdmin() ||
-          resource.data.ownerUid == request.auth.uid ||
-          request.auth.uid in resource.data.memberUids ||
+          (resource == null &&
+            (workspaceId == ('ws-' + request.auth.uid) ||
+              (request.auth.uid.size() >= 20 && workspaceId == ('ws-' + request.auth.uid[0:20])))) ||
+          (resource != null && (
+            existing().ownerUid == request.auth.uid ||
+            request.auth.uid in existing().memberUids
+          )) ||
           isActiveWorkspaceMember(workspaceId)
         );
       allow list: if isVerified() &&
@@ -326,7 +331,10 @@ service cloud.firestore {
           isValidWorkspaceMember(incoming(), workspaceId, memberUid) &&
           incoming().createdAt == request.time &&
           incoming().updatedAt == request.time &&
-          exists(/databases/$(database)/documents/workspaces/$(workspaceId)) &&
+          (
+            exists(/databases/$(database)/documents/workspaces/$(workspaceId)) ||
+            existsAfter(/databases/$(database)/documents/workspaces/$(workspaceId))
+          ) &&
           (
             isAdmin() ||
             (isWorkspaceOwner(workspaceId) && incoming().ownerUid == request.auth.uid) ||
@@ -376,8 +384,9 @@ service cloud.firestore {
           (
             isAdmin() ||
             isWorkspaceOwner(workspaceId) ||
-            (resource.data.status == 'pending' &&
-              (resource.data.invitedEmail == '' || resource.data.invitedEmail == request.auth.token.email))
+            (resource != null &&
+              existing().status == 'pending' &&
+              (existing().invitedEmail == '' || existing().invitedEmail == request.auth.token.email))
           );
         allow list: if isVerified() &&
           (

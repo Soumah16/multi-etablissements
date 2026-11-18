@@ -13,8 +13,9 @@ import {
   initialLoanRecords
 } from '../data/librarianMockData';
 import { AuthenticatedUser } from '../components/auth/AuthPortal';
-import { authenticateUser } from '../data/accountsData';
+import { authenticateUser, normalizeSchoolId } from '../data/accountsData';
 import { idbGetRecord, saveDualStorage, subscribeStorageKey } from '../utils/storage';
+import { propagateRoleProfileToAccount } from '../utils/accountSync';
 
 export interface LibraryAccessLog {
   id: string;
@@ -87,7 +88,10 @@ const safeLoadJson = <T,>(key: string, fallback: T): T => {
 
 export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeSchoolId, setActiveSchoolId] = useState<string>('ECOLE-001');
-  const schoolKey = activeSchoolId && activeSchoolId !== 'NATIONAL' ? activeSchoolId : 'ECOLE-001';
+  const schoolKey =
+    activeSchoolId && activeSchoolId !== 'NATIONAL'
+      ? normalizeSchoolId(activeSchoolId) || 'ECOLE-001'
+      : 'ECOLE-001';
 
   const [activeLibrarianTab, setActiveLibrarianTab] = useState<LibrarianNavTab>('dashboard');
   const [profile, setProfile] = useState<LibrarianProfile>(() =>
@@ -111,6 +115,7 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [hydratedSchoolKey, setHydratedSchoolKey] = useState<string | null>(null);
   const skipPersistRef = React.useRef<boolean>(true);
+  const lastProfileWriteTsRef = React.useRef<number>(0);
 
   // Reload school-scoped library data when school changes (checking IndexedDB for large ebooks/PDFs)
   useEffect(() => {
@@ -147,8 +152,11 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
 
     const unsubs = [
-      subscribeStorageKey(`smartschool_lib_profile_${schoolKey}`, (d, _t, src) => {
-        if (src === 'remote') { skipPersistRef.current = true; setProfile(d as LibrarianProfile); }
+      subscribeStorageKey(`smartschool_lib_profile_${schoolKey}`, (d, t, src) => {
+        if (src === 'remote' || (d && t !== lastProfileWriteTsRef.current)) {
+          skipPersistRef.current = true;
+          setProfile(d as LibrarianProfile);
+        }
       }),
       subscribeStorageKey(`smartschool_lib_books_${schoolKey}`, (d, _t, src) => {
         if (src === 'remote') { skipPersistRef.current = true; setBooks(d as BookItem[]); }
@@ -178,6 +186,7 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return;
     }
     const now = Date.now();
+    lastProfileWriteTsRef.current = now;
     saveDualStorage(`smartschool_lib_profile_${schoolKey}`, profile, now, 'local');
     saveDualStorage(`smartschool_lib_books_${schoolKey}`, books, now, 'local');
     saveDualStorage(`smartschool_lib_ebooks_${schoolKey}`, ebooks, now, 'local');
@@ -194,7 +203,7 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       activeSchoolId &&
       activeSchoolId !== 'NATIONAL' &&
       libraryUser.ecoleId &&
-      libraryUser.ecoleId !== activeSchoolId
+      normalizeSchoolId(libraryUser.ecoleId) !== normalizeSchoolId(activeSchoolId)
     ) {
       return false;
     }
@@ -310,7 +319,14 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updateProfile = (updated: Partial<LibrarianProfile>) => {
     if (!guardWriteAccess('Modification profil / sécurité bibliothécaire')) return;
-    setProfile(prev => ({ ...prev, ...updated }));
+    const nextProfile: LibrarianProfile = { ...profile, ...updated };
+    setProfile(nextProfile);
+    propagateRoleProfileToAccount(
+      'librarian',
+      nextProfile,
+      { email: profile.email, matricule: profile.matricule },
+      schoolKey
+    );
     recordLibraryLog('Mise à jour profil / paramètres bibliothécaire', 'autorise');
     showToast('Profil bibliothécaire mis à jour avec succès.');
   };

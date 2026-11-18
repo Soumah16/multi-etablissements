@@ -33,7 +33,16 @@ import {
   initialTeacherSchedule, 
   initialTeacherMessages 
 } from '../data/teacherMockData';
-import { usePersistedState } from '../utils/storage';
+import { subscribeStorageKey, usePersistedState } from '../utils/storage';
+import { propagateRoleProfileToAccount } from '../utils/accountSync';
+import {
+  SHARED_HOMEWORK_SUBMISSIONS_KEY,
+  SharedHomeworkSubmission,
+  gradeHomeworkSubmissionRecord,
+  loadHomeworkSubmissionRecords,
+  pushSharedMessage,
+  HubRole
+} from '../utils/communicationHub';
 
 interface TeacherContextType {
   activeTeacherTab: TeacherNavTab;
@@ -133,6 +142,18 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [calendarEvents, setCalendarEvents] = usePersistedState<SchoolCalendarEvent[]>('smartschool_teacher_calendar_v1', initialSchoolCalendarEvents);
   const [rawSchedule] = useState<ScheduleSlot[]>(initialTeacherSchedule);
 
+  const [sharedSubmissions, setSharedSubmissions] = useState<SharedHomeworkSubmission[]>(() =>
+    loadHomeworkSubmissionRecords()
+  );
+
+  useEffect(() => {
+    return subscribeStorageKey(SHARED_HOMEWORK_SUBMISSIONS_KEY, data => {
+      if (Array.isArray(data)) {
+        setSharedSubmissions(data as SharedHomeworkSubmission[]);
+      }
+    });
+  }, []);
+
   // Strict Teacher Scoping: only assigned classes, assigned subjects, and enrolled students in those classes
   const allowedClassIds = new Set(classes.map(c => c.id));
   const allowedClassNames = new Set(classes.map(c => c.name));
@@ -145,7 +166,51 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const courses = rawCourses.filter(c => allowedClassIds.has(c.classId) && allowedSubjectNames.has(c.subject));
   const evaluations = rawEvaluations.filter(e => allowedClassIds.has(e.classId) && allowedSubjectNames.has(e.subject));
   const logbookEntries = rawLogbookEntries.filter(l => allowedClassIds.has(l.classId) && allowedSubjectNames.has(l.subject));
-  const homeworkList = rawHomeworkList.filter(h => allowedClassIds.has(h.classId) && allowedSubjectNames.has(h.subject));
+  const homeworkList = rawHomeworkList
+    .filter(h => allowedClassIds.has(h.classId) && allowedSubjectNames.has(h.subject))
+    .map(hw => {
+      const matchingShared = sharedSubmissions.filter(
+        sub =>
+          sub.homeworkId === hw.id ||
+          (sub.subject.toLowerCase() === hw.subject.toLowerCase() &&
+            sub.homeworkTitle.toLowerCase() === hw.title.toLowerCase())
+      );
+      if (matchingShared.length === 0) return hw;
+      const mergedSubs = [...hw.submissions];
+      for (const sh of matchingShared) {
+        const idx = mergedSubs.findIndex(
+          s =>
+            s.id === sh.id ||
+            s.studentMatricule.toLowerCase() === sh.studentMatricule.toLowerCase()
+        );
+        const mapped: HomeworkSubmission = {
+          id: sh.id,
+          homeworkId: hw.id,
+          studentId: sh.studentId,
+          studentName: sh.studentName,
+          studentMatricule: sh.studentMatricule,
+          submittedAt: sh.submittedAt,
+          fileName: sh.fileName,
+          fileUrl: sh.fileUrl,
+          fileType: sh.fileType,
+          grade: sh.grade,
+          maxScore: sh.maxScore || hw.maxScore,
+          teacherComment: sh.teacherComment || sh.fileNote,
+          status: sh.status
+        };
+        if (idx >= 0) {
+          mergedSubs[idx] = { ...mergedSubs[idx], ...mapped };
+        } else {
+          mergedSubs.unshift(mapped);
+        }
+      }
+      return {
+        ...hw,
+        submissions: mergedSubs,
+        totalSubmissions: Math.max(hw.totalSubmissions, mergedSubs.length),
+        evaluatedCount: mergedSubs.filter(s => s.status === 'corrige').length
+      };
+    });
   const studentProfiles = rawStudentProfiles.filter(p => allowedClassNames.has(p.className));
   const schedule = rawSchedule.filter(s => allowedClassNames.has(s.className) && allowedSubjectNames.has(s.subject));
 
@@ -166,7 +231,14 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateProfile = (updated: Partial<TeacherProfile>) => {
-    setProfile(prev => ({ ...prev, ...updated }));
+    const nextProfile: TeacherProfile = { ...profile, ...updated };
+    setProfile(nextProfile);
+    propagateRoleProfileToAccount(
+      'teacher',
+      nextProfile,
+      { email: profile.email, matricule: profile.matricule },
+      nextProfile.schoolId
+    );
     triggerToast('Profil enseignant mis à jour avec succès.');
   };
 
@@ -439,7 +511,8 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         evaluatedCount
       };
     }));
-    triggerToast('Copie notée et corrigé renvoyé à l\'élève.');
+    gradeHomeworkSubmissionRecord(homeworkId, submissionId, grade, comment);
+    triggerToast("Copie notée et corrigé renvoyé à l'élève.");
   };
 
   // Student difficulty monitoring
@@ -487,6 +560,35 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isRead: true
     };
     setMessages(prev => [newMsg, ...prev]);
+
+    const recipientRoles: HubRole[] =
+      msg.recipientRole === 'Direction'
+        ? ['director', 'school_admin']
+        : msg.recipientRole === 'Parents'
+          ? ['parent']
+          : msg.recipientRole === 'Élèves'
+            ? ['student']
+            : ['teacher'];
+
+    pushSharedMessage({
+      schoolId: profile.schoolId || 'sch-gn-ck-001',
+      senderRole: 'teacher',
+      senderName: msg.sender || `${profile.firstName} ${profile.lastName}`,
+      recipientRoles,
+      recipientLabel: msg.recipient,
+      subject: msg.subject,
+      content: msg.content,
+      channel:
+        msg.channel === 'Email'
+          ? 'email'
+          : msg.channel === 'SMS'
+            ? 'sms'
+            : msg.channel === 'WhatsApp'
+              ? 'whatsapp'
+              : 'in_app',
+      priority: 'normal'
+    });
+
     triggerToast(`Message envoyé avec succès via ${msg.channel}.`);
   };
 

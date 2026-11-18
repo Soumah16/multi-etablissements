@@ -42,6 +42,9 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { FirebaseProvider } from './context/FirebaseContext';
 import { CloudSyncButton, CloudSyncModal } from './components/common/CloudSyncModal';
 import { CheckCircle2, ShieldCheck, ArrowRight, Building2 } from 'lucide-react';
+import { ACCOUNTS_STORAGE_KEY, getStoredAccounts, normalizeSchoolId } from './data/accountsData';
+import { subscribeStorageKey } from './utils/storage';
+import { CURRENT_USER_UPDATED_EVENT, hydrateActiveRoleProfileOnLogin } from './utils/accountSync';
 
 export type WorkspaceMode = 
   | 'super_admin' 
@@ -103,6 +106,12 @@ const MainLayout: React.FC = () => {
   } | null>(null);
 
   const handleLogin = (user: AuthenticatedUser) => {
+    try {
+      localStorage.setItem('smartschool_current_user', JSON.stringify(user));
+    } catch {
+      // ignore
+    }
+    hydrateActiveRoleProfileOnLogin(user);
     setCurrentUser(user);
     setWorkspaceMode(user.role);
     if (user.ecoleId && user.ecoleId !== 'NATIONAL') {
@@ -114,12 +123,152 @@ const MainLayout: React.FC = () => {
     } else {
       logoutFromLibrary();
     }
+  };
+
+  const handleLogout = React.useCallback((reason?: string | unknown) => {
+    logoutFromLibrary();
+    setCurrentUser(null);
+    setPendingRoleSwitch(null);
     try {
-      localStorage.setItem('smartschool_current_user', JSON.stringify(user));
+      localStorage.removeItem('smartschool_current_user');
+      localStorage.removeItem('smartschool_workspace_mode');
+      localStorage.removeItem('smartschool_last_activity_v1');
+      sessionStorage.removeItem('smartschool_current_user');
     } catch {
       // ignore
     }
-  };
+    if (typeof reason === 'string' && reason && showToast) {
+      showToast(reason);
+    }
+  }, [logoutFromLibrary, showToast]);
+
+  // Live session enforcement: 45-minute inactivity auto-logout & live suspension check
+  React.useEffect(() => {
+    if (!currentUser) return;
+
+    const INACTIVITY_MS = 45 * 60 * 1000;
+    const ACTIVITY_KEY = 'smartschool_last_activity_v1';
+
+    const updateActivity = () => {
+      try {
+        localStorage.setItem(ACTIVITY_KEY, String(Date.now()));
+      } catch {
+        // ignore
+      }
+    };
+
+    try {
+      const lastRaw = localStorage.getItem(ACTIVITY_KEY);
+      if (lastRaw && Date.now() - Number(lastRaw) > INACTIVITY_MS) {
+        handleLogout('Session expirée après 45 minutes d’inactivité.');
+        return;
+      }
+      updateActivity();
+    } catch {
+      // ignore
+    }
+
+    let throttleAt = 0;
+    const onUserActivity = () => {
+      const now = Date.now();
+      if (now - throttleAt < 15000) return;
+      throttleAt = now;
+      updateActivity();
+    };
+
+    const events: (keyof WindowEventMap)[] = ['pointerdown', 'keydown', 'mousemove', 'touchstart', 'scroll'];
+    events.forEach(ev => window.addEventListener(ev, onUserActivity, { passive: true }));
+
+    const checker = setInterval(() => {
+      try {
+        const lastRaw = localStorage.getItem(ACTIVITY_KEY);
+        if (lastRaw && Date.now() - Number(lastRaw) > INACTIVITY_MS) {
+          handleLogout('Session expirée automatiquement après 45 minutes d’inactivité.');
+        }
+      } catch {
+        // ignore
+      }
+    }, 30000);
+
+    return () => {
+      events.forEach(ev => window.removeEventListener(ev, onUserActivity));
+      clearInterval(checker);
+    };
+  }, [currentUser, handleLogout]);
+
+  // Live school/account suspension check
+  React.useEffect(() => {
+    if (!currentUser) return;
+    const accounts = getStoredAccounts();
+    const matched = accounts.find(
+      a =>
+        (currentUser.email && a.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+        (currentUser.matricule && a.matricule.toLowerCase() === currentUser.matricule.toLowerCase())
+    );
+    if (matched && (matched.status === 'verrouille' || matched.status === 'desactive')) {
+      handleLogout('Votre compte a été verrouillé ou suspendu par un administrateur.');
+      return;
+    }
+    if (currentUser.role !== 'super_admin' && currentUser.ecoleId && currentUser.ecoleId !== 'NATIONAL') {
+      const canonical = normalizeSchoolId(currentUser.ecoleId);
+      const userSchool = schools.find(s => normalizeSchoolId(s.id) === canonical);
+      if (userSchool && (userSchool.status === 'suspended' || userSchool.status === 'archived')) {
+        handleLogout(`L'accès pour l'établissement « ${userSchool.name} » est actuellement suspendu.`);
+      }
+    }
+  }, [currentUser, schools, handleLogout]);
+
+  // Listen for cross-module updates to the logged-in user or accounts registry
+  React.useEffect(() => {
+    const handleSessionUpdated = (ev: Event) => {
+      const detail = (ev as CustomEvent<AuthenticatedUser>).detail;
+      if (detail) {
+        setCurrentUser(prev => (JSON.stringify(prev) === JSON.stringify(detail) ? prev : detail));
+      }
+    };
+    window.addEventListener(CURRENT_USER_UPDATED_EVENT, handleSessionUpdated);
+
+    const unsubAccounts = subscribeStorageKey(ACCOUNTS_STORAGE_KEY, () => {
+      setCurrentUser(prev => {
+        if (!prev) return prev;
+        const accounts = getStoredAccounts();
+        const match = accounts.find(
+          a =>
+            (prev.email && a.email.toLowerCase() === prev.email.toLowerCase()) ||
+            (prev.matricule && a.matricule.toLowerCase() === prev.matricule.toLowerCase())
+        );
+        if (!match) return prev;
+        if (match.status === 'verrouille' || match.status === 'desactive') {
+          setTimeout(() => handleLogout('Compte suspendu ou verrouillé.'), 0);
+          return null;
+        }
+        const nextUser: AuthenticatedUser = {
+          ...prev,
+          name: match.name || prev.name,
+          email: match.email || prev.email,
+          matricule: match.matricule || prev.matricule,
+          schoolName: match.schoolName || prev.schoolName,
+          photo: match.photo || prev.photo,
+          ecoleId: match.ecoleId || prev.ecoleId,
+          status: match.status || prev.status,
+          mustChangePassword: match.mustChangePassword
+        };
+        if (JSON.stringify(nextUser) === JSON.stringify(prev)) return prev;
+        try {
+          localStorage.setItem('smartschool_current_user', JSON.stringify(nextUser));
+        } catch {
+          // ignore
+        }
+        hydrateActiveRoleProfileOnLogin(nextUser);
+        return nextUser;
+      });
+    });
+
+    return () => {
+      window.removeEventListener(CURRENT_USER_UPDATED_EVENT, handleSessionUpdated);
+      unsubAccounts();
+    };
+  }, [handleLogout]);
 
   // Keep school & librarian session synchronized with logged-in user
   React.useEffect(() => {
@@ -134,24 +283,16 @@ const MainLayout: React.FC = () => {
     }
   }, [currentUser?.ecoleId, currentUser?.role, currentSchool?.id, setCurrentSchoolId, setActiveSchoolId]);
 
-  const handleLogout = () => {
-    logoutFromLibrary();
-    setCurrentUser(null);
-    setPendingRoleSwitch(null);
-    try {
-      localStorage.removeItem('smartschool_current_user');
-      localStorage.removeItem('smartschool_workspace_mode');
-      sessionStorage.removeItem('smartschool_current_user');
-    } catch {
-      // ignore
-    }
-  };
-
   // Safe Role Switch Request: Always demands credentials verification & school isolation
   const requestRoleSwitch = (targetRole: WorkspaceMode, schoolId?: string) => {
     // Multi-School Isolation Guarantee:
     // An admin or user CANNOT access another admin's school!
-    if (currentUser?.role !== 'super_admin' && schoolId && currentUser?.ecoleId && schoolId !== currentUser.ecoleId) {
+    if (
+      currentUser?.role !== 'super_admin' &&
+      schoolId &&
+      currentUser?.ecoleId &&
+      normalizeSchoolId(schoolId) !== normalizeSchoolId(currentUser.ecoleId)
+    ) {
       if (showToast) {
         showToast("Accès refusé : Cloisonnement strict. Un administrateur ne peut pas accéder à l'école d'un autre administrateur.");
       }
@@ -159,13 +300,22 @@ const MainLayout: React.FC = () => {
     }
 
     // If target role is identical to current and no school change, stay
-    if (targetRole === workspaceMode && (!schoolId || schoolId === currentSchool?.id)) {
+    if (
+      targetRole === workspaceMode &&
+      (!schoolId || normalizeSchoolId(schoolId) === normalizeSchoolId(currentSchool?.id))
+    ) {
       return;
     }
     setPendingRoleSwitch({ role: targetRole, schoolId });
   };
 
   const handleRoleSwitchSuccess = (newUser: AuthenticatedUser) => {
+    try {
+      localStorage.setItem('smartschool_current_user', JSON.stringify(newUser));
+    } catch {
+      // ignore
+    }
+    hydrateActiveRoleProfileOnLogin(newUser);
     const nextSchoolId =
       pendingRoleSwitch?.schoolId ||
       (newUser.ecoleId && newUser.ecoleId !== 'NATIONAL' ? newUser.ecoleId : undefined);
@@ -179,11 +329,6 @@ const MainLayout: React.FC = () => {
       authorizeLibrarianSession(newUser);
     } else {
       logoutFromLibrary();
-    }
-    try {
-      localStorage.setItem('smartschool_current_user', JSON.stringify(newUser));
-    } catch {
-      // ignore
     }
     setPendingRoleSwitch(null);
     if (showToast) {
@@ -226,7 +371,7 @@ const MainLayout: React.FC = () => {
     if (workspaceMode === 'student') {
       return (
         <StudentLayout 
-          onLogout={handleLogout}
+          onLogout={() => handleLogout()}
           onReturnToSuperAdmin={handleSwitchToSuperAdmin}
           onReturnToSchoolAdmin={handleSwitchToSchoolAdmin}
           onSwitchToDirector={handleSwitchToDirector}
@@ -243,7 +388,7 @@ const MainLayout: React.FC = () => {
     if (workspaceMode === 'parent') {
       return (
         <ParentLayout 
-          onLogout={handleLogout}
+          onLogout={() => handleLogout()}
           onReturnToSuperAdmin={handleSwitchToSuperAdmin}
           onReturnToSchoolAdmin={handleSwitchToSchoolAdmin}
           onSwitchToDirector={handleSwitchToDirector}
@@ -260,7 +405,7 @@ const MainLayout: React.FC = () => {
     if (workspaceMode === 'librarian') {
       return (
         <LibrarianLayout
-          onLogout={handleLogout}
+          onLogout={() => handleLogout()}
           onExitLibrary={() => {
             if (currentUser.role !== 'librarian') {
               logoutFromLibrary();
@@ -283,7 +428,7 @@ const MainLayout: React.FC = () => {
     if (workspaceMode === 'supervisor') {
       return (
         <SupervisorLayout 
-          onLogout={handleLogout}
+          onLogout={() => handleLogout()}
           onReturnToSchoolAdmin={handleSwitchToSchoolAdmin}
           onReturnToDirector={handleSwitchToDirector}
           onReturnToSecretary={handleSwitchToSecretary}
@@ -297,7 +442,7 @@ const MainLayout: React.FC = () => {
     if (workspaceMode === 'accountant') {
       return (
         <AccountantLayout 
-          onLogout={handleLogout}
+          onLogout={() => handleLogout()}
           onReturnToSchoolAdmin={handleSwitchToSchoolAdmin}
           onReturnToDirector={handleSwitchToDirector}
           onReturnToSecretary={handleSwitchToSecretary}
@@ -311,7 +456,7 @@ const MainLayout: React.FC = () => {
     if (workspaceMode === 'teacher') {
       return (
         <TeacherLayout 
-          onLogout={handleLogout}
+          onLogout={() => handleLogout()}
           onReturnToSchoolAdmin={handleSwitchToSchoolAdmin}
           onReturnToDirector={handleSwitchToDirector}
           onReturnToSecretary={handleSwitchToSecretary}
@@ -325,7 +470,7 @@ const MainLayout: React.FC = () => {
     if (workspaceMode === 'secretary') {
       return (
         <SecretaryLayout 
-          onLogout={handleLogout}
+          onLogout={() => handleLogout()}
           onReturnToSchoolAdmin={handleSwitchToSchoolAdmin}
           onReturnToDirector={handleSwitchToDirector}
           onReturnToSuperAdmin={handleSwitchToSuperAdmin}
@@ -339,7 +484,7 @@ const MainLayout: React.FC = () => {
     if (workspaceMode === 'director') {
       return (
         <DirectorLayout 
-          onLogout={handleLogout}
+          onLogout={() => handleLogout()}
           onReturnToSchoolAdmin={handleSwitchToSchoolAdmin}
           onReturnToSuperAdmin={handleSwitchToSuperAdmin}
           onSwitchToSecretary={handleSwitchToSecretary}
@@ -356,7 +501,7 @@ const MainLayout: React.FC = () => {
     if (workspaceMode === 'school_admin') {
       return (
         <SchoolAdminLayout 
-          onLogout={handleLogout}
+          onLogout={() => handleLogout()}
           onReturnToSuperAdmin={handleSwitchToSuperAdmin}
           onSwitchToDirector={handleSwitchToDirector}
           onSwitchToSecretary={handleSwitchToSecretary}
@@ -424,7 +569,7 @@ const MainLayout: React.FC = () => {
           <Header 
             currentUserRole={currentUser?.role}
             onToggleSidebarMobile={() => setMobileSidebarOpen(!mobileSidebarOpen)} 
-            onLogout={handleLogout}
+            onLogout={() => handleLogout()}
             onSwitchToSchoolAdmin={(schoolId) => handleSwitchToSchoolAdmin(schoolId || schools[0]?.id)}
             onSwitchToDirector={handleSwitchToDirector}
             onSwitchToSecretary={handleSwitchToSecretary}

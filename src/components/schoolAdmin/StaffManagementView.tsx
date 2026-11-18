@@ -17,7 +17,9 @@ import {
   Phone, 
   Mail, 
   ShieldAlert,
-  X
+  X,
+  Copy,
+  RefreshCw
 } from 'lucide-react';
 import { StaffBadgeModal } from './StaffBadgeModal';
 import { ImageUploadField } from '../common/ImageUploadField';
@@ -53,6 +55,9 @@ export const StaffManagementView: React.FC = () => {
   const [department, setDepartment] = useState('Sciences Exactes');
   const [hireDate, setHireDate] = useState(new Date().toISOString().split('T')[0]);
   const [photo, setPhoto] = useState('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80');
+  const [initialPassword, setInitialPassword] = useState('');
+  const [createdCredentialsStaff, setCreatedCredentialsStaff] = useState<StaffMember | null>(null);
+  const [copiedPwd, setCopiedPwd] = useState(false);
 
   const filteredStaff = staff.filter(s => {
     const matchesSearch = 
@@ -77,6 +82,7 @@ export const StaffManagementView: React.FC = () => {
     setDepartment('Sciences Exactes');
     setHireDate(new Date().toISOString().split('T')[0]);
     setPhoto('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80');
+    setInitialPassword(`SmartPass#${Math.floor(1000 + Math.random() * 9000)}`);
     setIsFormModalOpen(true);
   };
 
@@ -111,19 +117,24 @@ export const StaffManagementView: React.FC = () => {
         photo
       });
     } else {
-      createStaff({
-        schoolId: currentSchool.id,
-        firstName,
-        lastName,
-        email,
-        phone,
-        address,
-        role,
-        department,
-        hireDate,
-        status: 'actif',
-        photo
-      });
+      const created = createStaff(
+        {
+          schoolId: currentSchool.id,
+          firstName,
+          lastName,
+          email,
+          phone,
+          address,
+          role,
+          department,
+          hireDate,
+          status: 'actif',
+          photo
+        },
+        initialPassword
+      );
+      setCopiedPwd(false);
+      setCreatedCredentialsStaff(created);
     }
 
     setIsFormModalOpen(false);
@@ -486,10 +497,34 @@ export const StaffManagementView: React.FC = () => {
                 helperText="Importez depuis votre PC ou collez un lien. Cette photo figure sur le badge professionnel imprimable."
               />
 
+              {!staffToEdit && (
+                <div className="space-y-1">
+                  <label className="text-slate-700 font-medium">Mot de passe initial *</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      value={initialPassword}
+                      onChange={e => setInitialPassword(e.target.value)}
+                      placeholder="Ex: SmartPass#2026"
+                      className="flex-1 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono focus:outline-none focus:border-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setInitialPassword(`SmartPass#${Math.floor(1000 + Math.random() * 9000)}`)}
+                      className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold flex items-center gap-1"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Générer</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-slate-700 text-[11px]">
                 <strong className="text-blue-700">Génération automatique SmartSchool :</strong>
                 <p className="mt-0.5">
-                  Un matricule officiel, un identifiant de connexion, un mot de passe temporaire et un QR code unique de badge seront automatiquement attribués.
+                  Un matricule officiel, un identifiant de connexion, le mot de passe initial ci-dessus et un QR code unique de badge seront enregistrés immédiatement.
                 </p>
               </div>
 
@@ -519,6 +554,73 @@ export const StaffManagementView: React.FC = () => {
           staff={selectedStaffForBadge}
           onClose={() => setSelectedStaffForBadge(null)}
         />
+      )}
+
+      {/* Created Staff Credentials Modal */}
+      {createdCredentialsStaff && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="relative w-full max-w-md rounded-2xl bg-white border border-emerald-200 shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <div className="flex items-center gap-2 text-emerald-700">
+                <CheckCircle2 className="w-5 h-5" />
+                <h3 className="font-bold text-sm text-blue-950">Identifiants de connexion créés</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCreatedCredentialsStaff(null)}
+                className="text-slate-500 hover:text-blue-950"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+              <div>
+                <span className="text-slate-500">Employé :</span>{' '}
+                <strong className="text-blue-950">{createdCredentialsStaff.firstName} {createdCredentialsStaff.lastName}</strong> ({createdCredentialsStaff.role})
+              </div>
+              <div>
+                <span className="text-slate-500">Matricule :</span>{' '}
+                <strong className="font-mono text-blue-700">{createdCredentialsStaff.matricule}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500">Email / Identifiant :</span>{' '}
+                <strong className="font-mono text-blue-950">{createdCredentialsStaff.email}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500">Nom d'utilisateur :</span>{' '}
+                <strong className="font-mono text-blue-950">{createdCredentialsStaff.username}</strong>
+              </div>
+              <div className="pt-2 border-t border-slate-200 flex items-center justify-between gap-2">
+                <div>
+                  <span className="text-slate-500 block">Mot de passe initial :</span>
+                  <strong className="font-mono text-sm text-emerald-700">{createdCredentialsStaff.temporaryPassword}</strong>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(createdCredentialsStaff.temporaryPassword || '');
+                    setCopiedPwd(true);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center gap-1"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>{copiedPwd ? 'Copié ✓' : 'Copier'}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setCreatedCredentialsStaff(null)}
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

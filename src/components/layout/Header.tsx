@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp, NavTab } from '../../context/AppContext';
 import { LanguageCode } from '../../types';
+import { ACCOUNTS_STORAGE_KEY, DemoAccount, getStoredAccounts, normalizeSchoolId } from '../../data/accountsData';
+import { subscribeStorageKey } from '../../utils/storage';
 import { 
   Globe, 
   ShieldCheck, 
@@ -59,6 +61,17 @@ export const Header: React.FC<HeaderProps> = ({
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [switcherTab, setSwitcherTab] = useState<'roles' | 'schools'>('roles');
+  const [liveAccounts, setLiveAccounts] = useState<DemoAccount[]>(() => getStoredAccounts());
+
+  useEffect(() => {
+    return subscribeStorageKey(ACCOUNTS_STORAGE_KEY, () => {
+      setLiveAccounts(getStoredAccounts());
+    });
+  }, []);
+
+  const getLiveRoleName = (role: WorkspaceMode, fallbackName: string): string => {
+    return liveAccounts.find(a => a.role === role)?.name || fallbackName;
+  };
 
   const languagesList: { code: LanguageCode; label: string; flag: string }[] = [
     { code: 'fr', label: 'Français', flag: '🇬🇳 FR' },
@@ -199,7 +212,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
-                      M
+                      {profile.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0 truncate">
                       <div className="font-bold text-blue-950 text-xs truncate">{profile.name}</div>
@@ -279,7 +292,7 @@ export const Header: React.FC<HeaderProps> = ({
                             Directeur des Études
                           </div>
                           <div className="text-[10px] text-slate-500 truncate">
-                            Dr. Ibrahima Sory Bangoura · Pédagogie & Examens
+                            {getLiveRoleName('director', 'Dr. Ibrahima Sory Bangoura')} · Pédagogie & Examens
                           </div>
                         </div>
                       </div>
@@ -305,7 +318,7 @@ export const Header: React.FC<HeaderProps> = ({
                             Secrétaire Générale
                           </div>
                           <div className="text-[10px] text-slate-500 truncate">
-                            Mme Kadiatou Diallo · Inscriptions & Scolarité
+                            {getLiveRoleName('secretary', 'Mme Kadiatou Diallo')} · Inscriptions & Scolarité
                           </div>
                         </div>
                       </div>
@@ -331,7 +344,7 @@ export const Header: React.FC<HeaderProps> = ({
                             Espace Enseignant
                           </div>
                           <div className="text-[10px] text-slate-500 truncate">
-                            M. Mamadou Lamarana Diallo · Maths & Devoirs
+                            {getLiveRoleName('teacher', 'M. Mamadou Lamarana Diallo')} · Maths & Devoirs
                           </div>
                         </div>
                       </div>
@@ -357,7 +370,7 @@ export const Header: React.FC<HeaderProps> = ({
                             Surveillant Général
                           </div>
                           <div className="text-[10px] text-slate-500 truncate">
-                            M. Ibrahima Kalil Keïta · Vie Scolaire & Présences
+                            {getLiveRoleName('supervisor', 'M. Ibrahima Kalil Keïta')} · Vie Scolaire & Présences
                           </div>
                         </div>
                       </div>
@@ -383,7 +396,7 @@ export const Header: React.FC<HeaderProps> = ({
                             Chef Comptable
                           </div>
                           <div className="text-[10px] text-slate-500 truncate">
-                            M. Ibrahima Kalil Camara · Finances GNF
+                            {getLiveRoleName('accountant', 'M. Ibrahima Kalil Camara')} · Finances GNF
                           </div>
                         </div>
                       </div>
@@ -409,7 +422,7 @@ export const Header: React.FC<HeaderProps> = ({
                             Bibliothécaire
                           </div>
                           <div className="text-[10px] text-slate-500 truncate">
-                            Mme Aïssatou Sow · Livres, E-Books & Prêts
+                            {getLiveRoleName('librarian', 'Mme Aïssatou Sow')} · Livres, E-Books & Prêts
                           </div>
                         </div>
                       </div>
@@ -435,7 +448,7 @@ export const Header: React.FC<HeaderProps> = ({
                             Espace Parent (Consultation)
                           </div>
                           <div className="text-[10px] text-slate-500 truncate">
-                            Elhadj Amadou Diallo · Notes & Mobile Money
+                            {getLiveRoleName('parent', 'Elhadj Amadou Diallo')} · Notes & Mobile Money
                           </div>
                         </div>
                       </div>
@@ -461,7 +474,7 @@ export const Header: React.FC<HeaderProps> = ({
                             Espace Élève (Apprenant)
                           </div>
                           <div className="text-[10px] text-slate-500 truncate">
-                            Fatoumata Binta Diallo · TSM · Badge & Devoirs
+                            {getLiveRoleName('student', 'Fatoumata Binta Diallo')} · TSM · Badge & Devoirs
                           </div>
                         </div>
                       </div>
@@ -473,7 +486,9 @@ export const Header: React.FC<HeaderProps> = ({
                 ) : (
                   <>
                     {schools.map(school => {
-                      const assignedAdmin = admins.find(a => a.schoolId === school.id);
+                      const assignedAdmin = admins.find(
+                        a => normalizeSchoolId(a.schoolId) === normalizeSchoolId(school.id)
+                      );
                       return (
                         <button
                           key={school.id}

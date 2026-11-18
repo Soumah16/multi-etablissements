@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
+  ACCOUNTS_STORAGE_KEY,
   DemoAccount, 
   getStoredAccounts, 
   saveStoredAccounts, 
   getIconForRole, 
   getBadgeColorForRole, 
   getCategoryForRole,
-  DEMO_ACCOUNTS
+  normalizeSchoolId
 } from '../../data/accountsData';
 import { subscribeStorageKey } from '../../utils/storage';
+import { propagateAccountEditToDomain } from '../../utils/accountSync';
+import { AccountStatus } from '../../types/rbac';
 import { WorkspaceMode } from '../../App';
 import { 
   UserCheck, 
@@ -28,6 +31,8 @@ import {
   Trash2, 
   RotateCcw, 
   Lock, 
+  Unlock,
+  Edit3,
   Sparkles, 
   X, 
   ExternalLink,
@@ -48,10 +53,8 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
   const [accounts, setAccounts] = useState<DemoAccount[]>(() => getStoredAccounts());
 
   useEffect(() => {
-    return subscribeStorageKey('smartschool_accounts_v3', (_data, _ts, source) => {
-      if (source === 'remote') {
-        setAccounts(getStoredAccounts());
-      }
+    return subscribeStorageKey(ACCOUNTS_STORAGE_KEY, () => {
+      setAccounts(getStoredAccounts());
     });
   }, []);
   const [searchTerm, setSearchTerm] = useState('');
@@ -77,6 +80,19 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
   const [newMatricule, setNewMatricule] = useState('');
   const [newPassword, setNewPassword] = useState('SmartPass2026!');
   const [newPhoto, setNewPhoto] = useState('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200');
+
+  // Edit account modal state
+  const [editingAccount, setEditingAccount] = useState<DemoAccount | null>(null);
+  const [editFirstName, setEditFirstName] = useState('');
+  const [editLastName, setEditLastName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+  const [editMatricule, setEditMatricule] = useState('');
+  const [editSchoolName, setEditSchoolName] = useState('');
+  const [editStatus, setEditStatus] = useState<AccountStatus>('actif');
+  const [editPassword, setEditPassword] = useState('');
+  const [editPhoto, setEditPhoto] = useState('');
 
   // Auto-generate matricule and email suggestion when role or names change
   useEffect(() => {
@@ -125,20 +141,29 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
       student: 'Espace Élève (Apprenant)'
     };
 
+    const cleanPassword = newPassword.trim() || `Smart${Math.floor(1000 + Math.random() * 9000)}!`;
+    const matchedSchool = schools.find(s => s.name === newSchoolName);
+    const resolvedSchoolId =
+      newRole === 'super_admin'
+        ? 'NATIONAL'
+        : normalizeSchoolId(matchedSchool?.id) || matchedSchool?.id || 'ECOLE-001';
+    const cleanEmail = newEmail.trim().toLowerCase();
+
     const newAcc: DemoAccount = {
       id: `USR-${Date.now()}`,
-      ecoleId: (schools.find(s => s.name === newSchoolName)?.id || 'ECOLE-001'),
+      ecoleId: resolvedSchoolId,
       firstName: newFirstName.trim(),
       lastName: newLastName.trim(),
       phone: '+224 620 00 00 00',
       role: newRole,
       title: roleTitles[newRole] || 'Utilisateur',
       name: fullName,
-      email: newEmail.trim().toLowerCase(),
+      email: cleanEmail,
+      username: cleanEmail.split('@')[0],
       matricule: newMatricule.trim().toUpperCase(),
       schoolName: newSchoolName,
-      password: newPassword,
-      plainPassword: newPassword,
+      password: cleanPassword,
+      plainPassword: cleanPassword,
       status: 'actif',
       mustChangePassword: true,
       failedLoginAttempts: 0,
@@ -159,6 +184,7 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
     const updated = [newAcc, ...accounts];
     setAccounts(updated);
     saveStoredAccounts(updated);
+    propagateAccountEditToDomain({ account: newAcc });
 
     setIsCreateModalOpen(false);
     setSelectedAccountForSlip(newAcc);
@@ -175,24 +201,121 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
     setNewEmail('');
   };
 
+  const handleOpenEditAccount = (acc: DemoAccount) => {
+    setEditingAccount(acc);
+    setEditFirstName(acc.firstName || acc.name.split(' ')[0] || '');
+    setEditLastName(acc.lastName || acc.name.split(' ').slice(1).join(' ') || '');
+    setEditEmail(acc.email);
+    setEditPhone(acc.phone || '');
+    setEditTitle(acc.title || '');
+    setEditMatricule(acc.matricule);
+    setEditSchoolName(acc.schoolName);
+    setEditStatus(acc.status || 'actif');
+    setEditPassword('');
+    setEditPhoto(acc.photo || '');
+  };
+
+  const handleSaveEditAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAccount || !editFirstName.trim() || !editLastName.trim() || !editEmail.trim()) return;
+
+    const fullName = `${editFirstName.trim()} ${editLastName.trim()}`.trim();
+    const matchedSchool = schools.find(s => s.name === editSchoolName);
+    const resolvedSchoolId =
+      editingAccount.role === 'super_admin'
+        ? 'NATIONAL'
+        : matchedSchool
+        ? normalizeSchoolId(matchedSchool.id) || matchedSchool.id
+        : editingAccount.ecoleId;
+    const resolvedPassword = editPassword.trim()
+      ? editPassword.trim()
+      : editingAccount.plainPassword || editingAccount.password;
+
+    const updatedAcc: DemoAccount = {
+      ...editingAccount,
+      firstName: editFirstName.trim(),
+      lastName: editLastName.trim(),
+      name: fullName,
+      email: editEmail.trim().toLowerCase(),
+      username: editEmail.trim().split('@')[0].toLowerCase(),
+      phone: editPhone.trim(),
+      title: editTitle.trim() || editingAccount.title,
+      matricule: editMatricule.trim().toUpperCase(),
+      ecoleId: resolvedSchoolId,
+      schoolName: editSchoolName || editingAccount.schoolName,
+      status: editStatus,
+      failedLoginAttempts: editStatus === 'actif' ? 0 : editingAccount.failedLoginAttempts,
+      photo: editPhoto || editingAccount.photo,
+      password: resolvedPassword,
+      plainPassword: resolvedPassword,
+      updatedAt: new Date().toISOString().split('T')[0]
+    };
+
+    const nextAccounts = accounts.map(a => (a.id === editingAccount.id ? updatedAcc : a));
+    setAccounts(nextAccounts);
+    saveStoredAccounts(nextAccounts);
+    propagateAccountEditToDomain({
+      oldEmail: editingAccount.email,
+      oldMatricule: editingAccount.matricule,
+      account: updatedAcc
+    });
+
+    if (showToast) {
+      showToast(`Informations de ${fullName} mises à jour et synchronisées dans tout le site.`);
+    }
+    if (addLog) {
+      addLog(`Modification compte utilisateur [${updatedAcc.matricule}] ${fullName}`, updatedAcc.schoolName, 'admin', 'info');
+    }
+    setEditingAccount(null);
+  };
+
+  const handleUnlockOrActivate = (acc: DemoAccount) => {
+    const updatedAcc: DemoAccount = {
+      ...acc,
+      status: 'actif',
+      failedLoginAttempts: 0,
+      updatedAt: new Date().toISOString().split('T')[0]
+    };
+    const nextAccounts = accounts.map(a => (a.id === acc.id ? updatedAcc : a));
+    setAccounts(nextAccounts);
+    saveStoredAccounts(nextAccounts);
+    propagateAccountEditToDomain({ oldEmail: acc.email, oldMatricule: acc.matricule, account: updatedAcc });
+    if (showToast) {
+      showToast(`Compte de ${acc.name} déverrouillé et réactivé.`);
+    }
+  };
+
   const handleResetPassword = (e: React.FormEvent) => {
     e.preventDefault();
     if (!passwordResetAccount || !newPasswordValue.trim()) return;
+    const cleanPass = newPasswordValue.trim();
 
+    let updatedAcc: DemoAccount | null = null;
     const updated = accounts.map(a => {
-      if (a.email === passwordResetAccount.email) {
-        return { 
+      if (a.id === passwordResetAccount.id || a.email === passwordResetAccount.email) {
+        updatedAcc = { 
           ...a, 
-          password: newPasswordValue.trim(),
-          plainPassword: newPasswordValue.trim(),
-          mustChangePassword: true 
+          password: cleanPass,
+          plainPassword: cleanPass,
+          mustChangePassword: true,
+          failedLoginAttempts: 0,
+          status: a.status === 'verrouille' ? ('actif' as AccountStatus) : a.status,
+          updatedAt: new Date().toISOString().split('T')[0]
         };
+        return updatedAcc;
       }
       return a;
     });
 
     setAccounts(updated);
     saveStoredAccounts(updated);
+    if (updatedAcc) {
+      propagateAccountEditToDomain({
+        oldEmail: passwordResetAccount.email,
+        oldMatricule: passwordResetAccount.matricule,
+        account: updatedAcc
+      });
+    }
     if (showToast) {
       showToast(`Mot de passe réinitialisé pour ${passwordResetAccount.name}.`);
     }
@@ -210,9 +333,15 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
     }
 
     if (confirm(`Confirmez-vous la révocation et la suppression du compte de ${accToDelete.name} (${accToDelete.role}) ?`)) {
-      const updated = accounts.filter(a => a.email !== accToDelete.email);
+      const updated = accounts.filter(a => a.id !== accToDelete.id && a.email !== accToDelete.email);
       setAccounts(updated);
       saveStoredAccounts(updated);
+      propagateAccountEditToDomain({
+        oldEmail: accToDelete.email,
+        oldMatricule: accToDelete.matricule,
+        account: accToDelete,
+        removed: true
+      });
       if (showToast) showToast(`Compte de ${accToDelete.name} supprimé avec succès.`);
       if (addLog) {
         addLog(`Révocation & Suppression définitive du compte [${accToDelete.matricule}] ${accToDelete.name}`, accToDelete.schoolName, 'securite', 'critical');
@@ -274,7 +403,11 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
       acc.title.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesRole = roleFilter === 'all' || acc.role === roleFilter;
-    const matchesSchool = schoolFilter === 'all' || acc.schoolName === schoolFilter;
+    const selectedSchoolObj = schools.find(s => s.name === schoolFilter);
+    const matchesSchool =
+      schoolFilter === 'all' ||
+      acc.schoolName === schoolFilter ||
+      (selectedSchoolObj && normalizeSchoolId(acc.ecoleId) === normalizeSchoolId(selectedSchoolObj.id));
 
     return matchesSearch && matchesRole && matchesSchool;
   });
@@ -488,32 +621,50 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                     </td>
 
                     <td className="py-3 px-3">
-                      <div className="flex items-center gap-1.5 font-mono text-[11px]">
-                        <span className="bg-[#F0F5FA] px-2 py-1 rounded border border-blue-100 text-slate-900">
-                          {isPasswordShown ? acc.password : '••••••••••••'}
+                      {acc.plainPassword || acc.password ? (
+                        <div className="flex items-center gap-1.5 font-mono text-[11px]">
+                          <span className="bg-[#F0F5FA] px-2 py-1 rounded border border-blue-100 text-slate-900">
+                            {isPasswordShown ? (acc.plainPassword || acc.password) : '••••••••••••'}
+                          </span>
+                          <button
+                            onClick={() => togglePasswordVisibility(acc.email)}
+                            className="p-1 text-slate-500 hover:text-blue-950 rounded hover:bg-blue-50 transition-colors"
+                            title={isPasswordShown ? "Masquer" : "Afficher"}
+                          >
+                            {isPasswordShown ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                          <button
+                            onClick={() => handleCopy(acc.plainPassword || acc.password, `pass-${acc.email}`)}
+                            className="p-1 text-slate-500 hover:text-blue-950 rounded hover:bg-blue-50 transition-colors"
+                            title="Copier le mot de passe temporaire"
+                          >
+                            {copiedKey === `pass-${acc.email}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono text-[10px] font-bold">
+                          Chiffré SHA-256
                         </span>
-                        <button
-                          onClick={() => togglePasswordVisibility(acc.email)}
-                          className="p-1 text-slate-500 hover:text-blue-950 rounded hover:bg-blue-50 transition-colors"
-                          title={isPasswordShown ? "Masquer" : "Afficher"}
-                        >
-                          {isPasswordShown ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                        </button>
-                        <button
-                          onClick={() => handleCopy(acc.password, `pass-${acc.email}`)}
-                          className="p-1 text-slate-500 hover:text-blue-950 rounded hover:bg-blue-50 transition-colors"
-                          title="Copier le mot de passe"
-                        >
-                          {copiedKey === `pass-${acc.email}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
+                      )}
                     </td>
 
                     <td className="py-3 px-3">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        Actif
-                      </span>
+                      {acc.status === 'verrouille' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                          Verrouillé
+                        </span>
+                      ) : acc.status === 'desactive' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          Désactivé
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          Actif
+                        </span>
+                      )}
                     </td>
 
                     <td className="py-3 px-4 text-right">
@@ -521,12 +672,32 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                         {/* Imprimer Fiche d'Accès Officielle */}
                         <button
                           onClick={() => setSelectedAccountForSlip(acc)}
-                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-50 border border-amber-200 transition-colors cursor-pointer"
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors cursor-pointer"
                           title="Imprimer la Fiche d'Accès & Identifiants Officiels"
                         >
                           <Printer className="w-3.5 h-3.5 text-amber-700" />
                           <span>Fiche d'Accès</span>
                         </button>
+
+                        {/* Modifier les informations */}
+                        <button
+                          onClick={() => handleOpenEditAccount(acc)}
+                          className="p-1.5 text-slate-500 hover:text-blue-700 rounded-lg hover:bg-blue-50 transition-colors"
+                          title="Modifier les informations du compte"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Déverrouiller / Réactiver si bloqué */}
+                        {acc.status !== 'actif' && (
+                          <button
+                            onClick={() => handleUnlockOrActivate(acc)}
+                            className="p-1.5 text-emerald-600 hover:text-emerald-800 rounded-lg hover:bg-emerald-50 transition-colors"
+                            title="Déverrouiller / Réactiver ce compte"
+                          >
+                            <Unlock className="w-3.5 h-3.5" />
+                          </button>
+                        )}
 
                         {/* Réinitialiser Mot de passe */}
                         <button
@@ -999,7 +1170,7 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                     </thead>
                     <tbody className="divide-y divide-blue-100 bg-white/90 font-sans">
                       {accounts.map(acc => {
-                        const pass = acc.plainPassword || acc.password || 'Smart@2026';
+                        const pass = acc.plainPassword || acc.password || 'Chiffré SHA-256 (Personnel)';
                         return (
                           <tr key={acc.id} className="hover:bg-blue-50 transition-colors">
                             <td className="p-3">
@@ -1073,6 +1244,157 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Modifier les informations d'un compte */}
+      {editingAccount && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-xl w-full max-h-[92vh] overflow-y-auto p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-blue-600" />
+                <h3 className="text-base font-bold text-blue-950">
+                  Modifier le compte · {editingAccount.name}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingAccount(null)}
+                className="p-1 text-slate-500 hover:text-blue-950 rounded-lg hover:bg-blue-50"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditAccount} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Prénom *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editFirstName}
+                    onChange={e => setEditFirstName(e.target.value)}
+                    className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Nom de famille *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editLastName}
+                    onChange={e => setEditLastName(e.target.value)}
+                    className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Email / Identifiant *</label>
+                  <input
+                    type="email"
+                    required
+                    value={editEmail}
+                    onChange={e => setEditEmail(e.target.value)}
+                    className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Téléphone</label>
+                  <input
+                    type="text"
+                    value={editPhone}
+                    onChange={e => setEditPhone(e.target.value)}
+                    className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Fonction / Titre</label>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={e => setEditTitle(e.target.value)}
+                    className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Matricule Officiel *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editMatricule}
+                    onChange={e => setEditMatricule(e.target.value)}
+                    className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-amber-700 font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {editingAccount.role !== 'super_admin' && (
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Établissement</label>
+                    <select
+                      value={editSchoolName}
+                      onChange={e => setEditSchoolName(e.target.value)}
+                      className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950"
+                    >
+                      {schools.map(s => (
+                        <option key={s.id} value={s.name}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Statut du compte</label>
+                  <select
+                    value={editStatus}
+                    onChange={e => setEditStatus(e.target.value as AccountStatus)}
+                    className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-semibold"
+                  >
+                    <option value="actif">Actif</option>
+                    <option value="desactive">Désactivé</option>
+                    <option value="verrouille">Verrouillé</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">
+                  Nouveau mot de passe (optionnel — laisser vide pour conserver l'actuel)
+                </label>
+                <input
+                  type="text"
+                  value={editPassword}
+                  onChange={e => setEditPassword(e.target.value)}
+                  placeholder="Laisser vide pour ne pas modifier le mot de passe"
+                  className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-blue-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingAccount(null)}
+                  className="px-4 py-2 rounded-lg bg-slate-50 text-slate-700 hover:text-blue-950"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="flex items-center gap-1.5 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 font-bold text-white shadow-md shadow-blue-600/30 cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Enregistrer & Synchroniser</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

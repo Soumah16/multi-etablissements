@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTeacher } from '../../context/TeacherContext';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
+import { CrossRoleHubPanel } from '../common/CrossRoleHubPanel';
 import { 
   Megaphone, 
   Send, 
@@ -302,6 +303,15 @@ export const TeacherCommunicationView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Synchronized Cross-Role Messages & Requests Hub */}
+      <CrossRoleHubPanel
+        role="teacher"
+        userName={`${profile.firstName} ${profile.lastName}`}
+        schoolId={currentSchool.id}
+        schoolName={currentSchool.name}
+        defaultRecipientRoles={['director', 'parent', 'student']}
+      />
     </div>
   );
 };

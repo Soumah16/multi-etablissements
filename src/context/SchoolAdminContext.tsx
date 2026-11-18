@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useApp } from './AppContext';
 import { resolveSchoolForContext } from '../utils/whatsapp';
 import { generateTotpSecret, verifyTotpCode } from '../utils/totp';
-import { saveDualStorage, usePersistedState } from '../utils/storage';
+import { loadLocalStorage, saveDualStorage, usePersistedState } from '../utils/storage';
+import { propagateStaffMemberChange } from '../utils/accountSync';
 import { 
   StaffMember, 
   SchoolClass, 
@@ -25,6 +26,8 @@ import {
   initialSchoolLoginLogs 
 } from '../data/schoolAdminMockData';
 
+import { requestServerOtp, verifyServerOtp, maskDestinationLabel } from '../utils/otpClient';
+
 export type SchoolAdminNavTab = 
   | 'dashboard'
   | 'staff'
@@ -35,6 +38,7 @@ export type SchoolAdminNavTab =
   | 'assignments'
   | 'documents'
   | 'events'
+  | 'communication'
   | 'reports'
   | 'security'
   | 'settings';
@@ -50,10 +54,12 @@ export interface SchoolSecurityConfig {
 }
 
 export interface SentSchoolOtp {
+  challengeToken: string;
   method: 'sms' | 'email';
-  destination: string;
-  code: string;
+  maskedDestination: string;
+  deliveryStatus: 'sent' | 'gateway_not_configured' | 'failed';
   sentAt: string;
+  message: string;
 }
 
 const SCHOOL_ALIAS_TO_ID: Record<string, string> = {
@@ -73,6 +79,10 @@ function securityStorageKey(schoolIdOrAlias?: string): string {
 
 function logsStorageKey(schoolIdOrAlias?: string): string {
   return `smartschool_school_logs_${getCanonicalSchoolId(schoolIdOrAlias)}`;
+}
+
+function pinLockStorageKey(schoolIdOrAlias?: string): string {
+  return `smartschool_pin_lock_${getCanonicalSchoolId(schoolIdOrAlias)}`;
 }
 
 export function loadSchoolSecurityConfig(schoolIdOrAlias?: string): SchoolSecurityConfig {
@@ -135,7 +145,7 @@ export function appendSchoolLoginLog(
     const key = logsStorageKey(schoolIdOrAlias);
     const raw = localStorage.getItem(key);
     const existing: SchoolLoginLog[] = raw ? JSON.parse(raw) : initialSchoolLoginLogs;
-    localStorage.setItem(key, JSON.stringify([newLog, ...existing].slice(0, 40)));
+    saveDualStorage(key, [newLog, ...existing].slice(0, 40));
   } catch {
     // ignore storage errors
   }
@@ -167,12 +177,12 @@ interface SchoolAdminContextType {
   toggleTwoFactor: (enabled?: boolean) => void;
   setTwoFactorMethod: (method: School2FAMethod) => void;
   regenerateTotpSecret: () => void;
-  sendSchool2faOtp: (channel?: 'sms' | 'email') => SentSchoolOtp;
+  sendSchool2faOtp: (channel?: 'sms' | 'email') => Promise<SentSchoolOtp | null>;
   verifySchool2faCode: (code: string) => Promise<{ ok: boolean; error?: string }>;
   
   // Staff
   staff: StaffMember[];
-  createStaff: (member: Omit<StaffMember, 'id' | 'matricule' | 'qrToken' | 'credentialsSent' | 'username'>) => void;
+  createStaff: (member: Omit<StaffMember, 'id' | 'matricule' | 'qrToken' | 'credentialsSent' | 'username'>, initialPassword?: string) => StaffMember;
   updateStaff: (id: string, updates: Partial<StaffMember>) => void;
   toggleStaffStatus: (id: string) => void;
   resetStaffPassword: (id: string) => void;
@@ -230,6 +240,28 @@ interface SchoolAdminContextType {
 
 const SchoolAdminContext = createContext<SchoolAdminContextType | undefined>(undefined);
 
+function readPersistedPinLock(schoolId: string): { attempts: number; blockedUntil: number } {
+  try {
+    const raw = localStorage.getItem(pinLockStorageKey(schoolId));
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const blockedUntil = Number(parsed.blockedUntil || 0);
+      const attempts = Number(parsed.attempts || 0);
+      if (blockedUntil > Date.now()) {
+        return { attempts, blockedUntil };
+      }
+      if (blockedUntil > 0 && blockedUntil <= Date.now()) {
+        localStorage.removeItem(pinLockStorageKey(schoolId));
+        return { attempts: 0, blockedUntil: 0 };
+      }
+      return { attempts, blockedUntil: 0 };
+    }
+  } catch {
+    // ignore
+  }
+  return { attempts: 0, blockedUntil: 0 };
+}
+
 export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { schools, showToast } = useApp();
 
@@ -247,13 +279,14 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [securityConfig, setSecurityConfig] = useState<SchoolSecurityConfig>(() =>
     loadSchoolSecurityConfig(canonicalSchoolId)
   );
-  const [activeOtpCode, setActiveOtpCode] = useState<string | null>(null);
+  const [activeChallengeToken, setActiveChallengeToken] = useState<string | null>(null);
   const [lastSentOtp, setLastSentOtp] = useState<SentSchoolOtp | null>(null);
 
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [pendingPinAction, setPendingPinAction] = useState<{ description: string; callback: () => void } | null>(null);
-  const [failedPinAttempts, setFailedPinAttempts] = useState(0);
-  const [isTemporarilyBlocked, setIsTemporarilyBlocked] = useState(false);
+  const [failedPinAttempts, setFailedPinAttempts] = useState<number>(() => readPersistedPinLock(canonicalSchoolId).attempts);
+  const [pinBlockedUntil, setPinBlockedUntil] = useState<number>(() => readPersistedPinLock(canonicalSchoolId).blockedUntil);
+  const isTemporarilyBlocked = pinBlockedUntil > Date.now();
 
   // Sync security config & logs whenever active school switches
   const [schoolLogs, setSchoolLogs] = useState<SchoolLoginLog[]>(() => {
@@ -267,8 +300,11 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   useEffect(() => {
     setSecurityConfig(loadSchoolSecurityConfig(canonicalSchoolId));
-    setActiveOtpCode(null);
+    setActiveChallengeToken(null);
     setLastSentOtp(null);
+    const lock = readPersistedPinLock(canonicalSchoolId);
+    setFailedPinAttempts(lock.attempts);
+    setPinBlockedUntil(lock.blockedUntil);
     try {
       const raw = localStorage.getItem(logsStorageKey(canonicalSchoolId));
       setSchoolLogs(raw ? JSON.parse(raw) : initialSchoolLoginLogs);
@@ -276,6 +312,21 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setSchoolLogs(initialSchoolLoginLogs);
     }
   }, [canonicalSchoolId]);
+
+  useEffect(() => {
+    if (pinBlockedUntil <= Date.now()) return;
+    const ms = pinBlockedUntil - Date.now();
+    const timer = setTimeout(() => {
+      setPinBlockedUntil(0);
+      setFailedPinAttempts(0);
+      try {
+        localStorage.removeItem(pinLockStorageKey(canonicalSchoolId));
+      } catch {
+        // ignore
+      }
+    }, ms);
+    return () => clearTimeout(timer);
+  }, [pinBlockedUntil, canonicalSchoolId]);
 
   useEffect(() => {
     saveSchoolSecurityConfig(canonicalSchoolId, securityConfig);
@@ -326,7 +377,7 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const setTwoFactorMethod = (method: School2FAMethod) => {
     setSecurityConfig(prev => ({ ...prev, twoFactorMethod: method }));
-    setActiveOtpCode(null);
+    setActiveChallengeToken(null);
     setLastSentOtp(null);
     const label =
       method === 'authenticator'
@@ -348,20 +399,30 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     showToast('Nouvelle clé QR Authenticator générée. Scannez-la dans votre application.');
   };
 
-  const sendSchool2faOtp = (channel?: 'sms' | 'email'): SentSchoolOtp => {
+  const sendSchool2faOtp = async (channel?: 'sms' | 'email'): Promise<SentSchoolOtp | null> => {
     const chosen: 'sms' | 'email' =
       channel || (securityConfig.twoFactorMethod === 'email' ? 'email' : 'sms');
-    const code = String(Math.floor(100000 + Math.random() * 900000));
     const destination = chosen === 'sms' ? currentSchool.phone : currentSchool.email;
-    const sentAt = new Date().toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+    const res = await requestServerOtp({
+      channel: chosen,
+      destination,
+      purpose: `Validation Admin École ${currentSchool.code || canonicalSchoolId}`
     });
-    const info: SentSchoolOtp = { method: chosen, destination, code, sentAt };
-    setActiveOtpCode(code);
+    if (!res.ok || !res.challengeToken) {
+      showToast(res.error || "Impossible d'envoyer le code OTP.");
+      return null;
+    }
+    const info: SentSchoolOtp = {
+      challengeToken: res.challengeToken,
+      method: chosen,
+      maskedDestination: res.maskedDestination || maskDestinationLabel(chosen, destination),
+      deliveryStatus: res.deliveryStatus || 'sent',
+      sentAt: res.sentAt || new Date().toLocaleTimeString('fr-FR'),
+      message: res.message || 'Code envoyé.'
+    };
+    setActiveChallengeToken(res.challengeToken);
     setLastSentOtp(info);
-    showToast(`Code 2FA envoyé par ${chosen === 'sms' ? 'SMS' : 'Email'} à ${destination}`);
+    showToast(`Demande OTP transmise (${chosen.toUpperCase()}) vers ${info.maskedDestination}`);
     return info;
   };
 
@@ -372,12 +433,18 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
 
     let valid = false;
+    let verifyError: string | undefined;
     if (securityConfig.twoFactorMethod === 'authenticator') {
-      const totpOk = await verifyTotpCode(securityConfig.totpSecret, clean, 1);
-      const otpFallbackOk = activeOtpCode !== null && clean === activeOtpCode;
-      valid = totpOk || otpFallbackOk;
-    } else {
-      valid = activeOtpCode !== null && clean === activeOtpCode;
+      valid = await verifyTotpCode(securityConfig.totpSecret, clean, 1);
+      if (!valid && activeChallengeToken) {
+        const otpRes = await verifyServerOtp({ challengeToken: activeChallengeToken, code: clean });
+        valid = otpRes.ok;
+        verifyError = otpRes.error;
+      }
+    } else if (activeChallengeToken) {
+      const otpRes = await verifyServerOtp({ challengeToken: activeChallengeToken, code: clean });
+      valid = otpRes.ok;
+      verifyError = otpRes.error;
     }
 
     if (!valid) {
@@ -385,14 +452,16 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return {
         ok: false,
         error:
-          securityConfig.twoFactorMethod === 'authenticator'
+          verifyError ||
+          (securityConfig.twoFactorMethod === 'authenticator'
             ? 'Code Authenticator incorrect ou expiré. Vérifiez le code à 6 chiffres généré.'
-            : 'Code OTP incorrect. Cliquez d’abord sur « Envoyer un code de test ».'
+            : 'Code OTP incorrect. Cliquez d’abord sur « Envoyer un code ».')
       };
     }
 
     const verifiedAt = new Date().toLocaleString('fr-FR');
     setSecurityConfig(prev => ({ ...prev, lastVerifiedAt: verifiedAt }));
+    setActiveChallengeToken(null);
     recordLog('Vérification 2FA Admin École confirmée', 'succes', 'Console Sécurité École');
     showToast('Double Authentification (2FA) vérifiée et opérationnelle !');
     return { ok: true };
@@ -400,11 +469,11 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   // Execute with PIN (+ 2FA when enabled) modal trigger
   const executeWithPin = (actionDescription: string, callback: () => void) => {
-    if (isTemporarilyBlocked) {
+    if (pinBlockedUntil > Date.now()) {
       showToast("Accès verrouillé temporairement après 5 tentatives échouées. Patientez 5 minutes.");
       return;
     }
-    setActiveOtpCode(null);
+    setActiveChallengeToken(null);
     setLastSentOtp(null);
     setPendingPinAction({ description: actionDescription, callback });
     setPinModalOpen(true);
@@ -414,17 +483,25 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     inputPin: string,
     twoFactorCode?: string
   ): Promise<{ ok: boolean; error?: string }> => {
+    if (pinBlockedUntil > Date.now()) {
+      return { ok: false, error: 'Compte temporairement verrouillé pendant 5 minutes suite à 5 échecs.' };
+    }
     if (inputPin !== securityConfig.adminPin) {
       const nextFailed = failedPinAttempts + 1;
       setFailedPinAttempts(nextFailed);
-      recordLog(`Échec PIN (${pendingPinAction?.description || 'Action sensible'})`, 'echec', 'Validation PIN Admin');
-      if (nextFailed >= 5) {
-        setIsTemporarilyBlocked(true);
-        setTimeout(() => {
-          setIsTemporarilyBlocked(false);
-          setFailedPinAttempts(0);
-        }, 300000); // 5 min
+      const nextBlockedUntil = nextFailed >= 5 ? Date.now() + 300000 : 0;
+      if (nextBlockedUntil > 0) {
+        setPinBlockedUntil(nextBlockedUntil);
       }
+      try {
+        localStorage.setItem(
+          pinLockStorageKey(canonicalSchoolId),
+          JSON.stringify({ attempts: nextFailed, blockedUntil: nextBlockedUntil })
+        );
+      } catch {
+        // ignore
+      }
+      recordLog(`Échec PIN (${pendingPinAction?.description || 'Action sensible'})`, 'echec', 'Validation PIN Admin');
       return { ok: false, error: `Code PIN incorrect. Tentative ${nextFailed}/5.` };
     }
 
@@ -440,6 +517,12 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
 
     setFailedPinAttempts(0);
+    setPinBlockedUntil(0);
+    try {
+      localStorage.removeItem(pinLockStorageKey(canonicalSchoolId));
+    } catch {
+      // ignore
+    }
     setPinModalOpen(false);
     if (pendingPinAction) {
       recordLog(`Action autorisée (${pendingPinAction.description})`, 'succes', 'Validation PIN + 2FA');
@@ -460,11 +543,15 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // Staff CRUD
-  const createStaff = (memberData: Omit<StaffMember, 'id' | 'matricule' | 'qrToken' | 'credentialsSent' | 'username'>) => {
+  const createStaff = (
+    memberData: Omit<StaffMember, 'id' | 'matricule' | 'qrToken' | 'credentialsSent' | 'username'>,
+    initialPassword?: string
+  ): StaffMember => {
     const rolePrefix = memberData.role.substring(0, 3).toUpperCase();
     const matricule = `${currentSchool.code || 'LEC'}-${rolePrefix}-${String(staff.length + 1).padStart(3, '0')}`;
     const username = `${memberData.firstName.charAt(0).toLowerCase()}.${memberData.lastName.toLowerCase().replace(/\s+/g, '')}`;
-    const tempPassword = `SmartPass#${Math.floor(1000 + Math.random() * 9000)}`;
+    const trimmedCustomPassword = initialPassword?.trim();
+    const tempPassword = trimmedCustomPassword || `SmartPass#${Math.floor(1000 + Math.random() * 9000)}`;
 
     const newStaff: StaffMember = {
       ...memberData,
@@ -479,36 +566,80 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
 
     setStaff(prev => [newStaff, ...prev]);
+    propagateStaffMemberChange({
+      member: newStaff,
+      schoolId: canonicalSchoolId,
+      schoolName: currentSchool?.name || "Lycée d'Excellence de Conakry"
+    });
     showToast(`Employé ${newStaff.firstName} ${newStaff.lastName} créé (${newStaff.role})`);
+    return newStaff;
   };
 
   const updateStaff = (id: string, updates: Partial<StaffMember>) => {
-    setStaff(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+    const existing = staff.find(s => s.id === id);
+    if (!existing) return;
+    const updatedMember: StaffMember = { ...existing, ...updates };
+    setStaff(prev => prev.map(s => (s.id === id ? updatedMember : s)));
+    propagateStaffMemberChange({
+      oldEmail: existing.email,
+      oldMatricule: existing.matricule,
+      member: updatedMember,
+      schoolId: canonicalSchoolId,
+      schoolName: currentSchool?.name || "Lycée d'Excellence de Conakry"
+    });
     showToast("Profil employé mis à jour");
   };
 
   const toggleStaffStatus = (id: string) => {
-    setStaff(prev => prev.map(s => {
-      if (s.id === id) {
-        const nextStatus = s.status === 'actif' ? 'suspendu' : 'actif';
-        showToast(`Statut employé changé : ${nextStatus.toUpperCase()}`);
-        return { ...s, status: nextStatus };
-      }
-      return s;
-    }));
+    const existing = staff.find(s => s.id === id);
+    if (!existing) return;
+    const nextStatus = existing.status === 'actif' ? 'suspendu' : 'actif';
+    const updatedMember: StaffMember = { ...existing, status: nextStatus };
+    setStaff(prev => prev.map(s => (s.id === id ? updatedMember : s)));
+    propagateStaffMemberChange({
+      oldEmail: existing.email,
+      oldMatricule: existing.matricule,
+      member: updatedMember,
+      schoolId: canonicalSchoolId,
+      schoolName: currentSchool?.name || "Lycée d'Excellence de Conakry"
+    });
+    showToast(`Statut employé changé : ${nextStatus.toUpperCase()}`);
   };
 
   const resetStaffPassword = (id: string) => {
     executeWithPin("Réinitialiser le mot de passe de l'employé", () => {
+      const currentList = loadLocalStorage<StaffMember[]>('smartschool_staff', staff);
+      const existing = currentList.find(s => s.id === id);
+      if (!existing) return;
       const tempPassword = `SmartPass#${Math.floor(1000 + Math.random() * 9000)}`;
-      setStaff(prev => prev.map(s => s.id === id ? { ...s, temporaryPassword: tempPassword } : s));
+      const updatedMember: StaffMember = { ...existing, temporaryPassword: tempPassword };
+      setStaff(currentList.map(s => (s.id === id ? updatedMember : s)));
+      propagateStaffMemberChange({
+        oldEmail: existing.email,
+        oldMatricule: existing.matricule,
+        member: updatedMember,
+        schoolId: canonicalSchoolId,
+        schoolName: currentSchool?.name || "Lycée d'Excellence de Conakry"
+      });
       showToast(`Nouveau mot de passe temporaire : ${tempPassword}`);
     });
   };
 
   const deleteStaff = (id: string) => {
     executeWithPin("Supprimer définitivement cet employé du personnel", () => {
-      setStaff(prev => prev.filter(s => s.id !== id));
+      const currentList = loadLocalStorage<StaffMember[]>('smartschool_staff', staff);
+      const existing = currentList.find(s => s.id === id);
+      setStaff(currentList.filter(s => s.id !== id));
+      if (existing) {
+        propagateStaffMemberChange({
+          oldEmail: existing.email,
+          oldMatricule: existing.matricule,
+          member: existing,
+          schoolId: canonicalSchoolId,
+          schoolName: currentSchool?.name || "Lycée d'Excellence de Conakry",
+          removed: true
+        });
+      }
       showToast("Employé supprimé du registre de l'école");
     });
   };

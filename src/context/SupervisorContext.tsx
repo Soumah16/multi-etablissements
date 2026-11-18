@@ -21,6 +21,7 @@ import {
   initialDisciplinaryMeetings 
 } from '../data/supervisorMockData';
 import { usePersistedState } from '../utils/storage';
+import { propagateRoleProfileToAccount } from '../utils/accountSync';
 
 interface SupervisorContextType {
   activeSupervisorTab: SupervisorNavTab;
@@ -85,7 +86,14 @@ export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const updateProfile = (updated: Partial<SupervisorProfile>) => {
-    setProfile(prev => ({ ...prev, ...updated }));
+    const nextProfile: SupervisorProfile = { ...profile, ...updated };
+    setProfile(nextProfile);
+    propagateRoleProfileToAccount(
+      'supervisor',
+      nextProfile,
+      { email: profile.email, matricule: profile.matricule },
+      nextProfile.schoolId
+    );
     triggerToast('Profil du Surveillant mis à jour avec succès.');
   };
 

@@ -12,12 +12,21 @@ import {
   initialParentPayments, 
   initialParentNotifications 
 } from '../data/parentMockData';
-import { usePersistedState } from '../utils/storage';
+import { subscribeStorageKey, usePersistedState } from '../utils/storage';
+import { propagateRoleProfileToAccount } from '../utils/accountSync';
+import {
+  HubRole,
+  SHARED_MESSAGES_KEY,
+  SharedMessage,
+  loadSharedMessages,
+  pushSharedMessage
+} from '../utils/communicationHub';
 
 interface ParentContextType {
   activeParentTab: ParentNavTab;
   setActiveParentTab: (tab: ParentNavTab) => void;
   profile: ParentProfile;
+  updateProfile: (partial: Partial<ParentProfile>) => void;
   childrenList: ChildSummary[];
   selectedChildId: string;
   setSelectedChildId: (id: string) => void;
@@ -37,7 +46,7 @@ const ParentContext = createContext<ParentContextType | undefined>(undefined);
 
 export const ParentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeParentTab, setActiveParentTab] = useState<ParentNavTab>('dashboard');
-  const [profile] = useState<ParentProfile>(initialParentProfile);
+  const [profile, setProfile] = usePersistedState<ParentProfile>('smartschool_parent_profile_v1', initialParentProfile);
   const [childrenList, setChildrenList] = usePersistedState<ChildSummary[]>('smartschool_parent_children_v1', initialChildren);
   const [selectedChildId, setSelectedChildId] = usePersistedState<string>('smartschool_parent_selected_child_v1', initialChildren[0].id);
   const [payments, setPayments] = usePersistedState<ParentPaymentItem[]>('smartschool_parent_payments_v1', initialParentPayments);
@@ -67,9 +76,53 @@ export const ParentProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const selectedChild = childrenList.find(c => c.id === selectedChildId) || childrenList[0];
 
+  useEffect(() => {
+    const syncIncoming = (list: SharedMessage[]) => {
+      const relevant = list.filter(
+        m => m.senderRole !== 'parent' && m.recipientRoles.includes('parent')
+      );
+      if (relevant.length === 0) return;
+      setNotifications(prev => {
+        const existingIds = new Set(prev.map(n => n.id));
+        const additions: ParentNotification[] = [];
+        for (const msg of relevant) {
+          const notifId = `smsg-${msg.id}`;
+          if (!existingIds.has(notifId)) {
+            additions.push({
+              id: notifId,
+              title: msg.subject,
+              message: msg.content,
+              date: new Date(msg.createdAt).toLocaleDateString('fr-FR'),
+              category: msg.priority === 'urgent' ? 'Urgence' : 'Événement',
+              sender: msg.senderName,
+              read: false
+            });
+          }
+        }
+        return additions.length > 0 ? [...additions, ...prev].slice(0, 60) : prev;
+      });
+    };
+
+    syncIncoming(loadSharedMessages());
+    return subscribeStorageKey(SHARED_MESSAGES_KEY, data => {
+      if (Array.isArray(data)) syncIncoming(data as SharedMessage[]);
+    });
+  }, [setNotifications]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const updateProfile = (partial: Partial<ParentProfile>) => {
+    const nextProfile: ParentProfile = { ...profile, ...partial };
+    setProfile(nextProfile);
+    propagateRoleProfileToAccount(
+      'parent',
+      nextProfile,
+      { email: profile.email }
+    );
+    showToast('Profil Parent mis à jour avec succès.');
   };
 
   const formatGnf = (amount: number) => {
@@ -127,6 +180,30 @@ export const ParentProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       date: 'Aujourd’hui'
     };
     setSentMessages(prev => [newMsg, ...prev]);
+
+    const lower = recipient.toLowerCase();
+    const targetRole: HubRole = lower.includes('directeur')
+      ? 'director'
+      : lower.includes('secrétariat') || lower.includes('secretariat')
+        ? 'secretary'
+        : lower.includes('comptable') || lower.includes('économ')
+          ? 'accountant'
+          : lower.includes('surveillant')
+            ? 'supervisor'
+            : 'teacher';
+
+    pushSharedMessage({
+      schoolId: 'sch-gn-ck-001',
+      senderRole: 'parent',
+      senderName: profile.name,
+      recipientRoles: [targetRole],
+      recipientLabel: recipient,
+      subject,
+      content: message,
+      channel: 'in_app',
+      priority: 'normal'
+    });
+
     showToast(`Message transmis à « ${recipient} ».`);
   };
 
@@ -135,6 +212,7 @@ export const ParentProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       activeParentTab,
       setActiveParentTab,
       profile,
+      updateProfile,
       childrenList,
       selectedChildId,
       setSelectedChildId,

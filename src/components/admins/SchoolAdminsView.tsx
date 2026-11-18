@@ -20,6 +20,7 @@ import {
   LogIn
 } from 'lucide-react';
 import { ImageUploadField } from '../common/ImageUploadField';
+import { normalizeSchoolId } from '../../data/accountsData';
 
 interface SchoolAdminsViewProps {
   onSwitchToSchoolAdmin?: (schoolId: string) => void;
@@ -54,9 +55,15 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
   const [phone, setPhone] = useState('+224 ');
   const [schoolId, setSchoolId] = useState('');
   const [avatar, setAvatar] = useState('');
+  const [initialPassword, setInitialPassword] = useState('');
 
-  // Password reset feedback modal
-  const [resetModalData, setResetModalData] = useState<{ adminName: string; tempPass: string } | null>(null);
+  // Password reset / creation feedback modal
+  const [resetModalData, setResetModalData] = useState<{
+    adminName: string;
+    email?: string;
+    tempPass: string;
+    isCreation?: boolean;
+  } | null>(null);
   const [copiedPass, setCopiedPass] = useState(false);
 
   // Transfer School Modal
@@ -70,7 +77,8 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
       a.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.schoolName.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesSchool = filterSchool === 'all' || a.schoolId === filterSchool;
+    const matchesSchool =
+      filterSchool === 'all' || normalizeSchoolId(a.schoolId) === normalizeSchoolId(filterSchool);
 
     return matchesSearch && matchesSchool;
   });
@@ -83,6 +91,7 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
     setPhone('+224 ');
     setSchoolId(schools[0]?.id || '');
     setAvatar('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80');
+    setInitialPassword(`SmartPass#${Math.floor(100000 + Math.random() * 900000)}`);
     setIsModalOpen(true);
   };
 
@@ -94,6 +103,7 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
     setPhone(admin.phone);
     setSchoolId(admin.schoolId);
     setAvatar(admin.avatar);
+    setInitialPassword('');
     setIsModalOpen(true);
   };
 
@@ -106,24 +116,33 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
 
     if (adminToEdit) {
       updateAdmin(adminToEdit.id, {
-        firstName,
-        lastName,
-        email,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim().toLowerCase(),
         phone,
         schoolId,
         schoolName,
         avatar
       });
     } else {
-      createAdmin({
-        firstName,
-        lastName,
-        email,
-        phone,
-        schoolId,
-        schoolName,
-        avatar,
-        status: 'active'
+      const created = createAdmin(
+        {
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.trim().toLowerCase(),
+          phone,
+          schoolId,
+          schoolName,
+          avatar,
+          status: 'active'
+        },
+        initialPassword
+      );
+      setResetModalData({
+        adminName: `${created.admin.firstName} ${created.admin.lastName}`,
+        email: created.admin.email,
+        tempPass: created.initialPassword,
+        isCreation: true
       });
     }
 
@@ -134,7 +153,9 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
     const tempPass = resetAdminPassword(admin.id);
     setResetModalData({
       adminName: `${admin.firstName} ${admin.lastName}`,
-      tempPass
+      email: admin.email,
+      tempPass,
+      isCreation: false
     });
   };
 
@@ -433,6 +454,28 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
                   </select>
                 </div>
 
+                {!adminToEdit && (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-slate-700 font-medium">Mot de passe initial *</label>
+                      <button
+                        type="button"
+                        onClick={() => setInitialPassword(`SmartPass#${Math.floor(100000 + Math.random() * 900000)}`)}
+                        className="text-[11px] text-blue-600 hover:underline font-semibold"
+                      >
+                        Générer
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={initialPassword}
+                      onChange={e => setInitialPassword(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono font-semibold focus:outline-hidden focus:border-blue-500"
+                    />
+                  </div>
+                )}
+
                 <ImageUploadField
                   label="Photo / Avatar de l'Administrateur"
                   value={avatar}
@@ -463,22 +506,32 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
         </div>
       )}
 
-      {/* Password Reset Notification Modal */}
+      {/* Password Reset / Creation Notification Modal */}
       {resetModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
           <div className="relative w-full max-w-md rounded-xl bg-white border border-amber-200 p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
             <div className="flex items-center gap-3 text-amber-700 pb-3 border-b border-blue-100">
               <KeyRound className="w-5 h-5" />
               <h3 className="font-bold text-blue-950 text-sm">
-                Nouveau Mot de Passe Temporaire
+                {resetModalData.isCreation ? 'Identifiants de Connexion Admin École' : 'Nouveau Mot de Passe Temporaire'}
               </h3>
             </div>
 
             <div className="mt-4 text-xs text-slate-700 space-y-3">
               <p>
-                Le mot de passe de l'administrateur <strong className="text-blue-950">{resetModalData.adminName}</strong> a été réinitialisé.
+                {resetModalData.isCreation ? (
+                  <>Le compte de <strong className="text-blue-950">{resetModalData.adminName}</strong> est immédiatement actif pour se connecter.</>
+                ) : (
+                  <>Le mot de passe de l'administrateur <strong className="text-blue-950">{resetModalData.adminName}</strong> a été réinitialisé.</>
+                )}
               </p>
-              
+
+              {resetModalData.email && (
+                <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200 font-mono text-xs text-blue-950">
+                  Identifiant : <strong>{resetModalData.email}</strong>
+                </div>
+              )}
+
               <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between font-mono text-sm text-emerald-600">
                 <span>{resetModalData.tempPass}</span>
                 <button
@@ -491,7 +544,7 @@ export const SchoolAdminsView: React.FC<SchoolAdminsViewProps> = ({ onSwitchToSc
               </div>
 
               <p className="text-[11px] text-slate-500">
-                Transmettez ce mot de passe à l'administrateur. Il sera invité à le changer dès sa prochaine connexion.
+                Transmettez ce mot de passe à l'administrateur. Il sera invité à le personnaliser dès sa prochaine connexion.
               </p>
             </div>
 

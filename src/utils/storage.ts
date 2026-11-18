@@ -292,6 +292,7 @@ export function usePersistedState<T>(
   const [state, setState] = useState<T>(() => loadLocalStorage<T>(key, initialValue, transform));
   const mountedAtRef = useRef<number>(Date.now());
   const userMutatedRef = useRef<boolean>(false);
+  const lastWrittenTsRef = useRef<number>(0);
   const transformRef = useRef(transform);
   transformRef.current = transform;
 
@@ -315,16 +316,17 @@ export function usePersistedState<T>(
       }
     });
 
-    // Listen for incoming remote cloud updates (from other phones/PCs)
-    const unsubscribeRemote = subscribeStorageKey(key, (data, _updatedAt, source) => {
-      if (!active || source !== 'remote') return;
+    // Listen for incoming remote cloud updates AND external cross-module updates on the same key
+    const unsubscribe = subscribeStorageKey(key, (data, updatedAt, source) => {
+      if (!active) return;
+      if (source !== 'remote' && updatedAt === lastWrittenTsRef.current) return;
       const next = transformRef.current ? transformRef.current(data as T) : (data as T);
       setState(next);
     });
 
     return () => {
       active = false;
-      unsubscribeRemote();
+      unsubscribe();
     };
   }, [key]);
 
@@ -336,7 +338,9 @@ export function usePersistedState<T>(
         typeof valueOrUpdater === 'function'
           ? (valueOrUpdater as (prevState: T) => T)(prev)
           : valueOrUpdater;
-      saveDualStorage(key, next, Math.max(Date.now(), mountedAtRef.current + 1), 'local');
+      const writeTs = Math.max(Date.now(), mountedAtRef.current + 1, lastWrittenTsRef.current + 1);
+      lastWrittenTsRef.current = writeTs;
+      saveDualStorage(key, next, writeTs, 'local');
       return next;
     });
   };

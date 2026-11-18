@@ -3,6 +3,7 @@ import { useSecretary } from '../../context/SecretaryContext';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { SecretaryMessage } from '../../types/secretary';
+import { CrossRoleHubPanel } from '../common/CrossRoleHubPanel';
 import { 
   Megaphone, 
   Send, 
@@ -21,7 +22,7 @@ import {
 } from 'lucide-react';
 
 export const SecretaryCommunicationView: React.FC = () => {
-  const { messages, sendMessage } = useSecretary();
+  const { messages, sendMessage, profile } = useSecretary();
   const { currentSchool } = useSchoolAdmin();
   const schoolWaPhone = getSchoolWhatsAppNumber(currentSchool);
   const [searchTerm, setSearchTerm] = useState('');
@@ -324,6 +325,16 @@ export const SecretaryCommunicationView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Synchronized Cross-Role Messages & Requests Hub */}
+      <CrossRoleHubPanel
+        role="secretary"
+        userName={profile.name}
+        schoolId={currentSchool.id}
+        schoolName={currentSchool.name}
+        canManageRequests
+        defaultRecipientRoles={['parent', 'director', 'school_admin']}
+      />
     </div>
   );
 };

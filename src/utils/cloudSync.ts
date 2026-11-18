@@ -482,17 +482,48 @@ export async function createWorkspaceInvite(params: {
   }
 }
 
+export function parseInviteAccessInput(rawWs: string, rawCode: string): {
+  workspaceId: string;
+  inviteCode: string;
+} {
+  let ws = rawWs.trim();
+  let code = rawCode.trim();
+  const combinedSource = [rawWs, rawCode].find(s => /INV-[A-Z0-9]+/i.test(s) && /ID\s*Espace/i.test(s));
+  if (combinedSource) {
+    const wsMatch = combinedSource.match(/ID\s*Espace\s*:\s*([^\s|]+)/i);
+    const codeMatch = combinedSource.match(/(?:Code(?:\s*d['’]invitation)?\s*:\s*|)(INV-[A-Z0-9]+)/i);
+    if (wsMatch?.[1]) ws = wsMatch[1].trim();
+    if (codeMatch?.[1]) code = codeMatch[1].trim();
+  }
+  return {
+    workspaceId: ws,
+    inviteCode: code.toUpperCase(),
+  };
+}
+
 export async function redeemWorkspaceInvite(params: {
   user: User;
   workspaceId: string;
   inviteCode: string;
 }): Promise<WorkspaceInfo> {
   const { user, workspaceId, inviteCode } = params;
-  const cleanWsId = sanitizeDocId(workspaceId.trim());
-  const cleanCode = sanitizeDocId(inviteCode.trim().toUpperCase());
+  const parsed = parseInviteAccessInput(workspaceId, inviteCode);
+
+  if (!parsed.workspaceId || parsed.workspaceId.includes('@')) {
+    throw new Error(
+      "ID d'espace invalide. Ne saisissez pas une adresse email : copiez exactement l'ID d'espace affiché sur l'autre appareil (ex: ws-... ou smartschool-guinee-main)."
+    );
+  }
+  if (!parsed.inviteCode || !parsed.inviteCode.startsWith('INV-') || parsed.inviteCode.length < 6) {
+    throw new Error(
+      "Code d'invitation invalide. Générez un code sur l'autre appareil (ex: INV-XXXXXX) via « Créer un code »."
+    );
+  }
+
+  const cleanWsId = sanitizeDocId(parsed.workspaceId);
+  const cleanCode = sanitizeDocId(parsed.inviteCode);
 
   const inviteRef = doc(db, 'workspaces', cleanWsId, 'invites', cleanCode);
-  const invitePath = `workspaces/${cleanWsId}/invites/${cleanCode}`;
 
   let inviteData: Record<string, unknown>;
   try {
@@ -504,11 +535,22 @@ export async function redeemWorkspaceInvite(params: {
     if (inviteData.status !== 'pending') {
       throw new Error("Ce code d'invitation a déjà été utilisé ou révoqué.");
     }
+    const invitedEmail = String(inviteData.invitedEmail || '').trim().toLowerCase();
+    if (invitedEmail && invitedEmail !== (user.email || '').toLowerCase()) {
+      throw new Error(`Ce code est réservé au compte Google ${invitedEmail}.`);
+    }
   } catch (error) {
-    if (error instanceof Error && error.message.includes("Code d'invitation")) {
+    if (
+      error instanceof Error &&
+      (error.message.includes("Code d'invitation") ||
+        error.message.includes("Ce code") ||
+        error.message.includes("ID d'espace"))
+    ) {
       throw error;
     }
-    handleFirestoreError(error, OperationType.GET, invitePath);
+    throw new Error(
+      "Espace ou code d'invitation introuvable (ou réservé à un autre compte Google). Copiez exactement l'ID d'espace et le code générés sur l'appareil principal."
+    );
   }
 
   const wsOwnerUid = String(inviteData.ownerUid || '');

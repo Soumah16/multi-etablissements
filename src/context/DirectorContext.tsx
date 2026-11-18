@@ -28,6 +28,9 @@ import {
 } from '../data/directorMockData';
 import { generateTotpSecret, verifyTotpCode } from '../utils/totp';
 import { saveDualStorage, subscribeStorageKey, usePersistedState } from '../utils/storage';
+import { propagateRoleProfileToAccount } from '../utils/accountSync';
+import { requestServerOtp, verifyServerOtp, maskDestinationLabel } from '../utils/otpClient';
+import { HubRole, pushSharedMessage } from '../utils/communicationHub';
 
 interface PinPromptRequest {
   title: string;
@@ -37,10 +40,12 @@ interface PinPromptRequest {
 }
 
 export interface SentOtpInfo {
+  challengeToken: string;
   method: 'sms' | 'email';
-  destination: string;
-  code: string;
+  maskedDestination: string;
+  deliveryStatus: 'sent' | 'gateway_not_configured' | 'failed';
   sentAt: string;
+  message: string;
 }
 
 export interface PinVerificationResult {
@@ -141,7 +146,7 @@ interface DirectorContextType {
   totpSecret: string;
   regenerateTotpSecret: () => void;
   lastSentOtpInfo: SentOtpInfo | null;
-  sendVerificationOtp: (channel?: 'sms' | 'email') => SentOtpInfo;
+  sendVerificationOtp: (channel?: 'sms' | 'email') => Promise<SentOtpInfo | null>;
   updateDirectorPin: (oldPin: string, newPin: string) => boolean;
   pinModalOpen: boolean;
   currentPinPrompt: PinPromptRequest | null;
@@ -211,7 +216,7 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const [directorPin, setDirectorPin] = useState<string>(initialSecurity.directorPin);
   const [totpSecret, setTotpSecret] = useState<string>(initialSecurity.totpSecret);
-  const [activeOtpCode, setActiveOtpCode] = useState<string | null>(null);
+  const [activeChallengeToken, setActiveChallengeToken] = useState<string | null>(null);
   const [lastSentOtpInfo, setLastSentOtpInfo] = useState<SentOtpInfo | null>(null);
 
   const [pinModalOpen, setPinModalOpen] = useState(false);
@@ -267,7 +272,14 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const updateProfile = (partial: Partial<DirectorProfile>) => {
-    setProfile(prev => ({ ...prev, ...partial }));
+    const nextProfile: DirectorProfile = { ...profile, ...partial };
+    setProfile(nextProfile);
+    propagateRoleProfileToAccount(
+      'director',
+      nextProfile,
+      { email: profile.email, matricule: profile.matricule },
+      nextProfile.schoolId
+    );
     showToast('Profil Directeur mis à jour avec succès');
   };
 
@@ -286,21 +298,30 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     showToast('Nouvelle clé QR Authenticator générée. Pensez à la scanner sur votre téléphone.');
   };
 
-  const sendVerificationOtp = (channel?: 'sms' | 'email'): SentOtpInfo => {
+  const sendVerificationOtp = async (channel?: 'sms' | 'email'): Promise<SentOtpInfo | null> => {
     const chosenChannel: 'sms' | 'email' =
       channel || (profile.twoFactorMethod === 'email' ? 'email' : 'sms');
-    const code = String(Math.floor(100000 + Math.random() * 900000));
     const destination = chosenChannel === 'sms' ? profile.phone : profile.email;
-    const sentAt = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const info: SentOtpInfo = {
-      method: chosenChannel,
+    const res = await requestServerOtp({
+      channel: chosenChannel,
       destination,
-      code,
-      sentAt
+      purpose: 'Validation PIN+2FA Directeur'
+    });
+    if (!res.ok || !res.challengeToken) {
+      showToast(res.error || "Impossible d'envoyer le code OTP.");
+      return null;
+    }
+    const info: SentOtpInfo = {
+      challengeToken: res.challengeToken,
+      method: chosenChannel,
+      maskedDestination: res.maskedDestination || maskDestinationLabel(chosenChannel, destination),
+      deliveryStatus: res.deliveryStatus || 'sent',
+      sentAt: res.sentAt || new Date().toLocaleTimeString('fr-FR'),
+      message: res.message || 'Code envoyé.'
     };
-    setActiveOtpCode(code);
+    setActiveChallengeToken(res.challengeToken);
     setLastSentOtpInfo(info);
-    showToast(`Code 2FA envoyé par ${chosenChannel === 'sms' ? 'SMS' : 'Email'} vers ${destination}`);
+    showToast(`Demande OTP transmise (${chosenChannel.toUpperCase()}) vers ${info.maskedDestination}`);
     return info;
   };
 
@@ -331,7 +352,7 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     actionName: string,
     onSuccess: () => void
   ) => {
-    setActiveOtpCode(null);
+    setActiveChallengeToken(null);
     setLastSentOtpInfo(null);
     setCurrentPinPrompt({
       title,
@@ -345,7 +366,7 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const closePinModal = () => {
     setPinModalOpen(false);
     setCurrentPinPrompt(null);
-    setActiveOtpCode(null);
+    setActiveChallengeToken(null);
     setLastSentOtpInfo(null);
   };
 
@@ -380,13 +401,18 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     let is2faValid = false;
+    let otpError: string | undefined;
     if (profile.twoFactorMethod === 'app') {
-      // Allow real TOTP from Authenticator app (or an explicitly requested fallback OTP if dispatched)
-      const matchesTotp = await verifyTotpCode(totpSecret, clean2FA, 1);
-      const matchesFallbackOtp = activeOtpCode !== null && clean2FA === activeOtpCode;
-      is2faValid = matchesTotp || matchesFallbackOtp;
-    } else {
-      is2faValid = activeOtpCode !== null && clean2FA === activeOtpCode;
+      is2faValid = await verifyTotpCode(totpSecret, clean2FA, 1);
+      if (!is2faValid && activeChallengeToken) {
+        const otpRes = await verifyServerOtp({ challengeToken: activeChallengeToken, code: clean2FA });
+        is2faValid = otpRes.ok;
+        otpError = otpRes.error;
+      }
+    } else if (activeChallengeToken) {
+      const otpRes = await verifyServerOtp({ challengeToken: activeChallengeToken, code: clean2FA });
+      is2faValid = otpRes.ok;
+      otpError = otpRes.error;
     }
 
     if (!is2faValid) {
@@ -402,9 +428,10 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return {
         ok: false,
         error:
-          profile.twoFactorMethod === 'app'
-            ? 'Code 2FA Authenticator invalide ou expiré. Utilisez votre application Authenticator (ou consultez le code en direct dans Sécurité & Code PIN).'
-            : 'Code 2FA incorrect ou non généré. Cliquez d’abord sur « Envoyer le code par SMS / Email ».'
+          otpError ||
+          (profile.twoFactorMethod === 'app'
+            ? 'Code 2FA Authenticator invalide ou expiré. Utilisez votre application Authenticator.'
+            : 'Code 2FA incorrect ou non généré. Cliquez d’abord sur « Recevoir code par SMS / Email ».')
       };
     }
 
@@ -659,6 +686,39 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       readsCount: 0
     };
     setAnnouncements(prev => [newAnn, ...prev]);
+
+    const recipientRoles: HubRole[] =
+      item.targetAudience === 'teachers'
+        ? ['teacher']
+        : item.targetAudience === 'parents'
+          ? ['parent']
+          : item.targetAudience === 'students'
+            ? ['student']
+            : item.targetAudience === 'specific_class'
+              ? ['teacher', 'parent', 'student']
+              : ['school_admin', 'secretary', 'teacher', 'parent', 'student'];
+
+    pushSharedMessage({
+      schoolId: profile.schoolId || 'sch-gn-ck-001',
+      senderRole: 'director',
+      senderName: profile.name,
+      recipientRoles,
+      recipientLabel:
+        item.targetAudience === 'teachers'
+          ? 'Enseignants'
+          : item.targetAudience === 'parents'
+            ? "Parents d'élèves"
+            : item.targetAudience === 'students'
+              ? 'Élèves'
+              : item.targetAudience === 'specific_class'
+                ? item.targetClassName || 'Classe ciblée'
+                : 'Toute la communauté scolaire',
+      subject: item.title,
+      content: item.content,
+      channel: item.channels.includes('email') ? 'email' : item.channels.includes('sms') ? 'sms' : 'in_app',
+      priority: item.priority
+    });
+
     addAuditLog({
       action: 'Diffusion de Message Omnicanal',
       target: item.title,

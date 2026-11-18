@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { getAccountByRole, updateAccountPassword } from '../../data/accountsData';
 import { 
   UserCheck, 
   ShieldCheck, 
@@ -37,6 +38,17 @@ export const SuperAdminProfileView: React.FC = () => {
 
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
+  useEffect(() => {
+    setName(profile.name);
+    setTitle(profile.title);
+    setPhone(profile.phone);
+    setEmail(profile.email);
+    setAddress(profile.address);
+    setEnterprise(profile.enterprise);
+    setEnterpriseLogo(profile.enterpriseLogo);
+    setSignatureUrl(profile.signatureUrl);
+  }, [profile]);
+
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfile({
@@ -55,16 +67,28 @@ export const SuperAdminProfileView: React.FC = () => {
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError(null);
-    if (newPassword.length < 8) {
+    const superAcc = getAccountByRole('super_admin');
+    const expectedCurrent = String(superAcc?.plainPassword || superAcc?.password || '');
+    if (superAcc && currentPassword.trim() !== expectedCurrent.trim()) {
+      setPasswordError("Le mot de passe actuel est incorrect.");
+      showToast("Le mot de passe actuel est incorrect.");
+      return;
+    }
+    if (newPassword.trim().length < 8) {
       setPasswordError("Le mot de passe doit comporter au moins 8 caractères.");
       showToast("Le mot de passe doit comporter au moins 8 caractères.");
       return;
     }
-    if (newPassword !== confirmPassword) {
+    if (newPassword.trim() !== confirmPassword.trim()) {
       setPasswordError("Les deux mots de passe ne correspondent pas.");
       showToast("Les deux mots de passe ne correspondent pas.");
       return;
     }
+    updateAccountPassword(
+      { id: superAcc?.id || 'USR-SADM-001', role: 'super_admin', email: profile.email },
+      newPassword.trim(),
+      false
+    );
     setIsPasswordModalOpen(false);
     setCurrentPassword('');
     setNewPassword('');

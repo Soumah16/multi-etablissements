@@ -17,9 +17,10 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
+import { CrossRoleHubPanel } from '../common/CrossRoleHubPanel';
 
 export const CommunicationView: React.FC = () => {
-  const { announcements, createAnnouncement, schools, t, showToast } = useApp();
+  const { announcements, createAnnouncement, schools, t, showToast, profile } = useApp();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -314,6 +315,16 @@ export const CommunicationView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Synchronized Cross-Role Messages & Requests Hub */}
+      <CrossRoleHubPanel
+        role="super_admin"
+        userName={profile.name}
+        schoolId="NATIONAL"
+        schoolName="Réseau National SmartSchool Guinée"
+        canManageRequests
+        defaultRecipientRoles={['school_admin', 'director']}
+      />
     </div>
   );
 };
