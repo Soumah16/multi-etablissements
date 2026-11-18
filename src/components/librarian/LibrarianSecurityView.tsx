@@ -5,7 +5,6 @@ import {
   Lock,
   AlertOctagon,
   ShieldX,
-  Smartphone,
   Eye,
   EyeOff,
   History,
@@ -14,11 +13,10 @@ import {
 } from 'lucide-react';
 
 export const LibrarianSecurityView: React.FC = () => {
-  const { profile, updateProfile, showToast, canManageLibrary, libraryAuditLogs } = useLibrarian();
+  const { updateProfile, showToast, canManageLibrary, libraryAuditLogs } = useLibrarian();
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [showPin, setShowPin] = useState(false);
-  const [twoFactor, setTwoFactor] = useState(profile.twoFactorEnabled);
 
   if (!canManageLibrary) {
     return (
@@ -50,20 +48,13 @@ export const LibrarianSecurityView: React.FC = () => {
     showToast('Code PIN de sécurité mis à jour.');
   };
 
-  const handleToggle2fa = () => {
-    const nextVal = !twoFactor;
-    setTwoFactor(nextVal);
-    updateProfile({ twoFactorEnabled: nextVal });
-    showToast(nextVal ? 'Double authentification (2FA) activée.' : '2FA désactivée.');
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-xl md:text-2xl font-black text-blue-950">Sécurité, Habilitations &amp; Audit Bibliothèque</h1>
         <p className="text-xs text-slate-500 mt-0.5">
-          Gestion du code PIN 6 chiffres, authentification double facteur et journal complet des connexions et modifications.
+          Gestion du code PIN 6 chiffres et journal complet des connexions et modifications.
         </p>
       </div>
 
@@ -119,29 +110,6 @@ export const LibrarianSecurityView: React.FC = () => {
               Enregistrer le nouveau code PIN
             </button>
           </form>
-
-          {/* 2FA Toggle */}
-          <div className="pt-4 border-t border-blue-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                <Smartphone className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-blue-950">Double Authentification (2FA)</div>
-                <div className="text-[11px] text-slate-500">Code SMS Orange / MTN à la connexion</div>
-              </div>
-            </div>
-            <button
-              onClick={handleToggle2fa}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                twoFactor 
-                  ? 'bg-emerald-600 text-white' 
-                  : 'bg-slate-50 text-slate-500 hover:text-blue-950'
-              }`}
-            >
-              {twoFactor ? 'Activée' : 'Désactivée'}
-            </button>
-          </div>
         </div>
 
         {/* Strict Functional Prohibitions */}

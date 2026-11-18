@@ -3,12 +3,9 @@ import { useSupervisor } from '../../context/SupervisorContext';
 import { 
   ShieldCheck, 
   KeyRound, 
-  Smartphone, 
   Clock, 
   CheckCircle2, 
-  Ban, 
-  Laptop, 
-  Sparkles 
+  Ban
 } from 'lucide-react';
 
 export const SupervisorSecurityView: React.FC = () => {
@@ -16,7 +13,6 @@ export const SupervisorSecurityView: React.FC = () => {
   const [currentPin, setCurrentPin] = useState(profile.pinCode || '7412');
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(profile.twoFactorEnabled ?? true);
 
   const handleUpdatePin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +40,7 @@ export const SupervisorSecurityView: React.FC = () => {
     { id: 'log-1', action: 'Billet de rentrée délivré', details: 'Billet N°103 pour Aboubacar Sidiki Camara (10ème A)', time: '2026-11-04 08:28' },
     { id: 'log-2', action: 'Incident consigné', details: 'Bagarre cour de récréation (Mohamed Lamine Camara)', time: '2026-11-04 10:20' },
     { id: 'log-3', action: 'Ronde de surveillance enregistrée', details: 'Portail Principal - Contrôle des uniformes et cartes', time: '2026-11-04 08:15' },
-    { id: 'log-4', action: 'Connexion 2FA réussie', details: 'Portail Vie Scolaire Conakry (IP 197.149.208.12)', time: '2026-11-04 07:15' }
+    { id: 'log-4', action: 'Connexion réussie', details: 'Portail Vie Scolaire Conakry (IP 197.149.208.12)', time: '2026-11-04 07:15' }
   ];
 
   return (
@@ -56,7 +52,7 @@ export const SupervisorSecurityView: React.FC = () => {
           <span>Sécurité, Code PIN & Droits Réglementaires</span>
         </h1>
         <p className="text-xs text-slate-500">
-          Code confidentiel pour billets de rentrée, 2FA et étanchéité stricte des fonctions
+          Code confidentiel pour billets de rentrée et étanchéité stricte des fonctions
         </p>
       </div>
 
@@ -131,8 +127,8 @@ export const SupervisorSecurityView: React.FC = () => {
         </div>
       </div>
 
-      {/* PIN & 2FA */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* PIN */}
+      <div className="max-w-2xl">
         {/* PIN Code */}
         <div className="rounded-2xl bg-white border border-blue-100 p-6 shadow-lg space-y-4">
           <div className="flex items-center gap-3">
@@ -186,43 +182,6 @@ export const SupervisorSecurityView: React.FC = () => {
               Mettre à jour le code PIN
             </button>
           </form>
-        </div>
-
-        {/* 2FA Protection */}
-        <div className="rounded-2xl bg-white border border-blue-100 p-6 shadow-lg space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold">
-              <Smartphone className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-blue-950">Double Authentification (2FA)</h2>
-              <p className="text-xs text-slate-500">Sécurité du compte surveillant par SMS</p>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-blue-50/60 border border-slate-200 flex items-center justify-between text-xs">
-            <div>
-              <div className="font-bold text-blue-950">Validation 2FA par SMS</div>
-              <div className="text-slate-500 text-[11px] mt-0.5">Numéro : {profile.phone}</div>
-            </div>
-            <button
-              onClick={() => {
-                setTwoFactorEnabled(!twoFactorEnabled);
-                triggerToast(twoFactorEnabled ? '2FA désactivé' : '2FA activé');
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                twoFactorEnabled 
-                  ? 'bg-emerald-600 text-white' 
-                  : 'bg-slate-100 text-slate-500 hover:text-blue-950'
-              }`}
-            >
-              {twoFactorEnabled ? 'Actif ✓' : 'Inactif'}
-            </button>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-blue-50/60 border border-slate-200 text-[11px] text-slate-500 leading-relaxed">
-            🔐 Protège l'intégrité du registre des sanctions et empêche toute usurpation de signature sur les billets de rentrée.
-          </div>
         </div>
       </div>
 

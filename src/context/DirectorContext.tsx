@@ -372,10 +372,9 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const submitPinVerification = async (
     pin: string,
-    twoFactorCode: string
+    _twoFactorCode: string = ''
   ): Promise<PinVerificationResult> => {
     const cleanPin = pin.trim();
-    const clean2FA = twoFactorCode.trim();
 
     if (cleanPin !== directorPin) {
       addAuditLog({
@@ -393,52 +392,10 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       };
     }
 
-    if (!/^\d{6}$/.test(clean2FA)) {
-      return {
-        ok: false,
-        error: 'Le code 2FA doit contenir exactement 6 chiffres.'
-      };
-    }
-
-    let is2faValid = false;
-    let otpError: string | undefined;
-    if (profile.twoFactorMethod === 'app') {
-      is2faValid = await verifyTotpCode(totpSecret, clean2FA, 1);
-      if (!is2faValid && activeChallengeToken) {
-        const otpRes = await verifyServerOtp({ challengeToken: activeChallengeToken, code: clean2FA });
-        is2faValid = otpRes.ok;
-        otpError = otpRes.error;
-      }
-    } else if (activeChallengeToken) {
-      const otpRes = await verifyServerOtp({ challengeToken: activeChallengeToken, code: clean2FA });
-      is2faValid = otpRes.ok;
-      otpError = otpRes.error;
-    }
-
-    if (!is2faValid) {
-      addAuditLog({
-        action: `Échec vérification 2FA : ${currentPinPrompt?.actionName || 'Action sensible'}`,
-        target: currentPinPrompt?.title || 'Coffre Directeur',
-        userRole: 'Directeur des Études',
-        ip: '197.149.214.33',
-        device: 'Poste Direction',
-        securityLevel: 'critique',
-        status: 'echec'
-      });
-      return {
-        ok: false,
-        error:
-          otpError ||
-          (profile.twoFactorMethod === 'app'
-            ? 'Code 2FA Authenticator invalide ou expiré. Utilisez votre application Authenticator.'
-            : 'Code 2FA incorrect ou non généré. Cliquez d’abord sur « Recevoir code par SMS / Email ».')
-      };
-    }
-
     if (currentPinPrompt) {
       currentPinPrompt.onSuccess();
       addAuditLog({
-        action: `Autorisation PIN/2FA : ${currentPinPrompt.actionName}`,
+        action: `Autorisation PIN : ${currentPinPrompt.actionName}`,
         target: currentPinPrompt.title,
         userRole: 'Directeur des Études',
         ip: '197.149.214.33',

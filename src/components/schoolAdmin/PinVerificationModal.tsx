@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
-import { KeyRound, X, AlertTriangle, ShieldCheck, Smartphone, Mail, Send } from 'lucide-react';
+import { KeyRound, X, AlertTriangle } from 'lucide-react';
 
 export const PinVerificationModal: React.FC = () => {
   const { 
@@ -8,15 +8,10 @@ export const PinVerificationModal: React.FC = () => {
     setPinModalOpen, 
     pendingPinAction, 
     verifyAndExecutePin, 
-    isTemporarilyBlocked,
-    twoFactorEnabled,
-    twoFactorMethod,
-    lastSentOtp,
-    sendSchool2faOtp
+    isTemporarilyBlocked
   } = useSchoolAdmin();
 
   const [pin, setPin] = useState('');
-  const [twoFactorCode, setTwoFactorCode] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
 
@@ -25,7 +20,6 @@ export const PinVerificationModal: React.FC = () => {
   const handleClose = () => {
     setPinModalOpen(false);
     setPin('');
-    setTwoFactorCode('');
     setErrorMsg(null);
   };
 
@@ -35,23 +29,16 @@ export const PinVerificationModal: React.FC = () => {
       setErrorMsg("Le code PIN doit comporter exactement 6 chiffres.");
       return;
     }
-    if (twoFactorEnabled && twoFactorCode.length !== 6) {
-      setErrorMsg("Le code 2FA à 6 chiffres est requis.");
-      return;
-    }
 
     setVerifying(true);
     setErrorMsg(null);
     try {
-      const res = await verifyAndExecutePin(pin, twoFactorCode);
+      const res = await verifyAndExecutePin(pin);
       if (!res.ok) {
         setErrorMsg(res.error || 'Vérification refusée.');
-        if (res.error?.toLowerCase().includes('pin')) {
-          setPin('');
-        }
+        setPin('');
       } else {
         setPin('');
-        setTwoFactorCode('');
         setErrorMsg(null);
       }
     } finally {
@@ -86,11 +73,11 @@ export const PinVerificationModal: React.FC = () => {
         </div>
 
         <h3 className="text-base font-bold text-blue-950">
-          {twoFactorEnabled ? 'Code PIN + 2FA Administrateur Requis' : 'Code PIN Administrateur Requis'}
+          Code PIN Administrateur Requis
         </h3>
 
         <p className="text-xs text-slate-500 mt-1">
-          {pendingPinAction?.description || "Cette opération est hautement sensible et nécessite une confirmation de sécurité."}
+          {pendingPinAction?.description || "Cette opération est hautement sensible et nécessite une confirmation par code PIN."}
         </p>
 
         {isTemporarilyBlocked ? (
@@ -138,67 +125,6 @@ export const PinVerificationModal: React.FC = () => {
               Code PIN par défaut : <span className="text-amber-700 font-bold">123456</span>
             </div>
 
-            {/* 2FA Second Factor Block when enabled */}
-            {twoFactorEnabled && (
-              <div className="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200 space-y-2.5 text-left">
-                <div className="flex items-center justify-between text-xs font-bold text-blue-950">
-                  <span className="flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-blue-600" />
-                    <span>
-                      Code 2FA (
-                      {twoFactorMethod === 'authenticator'
-                        ? 'Authenticator'
-                        : twoFactorMethod === 'sms'
-                        ? 'SMS'
-                        : 'Email'}
-                      )
-                    </span>
-                  </span>
-                </div>
-
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={twoFactorCode}
-                  onChange={(e) => {
-                    setTwoFactorCode(e.target.value.replace(/\D/g, ''));
-                    setErrorMsg(null);
-                  }}
-                  placeholder="Code 2FA à 6 chiffres"
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-blue-200 text-blue-950 font-mono text-center tracking-[0.3em] text-sm font-bold"
-                />
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => { void sendSchool2faOtp('sms'); }}
-                    className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded bg-white hover:bg-blue-100 border border-blue-200 text-blue-700 cursor-pointer"
-                  >
-                    <Smartphone className="w-3 h-3" />
-                    <span>Envoyer par SMS</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { void sendSchool2faOtp('email'); }}
-                    className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded bg-white hover:bg-indigo-100 border border-indigo-200 text-indigo-700 cursor-pointer"
-                  >
-                    <Mail className="w-3 h-3" />
-                    <span>Envoyer par Email</span>
-                  </button>
-                </div>
-
-                {lastSentOtp && (
-                  <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 space-y-0.5">
-                    <div className="flex items-center gap-1 font-semibold">
-                      <Send className="w-3 h-3 text-emerald-600 shrink-0" />
-                      <span>{lastSentOtp.method.toUpperCase()} → {lastSentOtp.maskedDestination} ({lastSentOtp.sentAt})</span>
-                    </div>
-                    <div className="text-[10px] text-emerald-700">{lastSentOtp.message}</div>
-                  </div>
-                )}
-              </div>
-            )}
-
             {errorMsg && (
               <p className="text-xs text-rose-600 font-medium animate-in fade-in">
                 {errorMsg}
@@ -207,7 +133,7 @@ export const PinVerificationModal: React.FC = () => {
 
             <button
               type="submit"
-              disabled={verifying || pin.length !== 6 || (twoFactorEnabled && twoFactorCode.length !== 6)}
+              disabled={verifying || pin.length !== 6}
               className="w-full py-2.5 text-xs font-semibold rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 transition-colors shadow-md cursor-pointer"
             >
               {verifying ? 'Vérification...' : "Valider l'Opération"}

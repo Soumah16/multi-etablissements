@@ -3,24 +3,17 @@ import { useTeacher } from '../../context/TeacherContext';
 import { 
   ShieldCheck, 
   KeyRound, 
-  Lock, 
-  Smartphone, 
   Clock, 
   CheckCircle2, 
-  AlertCircle,
-  FileCheck2,
-  Sparkles,
   Ban,
-  ShieldAlert,
   Laptop
 } from 'lucide-react';
 
 export const TeacherSecurityView: React.FC = () => {
-  const { profile, triggerToast } = useTeacher();
+  const { triggerToast } = useTeacher();
   const [currentPin, setCurrentPin] = useState('1234');
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(profile.twoFactorEnabled ?? true);
 
   const handleUpdatePin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +42,7 @@ export const TeacherSecurityView: React.FC = () => {
     { id: 'log-2', action: 'Appel clôturé', details: 'Feuille d\'appel transmise à la Vie Scolaire', time: '2026-11-03 08:15', status: 'success' },
     { id: 'log-3', action: 'Dépôt sujet d\'examen', details: 'Baccalauréat Blanc Session 1 scellé sous pli numérique', time: '2026-11-02 16:35', status: 'success' },
     { id: 'log-4', action: 'Soumission des notes', details: 'Évaluation N°1 transmise au Directeur des Études', time: '2026-10-31 16:40', status: 'success' },
-    { id: 'log-5', action: 'Connexion réussie 2FA', details: 'Ratoma, Conakry, Guinée (IP 197.149.208.45)', time: '2026-11-03 07:40', status: 'success' }
+    { id: 'log-5', action: 'Connexion réussie', details: 'Ratoma, Conakry, Guinée (IP 197.149.208.45)', time: '2026-11-03 07:40', status: 'success' }
   ];
 
   return (
@@ -61,7 +54,7 @@ export const TeacherSecurityView: React.FC = () => {
           <span>Sécurité du Compte, Droits & Historique d'Accès</span>
         </h1>
         <p className="text-xs text-slate-500">
-          Double authentification (2FA), code confidentiel de visa pédagogique et frontière stricte des attributions
+          Code confidentiel de visa pédagogique et frontière stricte des attributions
         </p>
       </div>
 
@@ -140,8 +133,8 @@ export const TeacherSecurityView: React.FC = () => {
         </div>
       </div>
 
-      {/* PIN Signature Code & 2FA */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* PIN Signature Code */}
+      <div className="max-w-2xl">
         {/* PIN Signature Code */}
         <div className="rounded-2xl bg-white border border-blue-100 p-6 shadow-lg space-y-4">
           <div className="flex items-center gap-3">
@@ -195,43 +188,6 @@ export const TeacherSecurityView: React.FC = () => {
               Mettre à jour le code PIN
             </button>
           </form>
-        </div>
-
-        {/* 2FA Protection */}
-        <div className="rounded-2xl bg-white border border-blue-100 p-6 shadow-lg space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold">
-              <Smartphone className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-blue-950">Authentification à Deux Facteurs (2FA)</h2>
-              <p className="text-xs text-slate-500">Protection du compte enseignant par code SMS à chaque connexion</p>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-blue-50/60 border border-slate-200 flex items-center justify-between text-xs">
-            <div>
-              <div className="font-bold text-blue-950">Validation 2FA par SMS</div>
-              <div className="text-slate-500 text-[11px] mt-0.5">Numéro certifié : {profile.phone}</div>
-            </div>
-            <button
-              onClick={() => {
-                setTwoFactorEnabled(!twoFactorEnabled);
-                triggerToast(twoFactorEnabled ? '2FA désactivé' : '2FA activé avec succès');
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                twoFactorEnabled 
-                  ? 'bg-emerald-600 text-white' 
-                  : 'bg-slate-100 text-slate-500 hover:text-blue-950'
-              }`}
-            >
-              {twoFactorEnabled ? 'Actif ✓' : 'Inactif'}
-            </button>
-          </div>
-
-          <div className="p-3 rounded-xl bg-blue-50/60 border border-slate-200 text-[11px] text-slate-500 leading-relaxed">
-            🔐 En activant la double authentification, une demande de confirmation est automatiquement envoyée sur votre téléphone certifié à chaque nouvelle session sur un appareil inconnu.
-          </div>
         </div>
       </div>
 

@@ -567,7 +567,7 @@ export function downloadBulletinPdf(card: StudentReportCard, schoolName: string)
     doc.text(pdfSafe(card.signatureHash || 'CERT-SMARTSCHOOL-GN'), pageWidth - 18, sigY + 23, { align: 'right' });
   } else {
     doc.setTextColor(180, 83, 9);
-    doc.text(pdfSafe('Document provisoire - En attente de signature PIN + 2FA du Directeur'), 18, sigY + 23);
+    doc.text(pdfSafe('Document provisoire - En attente de signature PIN du Directeur'), 18, sigY + 23);
   }
 
   doc.setFont('helvetica', 'normal');

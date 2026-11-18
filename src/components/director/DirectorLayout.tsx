@@ -181,7 +181,7 @@ export const DirectorLayout: React.FC<DirectorLayoutProps> = ({
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-[#F0F5FA] via-[#E8F1FB] to-[#DFEDFA] text-slate-800 flex flex-col md:flex-row">
-      {/* PIN & 2FA Modal */}
+      {/* PIN Modal */}
       <DirectorPinModal />
 
       {/* Toast popup */}
@@ -427,7 +427,7 @@ export const DirectorLayout: React.FC<DirectorLayoutProps> = ({
             <button
               onClick={() => setActiveDirectorTab('security')}
               className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-mono font-semibold hover:bg-amber-100 transition-colors"
-              title="Code PIN 6 chiffres et 2FA opérationnels"
+              title="Code PIN 6 chiffres opérationnel"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
               <span>PIN 6 Chiffres</span>

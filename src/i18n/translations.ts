@@ -273,7 +273,7 @@ export const translations: Record<LanguageCode, Translations> = {
     },
     security: {
       title: "Sécurité & Infrastructure Globale",
-      subtitle: "Contrôle 2FA, sessions actives, politique de blocage et journaux d'audit",
+      subtitle: "Sessions actives, politique de blocage WAF et journaux d'audit",
       twoFactorStatus: "Double Authentification (2FA)",
       activeSessions: "Sessions Actives Multi-Appareils",
       auditLogs: "Journal d'Audit Système",
@@ -431,7 +431,7 @@ export const translations: Record<LanguageCode, Translations> = {
     },
     security: {
       title: "Platform Security & Logs",
-      subtitle: "2FA status, active multi-device sessions, IP blocklists, and audit trail",
+      subtitle: "Active multi-device sessions, WAF IP blocklists, and audit trail",
       twoFactorStatus: "Two-Factor Authentication (2FA)",
       activeSessions: "Active Device Sessions",
       auditLogs: "System Audit Logs",
@@ -589,7 +589,7 @@ export const translations: Record<LanguageCode, Translations> = {
     },
     security: {
       title: "الأمان والبنية التحتية",
-      subtitle: "المصادقة الثنائية 2FA، الجلسات النشطة، وقائمة الحظر",
+      subtitle: "الجلسات النشطة، وقائمة الحظر، وسجلات التدقيق",
       twoFactorStatus: "المصادقة الثنائية (2FA)",
       activeSessions: "الجلسات النشطة عبر الأجهزة",
       auditLogs: "سجلات تدقيق النظام",
@@ -747,7 +747,7 @@ export const translations: Record<LanguageCode, Translations> = {
     },
     security: {
       title: "Seguridad e Infraestructura",
-      subtitle: "Control 2FA, sesiones activas multidispositivo y auditoría",
+      subtitle: "Sesiones activas multidispositivo, bloqueo WAF y auditoría",
       twoFactorStatus: "Autenticación de Dos Factores (2FA)",
       activeSessions: "Sesiones Activas por Dispositivo",
       auditLogs: "Registros de Auditoría del Sistema",
@@ -905,7 +905,7 @@ export const translations: Record<LanguageCode, Translations> = {
     },
     security: {
       title: "Segurança e Infraestrutura",
-      subtitle: "Autenticação 2FA, sessões ativas multidispositivo e logs de auditoria",
+      subtitle: "Sessões ativas multidispositivo, bloqueio WAF e logs de auditoria",
       twoFactorStatus: "Autenticação em Duas Etapas (2FA)",
       activeSessions: "Sessões Ativas por Dispositivo",
       auditLogs: "Registros de Auditoria do Sistema",

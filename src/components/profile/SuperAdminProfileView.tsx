@@ -170,11 +170,11 @@ export const SuperAdminProfileView: React.FC = () => {
             </div>
           </div>
 
-          {/* 2FA Status summary */}
+          {/* Security Status summary */}
           <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-3 text-xs">
             <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
             <div>
-              <div className="font-semibold text-emerald-700">Sécurité 2FA Activée</div>
+              <div className="font-semibold text-emerald-700">Protection WAF & Session Sécurisée</div>
               <div className="text-[11px] text-slate-700 mt-0.5">
                 Protection renforcée pour la gestion de l'infrastructure multi-tenant.
               </div>
@@ -316,7 +316,7 @@ export const SuperAdminProfileView: React.FC = () => {
                     <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                       lh.status === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
                     }`}>
-                      {lh.status === 'success' ? 'Succès (2FA)' : 'Échec (Bloqué)'}
+                      {lh.status === 'success' ? 'Succès' : 'Échec (Bloqué)'}
                     </span>
                     <div className="text-[10px] text-slate-500 font-mono mt-0.5">{lh.date}</div>
                   </div>

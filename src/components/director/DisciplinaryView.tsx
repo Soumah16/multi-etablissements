@@ -152,7 +152,7 @@ export const DisciplinaryView: React.FC = () => {
                       <button
                         onClick={() => handleOpenSanctionModal(inc)}
                         className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-md shadow-rose-600/20 flex items-center gap-1.5 ml-auto"
-                        title="Statuer sur la sanction (PIN/2FA)"
+                        title="Statuer sur la sanction (Code PIN)"
                       >
                         <Gavel className="w-3.5 h-3.5" />
                         <span>Statuer</span>
@@ -234,7 +234,7 @@ export const DisciplinaryView: React.FC = () => {
 
             <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-700 flex items-center gap-2">
               <Lock className="w-4 h-4 text-amber-700 shrink-0" />
-              <span>La validation de cette sanction requiert votre code PIN 6 chiffres et 2FA.</span>
+              <span>La validation de cette sanction requiert votre code PIN à 6 chiffres.</span>
             </div>
 
             <div className="flex items-center justify-between pt-2 border-t border-blue-100">
@@ -254,7 +254,7 @@ export const DisciplinaryView: React.FC = () => {
                 className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-md shadow-rose-600/20"
               >
                 <Gavel className="w-4 h-4" />
-                <span>Valider la Sanction (PIN/2FA)</span>
+                <span>Valider la Sanction (Code PIN)</span>
               </button>
             </div>
           </div>

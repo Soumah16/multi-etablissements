@@ -3,24 +3,16 @@ import { useAccountant } from '../../context/AccountantContext';
 import { 
   ShieldCheck, 
   KeyRound, 
-  Lock, 
-  Smartphone, 
   Clock, 
   CheckCircle2, 
-  AlertCircle, 
-  FileCheck2, 
-  XCircle,
-  Eye,
-  Ban,
-  Sparkles
+  Ban
 } from 'lucide-react';
 
 export const AccountantSecurityView: React.FC = () => {
-  const { profile, updateProfile, auditLogs, triggerToast, formatGnf } = useAccountant();
+  const { updateProfile, auditLogs, triggerToast, formatGnf } = useAccountant();
   const [currentPin, setCurrentPin] = useState('');
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(profile.twoFactorEnabled);
 
   const handleUpdatePin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +40,7 @@ export const AccountantSecurityView: React.FC = () => {
           <span>Sécurité Financière, Code PIN & Journal d'Audit</span>
         </h1>
         <p className="text-xs text-slate-500">
-          Protection de la caisse par code PIN 6 chiffres, authentification 2FA et traçabilité inviolable
+          Protection de la caisse par code PIN 6 chiffres et traçabilité inviolable
         </p>
       </div>
 
@@ -108,37 +100,16 @@ export const AccountantSecurityView: React.FC = () => {
           </form>
         </div>
 
-        {/* 2FA & Role Guardrails */}
+        {/* Role Guardrails */}
         <div className="rounded-2xl bg-white border border-blue-100 p-6 shadow-lg space-y-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold">
-              <Smartphone className="w-5 h-5" />
+              <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-blue-950">Authentification Forte à 2 Facteurs</h2>
-              <p className="text-xs text-slate-500">Protection par SMS et Google Authenticator</p>
+              <h2 className="text-base font-bold text-blue-950">Garde-fous & Séparation des Rôles</h2>
+              <p className="text-xs text-slate-500">Périmètre strict des habilitations comptables</p>
             </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-blue-50/60 border border-slate-200 flex items-center justify-between text-xs">
-            <div>
-              <div className="font-bold text-blue-950">Validation 2FA par SMS</div>
-              <div className="text-slate-500 text-[11px] mt-0.5">Numéro vérifié : {profile.phone}</div>
-            </div>
-            <button
-              onClick={() => {
-                setTwoFactorEnabled(!twoFactorEnabled);
-                updateProfile({ twoFactorEnabled: !twoFactorEnabled });
-                triggerToast(!twoFactorEnabled ? '2FA activé avec succès' : '2FA désactivé');
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                twoFactorEnabled 
-                  ? 'bg-emerald-600 text-white' 
-                  : 'bg-slate-100 text-slate-500 hover:text-blue-950'
-              }`}
-            >
-              {twoFactorEnabled ? 'Actif ✓' : 'Inactif'}
-            </button>
           </div>
 
           {/* Strict Role Guardrails according to specifications */}

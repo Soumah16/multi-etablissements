@@ -172,7 +172,7 @@ export const ExamValidationView: React.FC = () => {
                     <button
                       onClick={() => approveExam(exam.id)}
                       className="flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/20"
-                      title="Valider l'examen (PIN/2FA)"
+                      title="Valider l'examen (Code PIN)"
                     >
                       <Check className="w-3.5 h-3.5" />
                       <span>Valider Délibération</span>
@@ -180,7 +180,7 @@ export const ExamValidationView: React.FC = () => {
                     <button
                       onClick={() => publishExam(exam.id)}
                       className="flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md"
-                      title="Proclamer & Publier officiellement aux élèves et familles (PIN/2FA)"
+                      title="Proclamer & Publier officiellement aux élèves et familles (Code PIN)"
                     >
                       <Share2 className="w-3.5 h-3.5" />
                       <span>Publier Officiellement</span>
@@ -194,7 +194,7 @@ export const ExamValidationView: React.FC = () => {
                     className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-600/20"
                   >
                     <Share2 className="w-4 h-4" />
-                    <span>Proclamer & Publier Officiellement (PIN/2FA)</span>
+                    <span>Proclamer & Publier Officiellement (Code PIN)</span>
                   </button>
                 )}
               </div>

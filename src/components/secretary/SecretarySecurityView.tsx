@@ -2,35 +2,23 @@ import React, { useState } from 'react';
 import { useSecretary } from '../../context/SecretaryContext';
 import { 
   ShieldCheck, 
-  KeyRound, 
-  Smartphone, 
-  Mail, 
   History, 
   CheckCircle2, 
-  Check, 
   AlertTriangle,
   Lock,
-  XCircle,
-  Info
+  XCircle
 } from 'lucide-react';
 
 import { getAccountByRole, updateAccountPassword } from '../../data/accountsData';
 import { syncCurrentUserSession } from '../../utils/accountSync';
 
 export const SecretarySecurityView: React.FC = () => {
-  const { profile, updateProfile, securityLogs, addSecurityLog, showToast } = useSecretary();
-  const [selectedMethod, setSelectedMethod] = useState<'sms' | 'email' | 'app'>(profile.twoFactorMethod);
+  const { profile, securityLogs, addSecurityLog, showToast } = useSecretary();
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
-  const handleSave2fa = (m: 'sms' | 'email' | 'app') => {
-    setSelectedMethod(m);
-    updateProfile({ twoFactorMethod: m });
-    showToast(`Méthode 2FA mise à jour : ${m.toUpperCase()}`);
-  };
 
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,10 +87,10 @@ export const SecretarySecurityView: React.FC = () => {
           </div>
           <h1 className="text-2xl font-black text-blue-950 tracking-tight flex items-center gap-2">
             <ShieldCheck className="w-6 h-6 text-teal-600" />
-            <span>Sécurité, Double Authentification & Journal d'Accès</span>
+            <span>Sécurité, Mot de Passe & Journal d'Accès</span>
           </h1>
           <p className="text-xs text-slate-700 mt-1">
-            Protection des données personnelles des familles, paramètres de double authentification et journal des connexions.
+            Protection des données personnelles des familles, gestion du mot de passe et journal des connexions.
           </p>
         </div>
       </div>
@@ -142,56 +130,7 @@ export const SecretarySecurityView: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 2FA Config */}
-        <div className="p-6 rounded-2xl bg-white border border-blue-100 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-blue-100">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-600">
-                <KeyRound className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-blue-950">Double Authentification (2FA)</h3>
-                <p className="text-xs text-slate-500">Requis lors de la connexion sur nouvel appareil</p>
-              </div>
-            </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-200">
-              Actif
-            </span>
-          </div>
-
-          <div className="space-y-2.5 text-xs">
-            {[
-              { id: 'sms', label: 'SMS Sécurisé', desc: `Code temporaire envoyé au ${profile.phone}`, icon: <Smartphone className="w-4 h-4 text-teal-600" /> },
-              { id: 'email', label: 'Email Institutionnel', desc: `Code temporaire envoyé au ${profile.email}`, icon: <Mail className="w-4 h-4 text-blue-600" /> },
-              { id: 'app', label: 'Application Authenticator (TOTP)', desc: 'Google Authenticator / Microsoft Authenticator', icon: <ShieldCheck className="w-4 h-4 text-purple-600" /> }
-            ].map(method => (
-              <div
-                key={method.id}
-                onClick={() => handleSave2fa(method.id as any)}
-                className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
-                  selectedMethod === method.id
-                    ? 'bg-teal-50 border-teal-500 text-blue-950'
-                    : 'bg-blue-50/60 border-blue-100 text-slate-700 hover:border-slate-200'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  {method.icon}
-                  <div>
-                    <div className="font-bold text-xs">{method.label}</div>
-                    <div className="text-[11px] text-slate-500">{method.desc}</div>
-                  </div>
-                </div>
-                {selectedMethod === method.id && (
-                  <div className="w-5 h-5 rounded-full bg-teal-500 flex items-center justify-center text-white shrink-0">
-                    <Check className="w-3 h-3" />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
+      <div className="max-w-2xl">
         {/* Change Password */}
         <div className="p-6 rounded-2xl bg-white border border-blue-100 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-blue-100">

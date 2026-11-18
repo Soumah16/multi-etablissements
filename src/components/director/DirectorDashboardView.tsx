@@ -393,7 +393,7 @@ export const DirectorDashboardView: React.FC = () => {
               <span>File d'Attente : Bulletins à Valider par le Directeur</span>
             </h3>
             <p className="text-xs text-slate-500">
-              Vérifiez les notes, appréciations et appliquez votre signature électronique sécurisée (PIN 6 chiffres + 2FA requis).
+              Vérifiez les notes, appréciations et appliquez votre signature électronique sécurisée (Code PIN 6 chiffres requis).
             </p>
           </div>
           <button
@@ -473,7 +473,7 @@ export const DirectorDashboardView: React.FC = () => {
                         <button
                           onClick={() => approveReportCard(card.id)}
                           className="px-2.5 py-1 rounded-md text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-xs flex items-center gap-1"
-                          title="Valider avec signature numérique (PIN/2FA)"
+                          title="Valider avec signature numérique (Code PIN)"
                         >
                           <Check className="w-3 h-3" />
                           <span>Approuver</span>

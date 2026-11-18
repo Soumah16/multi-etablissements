@@ -96,7 +96,7 @@ export function loadSchoolSecurityConfig(schoolIdOrAlias?: string): SchoolSecuri
           typeof parsed.adminPin === 'string' && /^\d{6}$/.test(parsed.adminPin)
             ? parsed.adminPin
             : '123456',
-        twoFactorEnabled: typeof parsed.twoFactorEnabled === 'boolean' ? parsed.twoFactorEnabled : true,
+        twoFactorEnabled: false,
         twoFactorMethod:
           parsed.twoFactorMethod === 'sms' || parsed.twoFactorMethod === 'email'
             ? parsed.twoFactorMethod
@@ -114,7 +114,7 @@ export function loadSchoolSecurityConfig(schoolIdOrAlias?: string): SchoolSecuri
 
   const fresh: SchoolSecurityConfig = {
     adminPin: '123456',
-    twoFactorEnabled: true,
+    twoFactorEnabled: false,
     twoFactorMethod: 'authenticator',
     totpSecret: generateTotpSecret(16)
   };
@@ -481,7 +481,7 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const verifyAndExecutePin = async (
     inputPin: string,
-    twoFactorCode?: string
+    _twoFactorCode?: string
   ): Promise<{ ok: boolean; error?: string }> => {
     if (pinBlockedUntil > Date.now()) {
       return { ok: false, error: 'Compte temporairement verrouillé pendant 5 minutes suite à 5 échecs.' };
@@ -505,17 +505,6 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return { ok: false, error: `Code PIN incorrect. Tentative ${nextFailed}/5.` };
     }
 
-    if (securityConfig.twoFactorEnabled) {
-      const clean2FA = (twoFactorCode || '').trim();
-      if (!/^\d{6}$/.test(clean2FA)) {
-        return { ok: false, error: 'Code 2FA à 6 chiffres requis car la double authentification est active.' };
-      }
-      const check2fa = await verifySchool2faCode(clean2FA);
-      if (!check2fa.ok) {
-        return { ok: false, error: check2fa.error };
-      }
-    }
-
     setFailedPinAttempts(0);
     setPinBlockedUntil(0);
     try {
@@ -525,7 +514,7 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
     setPinModalOpen(false);
     if (pendingPinAction) {
-      recordLog(`Action autorisée (${pendingPinAction.description})`, 'succes', 'Validation PIN + 2FA');
+      recordLog(`Action autorisée (${pendingPinAction.description})`, 'succes', 'Validation Code PIN');
       pendingPinAction.callback();
       setPendingPinAction(null);
     }
