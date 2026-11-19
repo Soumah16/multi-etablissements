@@ -31,6 +31,7 @@ import { saveDualStorage, subscribeStorageKey, usePersistedState } from '../util
 import { propagateRoleProfileToAccount } from '../utils/accountSync';
 import { requestServerOtp, verifyServerOtp, maskDestinationLabel } from '../utils/otpClient';
 import { HubRole, pushSharedMessage } from '../utils/communicationHub';
+import { recordGlobalAuditLog } from '../utils/auditLogger';
 
 interface PinPromptRequest {
   title: string;
@@ -269,6 +270,22 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       timestamp: formatted
     };
     setAuditLogs(prev => [newLog, ...prev]);
+    recordGlobalAuditLog({
+      action: entry.action,
+      target: entry.target,
+      actorName: profile.name,
+      actorRole: 'director',
+      actorMatricule: profile.matricule,
+      schoolName: profile.schoolName,
+      type: entry.securityLevel === 'critique' ? 'securite' : 'admin',
+      severity:
+        entry.status === 'echec'
+          ? 'critical'
+          : entry.securityLevel === 'critique' || entry.securityLevel === 'sensible'
+          ? 'warning'
+          : 'info',
+      ip: entry.ip
+    });
   };
 
   const updateProfile = (partial: Partial<DirectorProfile>) => {
@@ -280,6 +297,16 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       { email: profile.email, matricule: profile.matricule },
       nextProfile.schoolId
     );
+    recordGlobalAuditLog({
+      action: 'Mise à jour du profil Directeur des Études',
+      target: nextProfile.name,
+      actorName: nextProfile.name,
+      actorRole: 'director',
+      actorMatricule: nextProfile.matricule,
+      schoolName: nextProfile.schoolName,
+      type: 'admin',
+      severity: 'info'
+    });
     showToast('Profil Directeur mis à jour avec succès');
   };
 
@@ -570,6 +597,7 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Teacher supervision
   const updateTeacherObservation = (id: string, observation: string, rating: number) => {
+    const existing = teacherProfiles.find(t => t.id === id);
     setTeacherProfiles(prev =>
       prev.map(t => {
         if (t.id === id) {
@@ -583,6 +611,15 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return t;
       })
     );
+    addAuditLog({
+      action: `Inspection pédagogique (${rating}/5) : ${existing ? existing.teacherName : id}`,
+      target: 'Corps Enseignant',
+      userRole: 'Directeur des Études',
+      ip: '197.149.214.33',
+      device: 'Poste Direction',
+      securityLevel: 'normale',
+      status: 'succes'
+    });
     showToast("Évaluation pédagogique de l'enseignant enregistrée.");
   };
 
@@ -626,6 +663,15 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return inc;
       })
     );
+    addAuditLog({
+      action: `Classement / Rejet incident disciplinaire #${id}`,
+      target: 'Conseil de Discipline',
+      userRole: 'Directeur des Études',
+      ip: '197.149.214.33',
+      device: 'Poste Direction',
+      securityLevel: 'sensible',
+      status: 'succes'
+    });
     showToast('Rapport disciplinaire classé sans suite / rejeté.');
   };
 
@@ -696,11 +742,30 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       viewsCount: 1
     };
     setNewsItems(prev => [newNews, ...prev]);
+    addAuditLog({
+      action: `Publication actualité scolaire « ${item.title} »`,
+      target: 'Portail École',
+      userRole: 'Directeur des Études',
+      ip: '197.149.214.33',
+      device: 'Poste Direction',
+      securityLevel: 'normale',
+      status: 'succes'
+    });
     showToast('Actualité scolaire publiée avec succès.');
   };
 
   const deleteNews = (id: string) => {
+    const existing = newsItems.find(n => n.id === id);
     setNewsItems(prev => prev.filter(n => n.id !== id));
+    addAuditLog({
+      action: `Suppression actualité « ${existing?.title || id} »`,
+      target: 'Portail École',
+      userRole: 'Directeur des Études',
+      ip: '197.149.214.33',
+      device: 'Poste Direction',
+      securityLevel: 'normale',
+      status: 'succes'
+    });
     showToast('Actualité supprimée.');
   };
 
@@ -711,6 +776,15 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       id: `ev-${Date.now()}`
     };
     setCalendarEvents(prev => [...prev, newEv]);
+    addAuditLog({
+      action: `Programmation événement académique « ${event.title} »`,
+      target: event.startDate,
+      userRole: 'Directeur des Études',
+      ip: '197.149.214.33',
+      device: 'Poste Direction',
+      securityLevel: 'normale',
+      status: 'succes'
+    });
     showToast('Événement académique programmé avec succès.');
   };
 

@@ -19,6 +19,7 @@ import {
   updateAccountPassword
 } from '../../data/accountsData';
 import { syncCurrentUserSession } from '../../utils/accountSync';
+import { recordGlobalAuditLog } from '../../utils/auditLogger';
 import { useApp } from '../../context/AppContext';
 import { PWAInstallButton } from '../common/PWAInstallButton';
 import { CloudSyncButton } from '../common/CloudSyncModal';
@@ -100,6 +101,16 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
   };
 
   const handleCompleteLogin = (user: DemoAccount) => {
+    recordGlobalAuditLog({
+      action: `Connexion réussie au portail (${user.title || user.role})`,
+      target: user.schoolName || user.email,
+      actorName: user.name,
+      actorRole: user.role,
+      actorMatricule: user.matricule,
+      schoolName: user.schoolName,
+      type: 'connexion',
+      severity: 'info'
+    });
     onLogin({
       role: user.role,
       name: user.name,
@@ -136,7 +147,16 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
       setIsLoading(false);
 
       if (!result.success || !result.user) {
-        setErrorMessage(result.errorMessage || 'Identifiant ou mot de passe incorrect.');
+        const msg = result.errorMessage || 'Identifiant ou mot de passe incorrect.';
+        recordGlobalAuditLog({
+          action: `Tentative de connexion refusée : ${msg}`,
+          target: identifier.trim(),
+          actorName: identifier.trim(),
+          actorRole: 'Portail Connexion',
+          type: 'connexion',
+          severity: msg.toLowerCase().includes('verrouillé') ? 'critical' : 'warning'
+        });
+        setErrorMessage(msg);
         return;
       }
 
@@ -173,10 +193,20 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
       );
       const updatedUser: DemoAccount = persisted || {
         ...pendingFirstLoginUser,
-        plainPassword: '',
-        password: '',
+        plainPassword: trimmedNew,
+        password: trimmedNew,
         mustChangePassword: false
       };
+      recordGlobalAuditLog({
+        action: `Activation compte & définition mot de passe personnel (${updatedUser.email})`,
+        target: updatedUser.name,
+        actorName: updatedUser.name,
+        actorRole: updatedUser.role,
+        actorMatricule: updatedUser.matricule,
+        schoolName: updatedUser.schoolName,
+        type: 'securite',
+        severity: 'info'
+      });
       syncCurrentUserSession(
         { id: updatedUser.id, email: updatedUser.email, matricule: updatedUser.matricule },
         { mustChangePassword: false }

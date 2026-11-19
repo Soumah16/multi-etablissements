@@ -3,6 +3,7 @@ export type LibrarianNavTab =
   | 'books' 
   | 'ebooks' 
   | 'loans' 
+  | 'communication'
   | 'stats' 
   | 'badge' 
   | 'security';

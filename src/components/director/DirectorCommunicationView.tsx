@@ -121,6 +121,16 @@ export const DirectorCommunicationView: React.FC = () => {
         </div>
       </div>
 
+      {/* Synchronized Cross-Role Messages & Requests Hub */}
+      <CrossRoleHubPanel
+        role="director"
+        userName={profile.name}
+        schoolId={currentSchool.id}
+        schoolName={currentSchool.name}
+        canManageRequests
+        defaultRecipientRoles={['school_admin', 'teacher', 'parent', 'secretary']}
+      />
+
       {/* Announcements List */}
       <div className="space-y-4">
         <div className="p-4 rounded-xl bg-white border border-blue-100 flex items-center gap-3">
@@ -361,16 +371,6 @@ export const DirectorCommunicationView: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Synchronized Cross-Role Messages & Requests Hub */}
-      <CrossRoleHubPanel
-        role="director"
-        userName={profile.name}
-        schoolId={currentSchool.id}
-        schoolName={currentSchool.name}
-        canManageRequests
-        defaultRecipientRoles={['school_admin', 'teacher', 'parent', 'secretary']}
-      />
     </div>
   );
 };

@@ -23,7 +23,8 @@ import {
   ArrowRightLeft,
   ChevronDown,
   LogOut,
-  MessageCircle
+  MessageCircle,
+  MessageSquare
 } from 'lucide-react';
 import { AccountantDashboardView } from './AccountantDashboardView';
 import { FeeSettingsView } from './FeeSettingsView';
@@ -35,6 +36,8 @@ import { ScholarshipsView } from './ScholarshipsView';
 import { FinancialReportsView } from './FinancialReportsView';
 import { AccountantSecurityView } from './AccountantSecurityView';
 import { AccountantPinModal } from './AccountantPinModal';
+import { CrossRoleHubPanel } from '../common/CrossRoleHubPanel';
+import { useUnreadSharedMessagesCount } from '../../utils/communicationHub';
 
 interface AccountantLayoutProps {
   onReturnToSchoolAdmin: () => void;
@@ -70,6 +73,7 @@ export const AccountantLayout: React.FC<AccountantLayoutProps> = ({
     schoolWaPhone,
     `Bonjour ${currentSchool.name}, service Comptabilité (${profile.firstName} ${profile.lastName}).`
   );
+  const unreadMessagesCount = useUnreadSharedMessagesCount('accountant', currentSchool.id);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
@@ -121,8 +125,15 @@ export const AccountantLayout: React.FC<AccountantLayoutProps> = ({
       ]
     },
     {
-      groupTitle: 'SÉCURITÉ & ACCÈS',
+      groupTitle: 'COMMUNICATION & SÉCURITÉ',
       items: [
+        {
+          tab: 'communication',
+          label: 'Messages & Requêtes',
+          icon: <MessageSquare className="w-4 h-4 text-blue-600" />,
+          badge: unreadMessagesCount,
+          badgeColor: 'bg-blue-100 text-blue-800 border border-blue-200'
+        },
         { tab: 'security', label: 'Sécurité & Code PIN', icon: <ShieldCheck className="w-4 h-4" /> }
       ]
     }
@@ -137,6 +148,17 @@ export const AccountantLayout: React.FC<AccountantLayoutProps> = ({
       case 'expenses': return <ExpensesView />;
       case 'salaries': return <SalariesView />;
       case 'scholarships': return <ScholarshipsView />;
+      case 'communication':
+        return (
+          <CrossRoleHubPanel
+            role="accountant"
+            userName={`${profile.firstName} ${profile.lastName}`}
+            schoolId={currentSchool.id}
+            schoolName={currentSchool.name}
+            canManageRequests
+            defaultRecipientRoles={['school_admin', 'parent', 'director']}
+          />
+        );
       case 'reports': return <FinancialReportsView />;
       case 'security': return <AccountantSecurityView />;
       default: return <AccountantDashboardView />;

@@ -8,6 +8,7 @@ import {
   Ban,
   Search
 } from 'lucide-react';
+import { resolveAuditOperation } from '../../utils/auditLogger';
 
 export type SuperAdmin2FAMethod = 'authenticator' | 'sms' | 'email';
 
@@ -39,6 +40,7 @@ export const SecurityView: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'sessions' | 'logs' | 'ip_blocklist'>('sessions');
   const [logTypeFilter, setLogTypeFilter] = useState('all');
+  const [operationFilter, setOperationFilter] = useState<'all' | 'create' | 'update' | 'delete'>('all');
   const [logSearch, setLogSearch] = useState('');
   const [newIpToBlock, setNewIpToBlock] = useState('');
 
@@ -50,8 +52,9 @@ export const SecurityView: React.FC = () => {
       log.target.toLowerCase().includes(logSearch.toLowerCase());
 
     const matchesType = logTypeFilter === 'all' || log.type === logTypeFilter;
+    const matchesOperation = operationFilter === 'all' || resolveAuditOperation(log) === operationFilter;
 
-    return matchesSearch && matchesType;
+    return matchesSearch && matchesType && matchesOperation;
   });
 
   const handleAddBlockIp = (e: React.FormEvent) => {
@@ -184,6 +187,18 @@ export const SecurityView: React.FC = () => {
       {/* Content 2: Audit Logs */}
       {activeTab === 'logs' && (
         <div className="space-y-4">
+          <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <strong className="font-bold">Supervision Globale en Temps Réel :</strong>{' '}
+              <span className="text-slate-700">
+                Chaque création, modification, réinitialisation de mot de passe et connexion effectuée par un Admin École, Directeur, Secrétaire, Comptable, Enseignant, Surveillant ou Bibliothécaire apparaît automatiquement ici.
+              </span>
+            </div>
+            <span className="px-2.5 py-1 rounded-lg bg-white border border-blue-200 text-blue-700 font-mono font-bold shrink-0">
+              {filteredLogs.length} entrée(s)
+            </span>
+          </div>
+
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="relative flex-1">
               <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
@@ -195,6 +210,17 @@ export const SecurityView: React.FC = () => {
                 className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-blue-50/60 border border-slate-200 text-blue-950 placeholder-slate-400 focus:outline-none focus:border-blue-500"
               />
             </div>
+
+            <select
+              value={operationFilter}
+              onChange={e => setOperationFilter(e.target.value as 'all' | 'create' | 'update' | 'delete')}
+              className="px-3 py-2 text-xs rounded-lg bg-blue-50/60 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500"
+            >
+              <option value="all">Toutes opérations</option>
+              <option value="create">Créations</option>
+              <option value="update">Modifications</option>
+              <option value="delete">Suppressions</option>
+            </select>
 
             <select
               value={logTypeFilter}
@@ -216,6 +242,7 @@ export const SecurityView: React.FC = () => {
               <thead>
                 <tr className="border-b border-slate-200 bg-blue-50/60 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
                   <th className="py-2.5 px-3">Horodatage (GMT)</th>
+                  <th className="py-2.5 px-3">Opération</th>
                   <th className="py-2.5 px-3">Action Enregistrée</th>
                   <th className="py-2.5 px-3">Acteur / Déclencheur</th>
                   <th className="py-2.5 px-3">Adresse IP</th>
@@ -223,34 +250,58 @@ export const SecurityView: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-900">
-                {filteredLogs.map(log => (
-                  <tr key={log.id} className="hover:bg-blue-100">
-                    <td className="py-3 px-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">
-                      {log.timestamp}
-                    </td>
-                    <td className="py-3 px-3 font-medium text-slate-900">
-                      {log.action}
-                      <div className="text-[10px] text-slate-500 mt-0.5">Cible : {log.target}</div>
-                    </td>
-                    <td className="py-3 px-3 text-slate-700 text-[11px]">
-                      {log.actor}
-                    </td>
-                    <td className="py-3 px-3 font-mono text-[11px] text-slate-500">
-                      {log.ip}
-                    </td>
-                    <td className="py-3 px-3 whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
-                        log.severity === 'critical'
-                          ? 'bg-rose-50 text-rose-600 border border-rose-200'
-                          : log.severity === 'warning'
-                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                            : 'bg-blue-50 text-blue-600'
-                      }`}>
-                        {log.severity}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {filteredLogs.map(log => {
+                  const op = resolveAuditOperation(log);
+                  const opLabel =
+                    op === 'create'
+                      ? 'Création'
+                      : op === 'update'
+                        ? 'Modification'
+                        : op === 'delete'
+                          ? 'Suppression'
+                          : op === 'security'
+                            ? 'Sécurité'
+                            : 'Système';
+                  const opClass =
+                    op === 'create'
+                      ? 'text-emerald-700'
+                      : op === 'update'
+                        ? 'text-blue-700'
+                        : op === 'delete'
+                          ? 'text-rose-700'
+                          : 'text-amber-700';
+                  return (
+                    <tr key={log.id} className="hover:bg-blue-100">
+                      <td className="py-3 px-3 font-mono tabular-nums text-[11px] text-slate-500 whitespace-nowrap">
+                        {log.timestamp}
+                      </td>
+                      <td className={`py-3 px-3 text-[11px] font-semibold whitespace-nowrap ${opClass}`}>
+                        {opLabel}
+                      </td>
+                      <td className="py-3 px-3 font-medium text-slate-900">
+                        {log.action}
+                        <div className="text-[10px] text-slate-500 mt-0.5">Cible : {log.target}</div>
+                      </td>
+                      <td className="py-3 px-3 text-slate-700 text-[11px]">
+                        {log.actor}
+                      </td>
+                      <td className="py-3 px-3 font-mono tabular-nums text-[11px] text-slate-500">
+                        {log.ip}
+                      </td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
+                          log.severity === 'critical'
+                            ? 'bg-rose-50 text-rose-600 border border-rose-200'
+                            : log.severity === 'warning'
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                              : 'bg-blue-50 text-blue-600'
+                        }`}>
+                          {log.severity}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

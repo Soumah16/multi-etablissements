@@ -33,8 +33,11 @@ import {
   UserCheck,
   ArrowLeft,
   ShieldAlert,
-  MessageCircle
+  MessageCircle,
+  MessageSquare
 } from 'lucide-react';
+import { CrossRoleHubPanel } from '../common/CrossRoleHubPanel';
+import { HubRole, useUnreadSharedMessagesCount } from '../../utils/communicationHub';
 
 interface LibrarianLayoutProps {
   onReturnToSuperAdmin: () => void;
@@ -80,6 +83,8 @@ export const LibrarianLayout: React.FC<LibrarianLayoutProps> = ({
     schoolWaPhone,
     `Bonjour ${currentSchool.name}, Bibliothèque scolaire.`
   );
+  const effectiveHubRole: HubRole = (libraryUser?.role as HubRole) || 'librarian';
+  const unreadMessagesCount = useUnreadSharedMessagesCount(effectiveHubRole, currentSchool.id);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
@@ -271,7 +276,14 @@ export const LibrarianLayout: React.FC<LibrarianLayoutProps> = ({
           badge: pendingOverdueCount,
           badgeColor: 'bg-rose-100 text-rose-800 border border-rose-200'
         },
-        { tab: 'stats', label: 'Statistiques & Fréquentation', icon: <BarChart3 className="w-4 h-4 text-teal-600" /> }
+        { tab: 'stats', label: 'Statistiques & Fréquentation', icon: <BarChart3 className="w-4 h-4 text-teal-600" /> },
+        {
+          tab: 'communication',
+          label: 'Messages & Demandes',
+          icon: <MessageSquare className="w-4 h-4 text-blue-600" />,
+          badge: unreadMessagesCount,
+          badgeColor: 'bg-blue-100 text-blue-800 border border-blue-200'
+        }
       ]
     },
     ...(canManageLibrary
@@ -297,6 +309,17 @@ export const LibrarianLayout: React.FC<LibrarianLayoutProps> = ({
         return <EbooksDigitalView />;
       case 'loans':
         return <BorrowingReturnsView />;
+      case 'communication':
+        return (
+          <CrossRoleHubPanel
+            role={effectiveHubRole}
+            userName={libraryUser.name}
+            schoolId={currentSchool.id}
+            schoolName={currentSchool.name}
+            canManageRequests={canManageLibrary}
+            defaultRecipientRoles={['school_admin', 'teacher', 'student']}
+          />
+        );
       case 'stats':
         return <LibrarianStatsView />;
       case 'badge':

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { loadLocalStorage, saveDualStorage, subscribeStorageKey } from './storage';
+import { normalizeSchoolId } from '../data/accountsData';
 
 export type HubRole =
   | 'super_admin'
@@ -224,6 +225,23 @@ export function pushSharedMessage(input: {
   return item;
 }
 
+export function isSameSchoolScope(itemSchoolId?: string, viewerSchoolId?: string): boolean {
+  if (!itemSchoolId || itemSchoolId === 'NATIONAL' || !viewerSchoolId || viewerSchoolId === 'NATIONAL') {
+    return true;
+  }
+  return normalizeSchoolId(itemSchoolId) === normalizeSchoolId(viewerSchoolId);
+}
+
+export function isMessageUnreadForRole(msg: SharedMessage, role: HubRole): boolean {
+  if (msg.readByRoles?.includes(role)) return false;
+  const replies = Array.isArray(msg.replies) ? msg.replies : [];
+  if (replies.length > 0) {
+    const lastReply = replies[replies.length - 1];
+    return lastReply.authorRole !== role;
+  }
+  return msg.senderRole !== role;
+}
+
 export function replyToSharedMessage(
   messageId: string,
   authorName: string,
@@ -244,9 +262,8 @@ export function replyToSharedMessage(
   const current = loadSharedMessages();
   const next = current.map(m => {
     if (m.id !== messageId) return m;
-    const nextRead = m.readByRoles.includes(authorRole)
-      ? m.readByRoles
-      : [...m.readByRoles, authorRole];
+    // Mark unread for other thread participants so sender & recipients see new reply alerts
+    const nextRead: HubRole[] = [authorRole];
     return {
       ...m,
       replies: [...(m.replies || []), reply],
@@ -287,6 +304,33 @@ export function markSharedMessageRead(messageId: string, role: HubRole): void {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ readByRoles: target?.readByRoles })
     }).catch(() => undefined);
+  }
+}
+
+export function markAllSharedMessagesRead(role: HubRole, schoolId?: string): void {
+  const current = loadSharedMessages();
+  const updatedIds: Array<{ id: string; readByRoles: HubRole[] }> = [];
+  const next = current.map(m => {
+    const sameSchool = role === 'super_admin' || isSameSchoolScope(m.schoolId, schoolId);
+    const involved =
+      role === 'super_admin' || m.senderRole === role || m.recipientRoles.includes(role);
+    if (!sameSchool || !involved || m.readByRoles.includes(role)) return m;
+    const readByRoles: HubRole[] = [...m.readByRoles, role];
+    updatedIds.push({ id: m.id, readByRoles });
+    return { ...m, readByRoles };
+  });
+
+  if (updatedIds.length === 0) return;
+  saveDualStorage(SHARED_MESSAGES_KEY, next, Date.now(), 'local');
+
+  if (typeof window !== 'undefined') {
+    for (const item of updatedIds) {
+      void fetch(`/api/messages/${encodeURIComponent(item.id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ readByRoles: item.readByRoles })
+      }).catch(() => undefined);
+    }
   }
 }
 
@@ -504,7 +548,7 @@ export function useSharedMessages(schoolId?: string): SharedMessage[] {
     });
     const timer = setInterval(() => {
       void syncSharedMessagesFromServer(schoolId);
-    }, 20_000);
+    }, 6_000);
     return () => {
       unsub();
       clearInterval(timer);
@@ -512,6 +556,16 @@ export function useSharedMessages(schoolId?: string): SharedMessage[] {
   }, [schoolId]);
 
   return messages;
+}
+
+export function useUnreadSharedMessagesCount(role: HubRole, schoolId?: string): number {
+  const messages = useSharedMessages(schoolId);
+  return messages.filter(m => {
+    const sameSchool = role === 'super_admin' || isSameSchoolScope(m.schoolId, schoolId);
+    const involved =
+      role === 'super_admin' || m.senderRole === role || m.recipientRoles.includes(role);
+    return sameSchool && involved && isMessageUnreadForRole(m, role);
+  }).length;
 }
 
 export function useSharedRequests(schoolId?: string): SharedRequest[] {
@@ -524,7 +578,7 @@ export function useSharedRequests(schoolId?: string): SharedRequest[] {
     });
     const timer = setInterval(() => {
       void syncSharedRequestsFromServer(schoolId);
-    }, 20_000);
+    }, 6_000);
     return () => {
       unsub();
       clearInterval(timer);

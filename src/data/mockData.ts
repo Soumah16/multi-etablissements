@@ -191,14 +191,55 @@ export const initialTransactions: PaymentTransaction[] = [
 
 export const initialAuditLogs: SecurityAuditLog[] = [
   {
+    id: 'log-admin-01',
+    timestamp: '2026-11-02 09:42:18',
+    action: "Création collaborateur Mamadou Lamarana Diallo (teacher)",
+    actor: "Alpha Oumar Diallo (Admin École)",
+    target: "Matricule LEC-CKY-TEA-004 · Lycée d'Excellence de Conakry",
+    ip: '197.149.214.33 (Conakry, Guinée)',
+    type: 'admin',
+    severity: 'info',
+    operation: 'create',
+    actorRole: 'school_admin',
+    schoolName: "Lycée d'Excellence de Conakry"
+  },
+  {
+    id: 'log-admin-02',
+    timestamp: '2026-11-02 09:18:05',
+    action: "Modification de la classe « Terminale Sciences Mathématiques 1 »",
+    actor: "Alpha Oumar Diallo (Admin École)",
+    target: "Terminale · Lycée d'Excellence de Conakry",
+    ip: '197.149.214.33 (Conakry, Guinée)',
+    type: 'admin',
+    severity: 'info',
+    operation: 'update',
+    actorRole: 'school_admin',
+    schoolName: "Lycée d'Excellence de Conakry"
+  },
+  {
+    id: 'log-admin-03',
+    timestamp: '2026-11-02 08:50:44',
+    action: "Suppression salle « Annexe Provisoire B »",
+    actor: "Alpha Oumar Diallo (Admin École)",
+    target: "Campus · Lycée d'Excellence de Conakry",
+    ip: '197.149.214.33 (Conakry, Guinée)',
+    type: 'securite',
+    severity: 'warning',
+    operation: 'delete',
+    actorRole: 'school_admin',
+    schoolName: "Lycée d'Excellence de Conakry"
+  },
+  {
     id: 'log-01',
     timestamp: '2026-11-02 07:04:12',
-    action: 'Connexion Super Admin validée par 2FA',
+    action: 'Connexion Super Admin validée',
     actor: 'Dr. Mamadou Cellou Diallo (Super Admin)',
     target: 'Console Principale',
     ip: '197.149.198.42',
     type: 'connexion',
-    severity: 'info'
+    severity: 'info',
+    operation: 'security',
+    actorRole: 'super_admin'
   },
   {
     id: 'log-02',
@@ -208,7 +249,9 @@ export const initialAuditLogs: SecurityAuditLog[] = [
     target: "Lycée d'Excellence de Conakry",
     ip: '127.0.0.1 (Internal)',
     type: 'finance',
-    severity: 'info'
+    severity: 'info',
+    operation: 'update',
+    schoolName: "Lycée d'Excellence de Conakry"
   },
   {
     id: 'log-03',
@@ -218,7 +261,8 @@ export const initialAuditLogs: SecurityAuditLog[] = [
     target: 'Snapshot-db-all-schools-20261101.sql.enc',
     ip: '10.0.4.15',
     type: 'sauvegarde',
-    severity: 'info'
+    severity: 'info',
+    operation: 'create'
   },
   {
     id: 'log-05',
@@ -228,7 +272,8 @@ export const initialAuditLogs: SecurityAuditLog[] = [
     target: 'IP 185.220.101.5',
     ip: '185.220.101.5',
     type: 'securite',
-    severity: 'critical'
+    severity: 'critical',
+    operation: 'delete'
   }
 ];
 

@@ -23,6 +23,7 @@ import {
 } from '../data/accountantMockData';
 import { usePersistedState } from '../utils/storage';
 import { propagateRoleProfileToAccount } from '../utils/accountSync';
+import { recordGlobalAuditLog } from '../utils/auditLogger';
 
 interface PinActionPending {
   type: 'cancel_payment' | 'delete_expense' | 'modify_fee';
@@ -115,6 +116,7 @@ export const AccountantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       { email: profile.email, matricule: profile.matricule },
       nextProfile.schoolId
     );
+    addAuditLog('Modification profil comptable', `${nextProfile.firstName} ${nextProfile.lastName}`);
     triggerToast('Profil comptable mis à jour.');
   };
 
@@ -140,6 +142,7 @@ export const AccountantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const nextStatus = f.status === 'actif' ? 'inactif' : 'actif';
       return { ...f, status: nextStatus };
     }));
+    addAuditLog('Statut de frais modifié', `Frais scolaire #${id}`);
     triggerToast('Statut du frais modifié.');
   };
 
@@ -157,6 +160,17 @@ export const AccountantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       status: 'success'
     };
     setAuditLogs(prev => [newLog, ...prev]);
+    recordGlobalAuditLog({
+      action: `${action} : ${details}`,
+      target: amountGnf ? formatGnf(amountGnf) : 'Comptabilité & Scolarité',
+      actorName: `${profile.firstName} ${profile.lastName}`,
+      actorRole: 'accountant',
+      actorMatricule: profile.matricule,
+      schoolName: profile.schoolName,
+      type: 'finance',
+      severity: action.toLowerCase().includes('annul') ? 'warning' : 'info',
+      ip: '197.149.192.42'
+    });
   };
 
   const addPayment = (data: {
@@ -265,6 +279,7 @@ export const AccountantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const paySalary = (salaryId: string) => {
+    const existing = salaries.find(s => s.id === salaryId);
     setSalaries(prev => prev.map(s => {
       if (s.id !== salaryId) return s;
       return {
@@ -273,6 +288,11 @@ export const AccountantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         paymentDate: new Date().toISOString().substring(0, 10)
       };
     }));
+    addAuditLog(
+      'Versement de salaire',
+      existing ? `${existing.employeeName} (${existing.month})` : `Salaire #${salaryId}`,
+      existing?.netSalaryGnf
+    );
     triggerToast('Salaire validé et viré.');
   };
 

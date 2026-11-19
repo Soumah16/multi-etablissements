@@ -19,7 +19,10 @@ import {
   ShieldAlert,
   X,
   Copy,
-  RefreshCw
+  RefreshCw,
+  Eye,
+  EyeOff,
+  Check
 } from 'lucide-react';
 import { StaffBadgeModal } from './StaffBadgeModal';
 import { ImageUploadField } from '../common/ImageUploadField';
@@ -35,6 +38,8 @@ export const StaffManagementView: React.FC = () => {
     sendStaffCredentials, 
     selectedStaffForBadge, 
     setSelectedStaffForBadge,
+    lastStaffCredentialReceipt,
+    setLastStaffCredentialReceipt,
     currentSchool,
     classes,
     subjects
@@ -56,8 +61,12 @@ export const StaffManagementView: React.FC = () => {
   const [hireDate, setHireDate] = useState(new Date().toISOString().split('T')[0]);
   const [photo, setPhoto] = useState('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80');
   const [initialPassword, setInitialPassword] = useState('');
-  const [createdCredentialsStaff, setCreatedCredentialsStaff] = useState<StaffMember | null>(null);
+  const [editNewPassword, setEditNewPassword] = useState('');
   const [copiedPwd, setCopiedPwd] = useState(false);
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+  const [copiedRowId, setCopiedRowId] = useState<string | null>(null);
+  const [passwordResetTarget, setPasswordResetTarget] = useState<StaffMember | null>(null);
+  const [customResetPassword, setCustomResetPassword] = useState('');
 
   const filteredStaff = staff.filter(s => {
     const matchesSearch = 
@@ -97,7 +106,23 @@ export const StaffManagementView: React.FC = () => {
     setDepartment(member.department);
     setHireDate(member.hireDate);
     setPhoto(member.photo);
+    setEditNewPassword('');
     setIsFormModalOpen(true);
+  };
+
+  const handleOpenResetPassword = (member: StaffMember) => {
+    setPasswordResetTarget(member);
+    setCustomResetPassword(`SmartPass#${Math.floor(1000 + Math.random() * 9000)}`);
+  };
+
+  const handleConfirmPasswordReset = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordResetTarget || !customResetPassword.trim()) return;
+    const targetId = passwordResetTarget.id;
+    const chosenPassword = customResetPassword.trim();
+    setPasswordResetTarget(null);
+    setCopiedPwd(false);
+    resetStaffPassword(targetId, chosenPassword);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -105,19 +130,25 @@ export const StaffManagementView: React.FC = () => {
     if (!firstName || !lastName || !email) return;
 
     if (staffToEdit) {
-      updateStaff(staffToEdit.id, {
-        firstName,
-        lastName,
-        email,
-        phone,
-        address,
-        role,
-        department,
-        hireDate,
-        photo
-      });
+      setCopiedPwd(false);
+      updateStaff(
+        staffToEdit.id,
+        {
+          firstName,
+          lastName,
+          email,
+          phone,
+          address,
+          role,
+          department,
+          hireDate,
+          photo
+        },
+        editNewPassword
+      );
     } else {
-      const created = createStaff(
+      setCopiedPwd(false);
+      createStaff(
         {
           schoolId: currentSchool.id,
           firstName,
@@ -133,8 +164,6 @@ export const StaffManagementView: React.FC = () => {
         },
         initialPassword
       );
-      setCopiedPwd(false);
-      setCreatedCredentialsStaff(created);
     }
 
     setIsFormModalOpen(false);
@@ -285,10 +314,53 @@ export const StaffManagementView: React.FC = () => {
                       <div className="text-[11px] font-mono text-slate-700">
                         user : <strong className="text-blue-950">{member.username}</strong>
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="mt-1 flex items-center gap-1.5 text-[11px] font-mono">
+                        <span className="text-slate-500">mdp :</span>
+                        <span className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-blue-950 font-semibold">
+                          {visiblePasswords[member.id]
+                            ? member.temporaryPassword || 'Non défini'
+                            : '••••••••••'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setVisiblePasswords(prev => ({
+                              ...prev,
+                              [member.id]: !prev[member.id]
+                            }))
+                          }
+                          className="p-1 text-slate-500 hover:text-blue-700 rounded hover:bg-blue-50 cursor-pointer"
+                          title={visiblePasswords[member.id] ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                        >
+                          {visiblePasswords[member.id] ? (
+                            <EyeOff className="w-3.5 h-3.5" />
+                          ) : (
+                            <Eye className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                        {member.temporaryPassword && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard?.writeText(member.temporaryPassword || '');
+                              setCopiedRowId(member.id);
+                              setTimeout(() => setCopiedRowId(null), 2000);
+                            }}
+                            className="p-1 text-slate-500 hover:text-emerald-600 rounded hover:bg-emerald-50 cursor-pointer"
+                            title="Copier le mot de passe"
+                          >
+                            {copiedRowId === member.id ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1.5">
                         <button
                           onClick={() => setSelectedStaffForBadge(member)}
-                          className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-50 border border-blue-200 transition-colors"
+                          className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-50 border border-blue-200 transition-colors cursor-pointer"
                           title="Voir le badge & QR Code"
                         >
                           <QrCode className="w-3 h-3" />
@@ -297,7 +369,7 @@ export const StaffManagementView: React.FC = () => {
 
                         <button
                           onClick={() => sendStaffCredentials(member.id)}
-                          className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded transition-colors ${
+                          className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded transition-colors cursor-pointer ${
                             member.credentialsSent
                               ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
                               : 'bg-slate-50 text-slate-700 hover:text-blue-950 border border-slate-200'
@@ -338,9 +410,9 @@ export const StaffManagementView: React.FC = () => {
                     <td className="py-3 px-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
                         <button
-                          onClick={() => resetStaffPassword(member.id)}
-                          className="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-blue-50 rounded transition-colors"
-                          title="Réinitialiser le mot de passe (Code PIN requis)"
+                          onClick={() => handleOpenResetPassword(member)}
+                          className="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                          title="Définir / Réinitialiser le mot de passe (Code PIN requis)"
                         >
                           <KeyRound className="w-4 h-4" />
                         </button>
@@ -497,7 +569,7 @@ export const StaffManagementView: React.FC = () => {
                 helperText="Importez depuis votre PC ou collez un lien. Cette photo figure sur le badge professionnel imprimable."
               />
 
-              {!staffToEdit && (
+              {!staffToEdit ? (
                 <div className="space-y-1">
                   <label className="text-slate-700 font-medium">Mot de passe initial *</label>
                   <div className="flex gap-2">
@@ -512,7 +584,28 @@ export const StaffManagementView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setInitialPassword(`SmartPass#${Math.floor(1000 + Math.random() * 9000)}`)}
-                      className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold flex items-center gap-1"
+                      className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Générer</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <label className="text-slate-700 font-medium">Nouveau mot de passe (optionnel)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={editNewPassword}
+                      onChange={e => setEditNewPassword(e.target.value)}
+                      placeholder="Laisser vide pour conserver l'actuel"
+                      className="flex-1 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono focus:outline-none focus:border-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setEditNewPassword(`SmartPass#${Math.floor(1000 + Math.random() * 9000)}`)}
+                      className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold flex items-center gap-1 cursor-pointer"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
                       <span>Générer</span>
@@ -556,19 +649,102 @@ export const StaffManagementView: React.FC = () => {
         />
       )}
 
-      {/* Created Staff Credentials Modal */}
-      {createdCredentialsStaff && (
+      {/* Custom Password Setup / Reset Modal (triggers PIN confirmation next) */}
+      {passwordResetTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
+          <div className="relative w-full max-w-md rounded-2xl bg-white border border-amber-200 shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
+              <div className="flex items-center gap-2 text-amber-700">
+                <KeyRound className="w-5 h-5" />
+                <h3 className="font-bold text-sm text-blue-950">Définir / Réinitialiser le Mot de Passe</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPasswordResetTarget(null)}
+                className="text-slate-500 hover:text-blue-950 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmPasswordReset} className="space-y-4 text-xs">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                <div className="font-bold text-blue-950">
+                  {passwordResetTarget.firstName} {passwordResetTarget.lastName}
+                </div>
+                <div className="text-slate-600">
+                  {passwordResetTarget.role} · <span className="font-mono text-blue-700">{passwordResetTarget.matricule}</span>
+                </div>
+                <div className="text-slate-500 font-mono">{passwordResetTarget.email}</div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-slate-700 font-semibold block">Nouveau mot de passe à activer *</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    required
+                    value={customResetPassword}
+                    onChange={e => setCustomResetPassword(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 font-mono focus:outline-none focus:border-amber-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCustomResetPassword(`SmartPass#${Math.floor(1000 + Math.random() * 9000)}`)}
+                    className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Générer</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] flex items-start gap-2">
+                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>
+                  À l'étape suivante, saisissez votre <strong>Code PIN Administrateur</strong> (par défaut <strong className="font-mono">123456</strong>). Le mot de passe sera aussitôt activé et affiché.
+                </span>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setPasswordResetTarget(null)}
+                  className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold cursor-pointer"
+                >
+                  Continuer vers Code PIN
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Unified Staff Credentials & Activated Password Receipt Modal */}
+      {lastStaffCredentialReceipt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
           <div className="relative w-full max-w-md rounded-2xl bg-white border border-emerald-200 shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-blue-100">
               <div className="flex items-center gap-2 text-emerald-700">
                 <CheckCircle2 className="w-5 h-5" />
-                <h3 className="font-bold text-sm text-blue-950">Identifiants de connexion créés</h3>
+                <h3 className="font-bold text-sm text-blue-950">
+                  {lastStaffCredentialReceipt.action === 'created'
+                    ? 'Identifiants de connexion créés'
+                    : lastStaffCredentialReceipt.action === 'reset'
+                    ? 'Nouveau mot de passe activé'
+                    : 'Identifiants mis à jour'}
+                </h3>
               </div>
               <button
                 type="button"
-                onClick={() => setCreatedCredentialsStaff(null)}
-                className="text-slate-500 hover:text-blue-950"
+                onClick={() => setLastStaffCredentialReceipt(null)}
+                className="text-slate-500 hover:text-blue-950 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -577,32 +753,35 @@ export const StaffManagementView: React.FC = () => {
             <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
               <div>
                 <span className="text-slate-500">Employé :</span>{' '}
-                <strong className="text-blue-950">{createdCredentialsStaff.firstName} {createdCredentialsStaff.lastName}</strong> ({createdCredentialsStaff.role})
+                <strong className="text-blue-950">
+                  {lastStaffCredentialReceipt.member.firstName} {lastStaffCredentialReceipt.member.lastName}
+                </strong>{' '}
+                ({lastStaffCredentialReceipt.member.role})
               </div>
               <div>
                 <span className="text-slate-500">Matricule :</span>{' '}
-                <strong className="font-mono text-blue-700">{createdCredentialsStaff.matricule}</strong>
+                <strong className="font-mono text-blue-700">{lastStaffCredentialReceipt.member.matricule}</strong>
               </div>
               <div>
                 <span className="text-slate-500">Email / Identifiant :</span>{' '}
-                <strong className="font-mono text-blue-950">{createdCredentialsStaff.email}</strong>
+                <strong className="font-mono text-blue-950">{lastStaffCredentialReceipt.member.email}</strong>
               </div>
               <div>
                 <span className="text-slate-500">Nom d'utilisateur :</span>{' '}
-                <strong className="font-mono text-blue-950">{createdCredentialsStaff.username}</strong>
+                <strong className="font-mono text-blue-950">{lastStaffCredentialReceipt.member.username}</strong>
               </div>
               <div className="pt-2 border-t border-slate-200 flex items-center justify-between gap-2">
                 <div>
-                  <span className="text-slate-500 block">Mot de passe initial :</span>
-                  <strong className="font-mono text-sm text-emerald-700">{createdCredentialsStaff.temporaryPassword}</strong>
+                  <span className="text-slate-500 block">Mot de passe actif :</span>
+                  <strong className="font-mono text-sm text-emerald-700">{lastStaffCredentialReceipt.password}</strong>
                 </div>
                 <button
                   type="button"
                   onClick={() => {
-                    navigator.clipboard?.writeText(createdCredentialsStaff.temporaryPassword || '');
+                    navigator.clipboard?.writeText(lastStaffCredentialReceipt.password || '');
                     setCopiedPwd(true);
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center gap-1 cursor-pointer"
                 >
                   <Copy className="w-3.5 h-3.5" />
                   <span>{copiedPwd ? 'Copié ✓' : 'Copier'}</span>
@@ -610,11 +789,27 @@ export const StaffManagementView: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <p className="text-[11px] text-slate-600 bg-emerald-50 border border-emerald-200 rounded-lg p-2.5">
+              Ce collaborateur peut se connecter immédiatement sur le portail avec son email ou son matricule et ce mot de passe.
+            </p>
+
+            <div className="flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setCreatedCredentialsStaff(null)}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold"
+                onClick={() => {
+                  const m = lastStaffCredentialReceipt.member;
+                  const summary = `SmartSchool Guinée - Identifiants ${m.role}\nNom: ${m.firstName} ${m.lastName}\nEmail: ${m.email}\nMatricule: ${m.matricule}\nMot de passe: ${lastStaffCredentialReceipt.password}`;
+                  navigator.clipboard?.writeText(summary);
+                  setCopiedPwd(true);
+                }}
+                className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
+              >
+                Copier la fiche complète
+              </button>
+              <button
+                type="button"
+                onClick={() => setLastStaffCredentialReceipt(null)}
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold cursor-pointer"
               >
                 Fermer
               </button>

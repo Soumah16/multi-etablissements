@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { WorkspaceMode } from '../../App';
 import { AuthenticatedUser } from './AuthPortal';
 import { getAccountByRole, getStoredAccounts, authenticateUser, normalizeSchoolId, DemoAccount } from '../../data/accountsData';
+import { recordGlobalAuditLog } from '../../utils/auditLogger';
 import {
   ShieldCheck,
   Lock,
@@ -96,12 +97,33 @@ export const RoleSwitchAuthModal: React.FC<RoleSwitchAuthModalProps> = ({
 
     const auth = authenticateUser(targetAccount.email, password, effectiveSchoolId || 'ALL');
     if (!auth.success || !auth.user) {
+      recordGlobalAuditLog({
+        action: `Échec bascule vers l'espace [${targetAccount.title}]`,
+        target: targetAccount.email,
+        actorName: currentUser.name,
+        actorRole: currentUser.role,
+        actorMatricule: currentUser.matricule,
+        schoolName: targetAccount.schoolName,
+        type: 'securite',
+        severity: 'warning'
+      });
       setErrorMessage(
         auth.errorMessage ||
           'Mot de passe incorrect pour ce compte. Veuillez saisir le mot de passe officiel assigné à ce rôle.'
       );
       return;
     }
+
+    recordGlobalAuditLog({
+      action: `Bascule autorisée vers l'espace [${auth.user.title || auth.user.role}]`,
+      target: auth.user.email,
+      actorName: currentUser.name,
+      actorRole: currentUser.role,
+      actorMatricule: currentUser.matricule,
+      schoolName: auth.user.schoolName,
+      type: 'connexion',
+      severity: 'info'
+    });
 
     setIsLoading(true);
     setTimeout(() => {

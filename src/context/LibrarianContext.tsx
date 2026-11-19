@@ -16,6 +16,7 @@ import { AuthenticatedUser } from '../components/auth/AuthPortal';
 import { authenticateUser, normalizeSchoolId } from '../data/accountsData';
 import { idbGetRecord, saveDualStorage, subscribeStorageKey } from '../utils/storage';
 import { propagateRoleProfileToAccount } from '../utils/accountSync';
+import { recordGlobalAuditLog } from '../utils/auditLogger';
 
 export interface LibraryAccessLog {
   id: string;
@@ -233,6 +234,16 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       status
     };
     setLibraryAuditLogs(prev => [entry, ...prev].slice(0, 50));
+    recordGlobalAuditLog({
+      action: `[Bibliothèque] ${action}`,
+      target: targetActor?.schoolName || profile.schoolName || 'Bibliothèque Numérique',
+      actorName: targetActor?.name || `${profile.firstName} ${profile.lastName}`,
+      actorRole: targetActor?.role || 'librarian',
+      actorMatricule: targetActor?.matricule || profile.matricule,
+      schoolName: targetActor?.schoolName || profile.schoolName,
+      type: status === 'refuse' ? 'securite' : 'admin',
+      severity: status === 'refuse' ? 'warning' : 'info'
+    });
   };
 
   const guardWriteAccess = (actionName: string): boolean => {

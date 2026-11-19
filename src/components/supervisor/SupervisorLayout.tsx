@@ -21,7 +21,8 @@ import {
   Sparkles,
   ArrowRightLeft,
   LogOut,
-  MessageCircle
+  MessageCircle,
+  MessageSquare
 } from 'lucide-react';
 import { SupervisorDashboardView } from './SupervisorDashboardView';
 import { SupervisorAttendanceView } from './SupervisorAttendanceView';
@@ -32,6 +33,8 @@ import { SupervisorPatrolsView } from './SupervisorPatrolsView';
 import { SupervisorMeetingsView } from './SupervisorMeetingsView';
 import { SupervisorBadgeView } from './SupervisorBadgeView';
 import { SupervisorSecurityView } from './SupervisorSecurityView';
+import { CrossRoleHubPanel } from '../common/CrossRoleHubPanel';
+import { useUnreadSharedMessagesCount } from '../../utils/communicationHub';
 
 interface SupervisorLayoutProps {
   onReturnToSchoolAdmin: () => void;
@@ -67,6 +70,7 @@ export const SupervisorLayout: React.FC<SupervisorLayoutProps> = ({
     schoolWaPhone,
     `Bonjour ${currentSchool.name}, Surveillance Générale (${profile.firstName} ${profile.lastName}).`
   );
+  const unreadMessagesCount = useUnreadSharedMessagesCount('supervisor', currentSchool.id);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
@@ -141,6 +145,13 @@ export const SupervisorLayout: React.FC<SupervisorLayoutProps> = ({
           label: 'Convocations Parents', 
           icon: <Calendar className="w-4 h-4 text-purple-600" />
         },
+        {
+          tab: 'communication',
+          label: 'Messages & Requêtes',
+          icon: <MessageSquare className="w-4 h-4 text-blue-600" />,
+          badge: unreadMessagesCount,
+          badgeColor: 'bg-blue-100 text-blue-800 border border-blue-200'
+        },
         { 
           tab: 'badge', 
           label: 'Badge Professionnel', 
@@ -164,6 +175,17 @@ export const SupervisorLayout: React.FC<SupervisorLayoutProps> = ({
       case 'watchlist': return <SupervisorWatchlistView />;
       case 'patrols': return <SupervisorPatrolsView />;
       case 'parent_meetings': return <SupervisorMeetingsView />;
+      case 'communication':
+        return (
+          <CrossRoleHubPanel
+            role="supervisor"
+            userName={`${profile.firstName} ${profile.lastName}`}
+            schoolId={currentSchool.id}
+            schoolName={currentSchool.name}
+            canManageRequests
+            defaultRecipientRoles={['director', 'parent', 'school_admin']}
+          />
+        );
       case 'badge': return <SupervisorBadgeView />;
       case 'security': return <SupervisorSecurityView />;
       default: return <SupervisorDashboardView />;

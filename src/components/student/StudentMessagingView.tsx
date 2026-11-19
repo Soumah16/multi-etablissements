@@ -66,6 +66,16 @@ export const StudentMessagingView: React.FC = () => {
         )}
       </div>
 
+      {/* Synchronized Cross-Role Messages & Requests Hub */}
+      <CrossRoleHubPanel
+        role="student"
+        userName={`${profile.firstName} ${profile.lastName}`}
+        schoolId={currentSchool.id}
+        schoolName={currentSchool.name}
+        defaultRecipientRoles={['teacher', 'secretary', 'supervisor']}
+        compact
+      />
+
       <div className="rounded-2xl bg-white border border-blue-100 overflow-hidden flex flex-col h-[650px]">
         {/* Recipient Selector Topbar */}
         <div className="p-4 bg-slate-50 border-b border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -149,16 +159,6 @@ export const StudentMessagingView: React.FC = () => {
           </button>
         </form>
       </div>
-
-      {/* Synchronized Cross-Role Messages & Requests Hub */}
-      <CrossRoleHubPanel
-        role="student"
-        userName={`${profile.firstName} ${profile.lastName}`}
-        schoolId={currentSchool.id}
-        schoolName={currentSchool.name}
-        defaultRecipientRoles={['teacher', 'secretary', 'supervisor']}
-        compact
-      />
     </div>
   );
 };

@@ -326,7 +326,7 @@ export const propagateSuperAdminProfileChange = (
       ecoleId: 'NATIONAL',
       schoolName: nextProfile.enterprise || existing?.schoolName || 'Ministère MEPU-A · Direction Nationale',
       title: nextProfile.title || existing?.title,
-      photo: existing?.photo,
+      photo: nextProfile.photo || existing?.photo,
       mustChangePassword: existing?.mustChangePassword ?? false,
       status: existing?.status || 'actif'
     },
@@ -342,7 +342,8 @@ export const propagateSuperAdminProfileChange = (
     {
       name: nextProfile.name,
       email: nextProfile.email,
-      schoolName: nextProfile.enterprise || undefined
+      schoolName: nextProfile.enterprise || undefined,
+      ...(nextProfile.photo ? { photo: nextProfile.photo } : {})
     }
   );
 };
@@ -588,14 +589,15 @@ export const propagateStaffMemberChange = (params: {
       schoolName,
       title: member.role,
       photo: member.photo,
-      ...(member.temporaryPassword ? { plainPassword: member.temporaryPassword, mustChangePassword: true } : {}),
+      ...(member.temporaryPassword ? { plainPassword: member.temporaryPassword, mustChangePassword: false } : {}),
       status: mappedStatus,
       provisionedBy: "Admin École"
     },
     {
       email: oldEmail || member.email,
       matricule: oldMatricule || member.matricule,
-      username: member.username
+      username: member.username,
+      ...(member.id === 'stf-001' ? { role: 'director' as WorkspaceMode, ecoleId: canonicalSchoolId } : {})
     }
   );
 
@@ -980,7 +982,8 @@ export const propagateAccountEditToDomain = (params: {
               (oldEmail && m.email.toLowerCase() === oldEmail.toLowerCase()) ||
               (oldMatricule && m.matricule.toLowerCase() === oldMatricule.toLowerCase()) ||
               m.email.toLowerCase() === account.email.toLowerCase() ||
-              m.matricule.toLowerCase() === account.matricule.toLowerCase();
+              m.matricule.toLowerCase() === account.matricule.toLowerCase() ||
+              (account.id === 'USR-DIR-001' && m.id === 'stf-001');
             if (!match) return m;
             changed = true;
             return {
@@ -992,7 +995,9 @@ export const propagateAccountEditToDomain = (params: {
               matricule: account.matricule,
               photo: account.photo || m.photo,
               status: account.status === 'actif' ? ('actif' as const) : ('suspendu' as const),
-              ...(account.plainPassword ? { temporaryPassword: account.plainPassword } : {})
+              ...(account.plainPassword || account.password
+                ? { temporaryPassword: account.plainPassword || account.password }
+                : {})
             };
           });
       if (changed) {

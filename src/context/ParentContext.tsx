@@ -21,6 +21,7 @@ import {
   loadSharedMessages,
   pushSharedMessage
 } from '../utils/communicationHub';
+import { recordGlobalAuditLog } from '../utils/auditLogger';
 
 interface ParentContextType {
   activeParentTab: ParentNavTab;
@@ -122,6 +123,14 @@ export const ParentProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       nextProfile,
       { email: profile.email }
     );
+    recordGlobalAuditLog({
+      action: 'Mise à jour du profil Parent / Tuteur',
+      target: nextProfile.name,
+      actorName: nextProfile.name,
+      actorRole: 'parent',
+      type: 'admin',
+      severity: 'info'
+    });
     showToast('Profil Parent mis à jour avec succès.');
   };
 
@@ -164,6 +173,14 @@ export const ParentProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return c;
     }));
 
+    recordGlobalAuditLog({
+      action: `Paiement scolarité ${method} : ${targetChild.firstName} ${targetChild.lastName} (${formatGnf(amountGnf)})`,
+      target: `${feeType} · Reçu ${newPayment.receiptNumber}`,
+      actorName: profile.name,
+      actorRole: 'parent',
+      type: 'finance',
+      severity: 'info'
+    });
     showToast(`Paiement de ${formatGnf(amountGnf)} par ${method} (${phone}) validé avec succès.`);
   };
 
@@ -204,6 +221,14 @@ export const ParentProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       priority: 'normal'
     });
 
+    recordGlobalAuditLog({
+      action: `Envoi message Parent : ${subject}`,
+      target: recipient,
+      actorName: profile.name,
+      actorRole: 'parent',
+      type: 'admin',
+      severity: 'info'
+    });
     showToast(`Message transmis à « ${recipient} ».`);
   };
 

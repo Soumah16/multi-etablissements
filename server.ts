@@ -15,6 +15,7 @@ const OTP_SECRET =
 
 const DATA_DIR = path.resolve(process.cwd(), '.data');
 const COMMS_FILE = path.join(DATA_DIR, 'smartschool-comms.json');
+const STATE_FILE = path.join(DATA_DIR, 'smartschool-state.json');
 
 interface OtpChallenge {
   id: string;
@@ -33,19 +34,77 @@ interface StoredCommsData {
   blockedIps: string[];
 }
 
+interface StateEntry {
+  value: unknown;
+  updatedAt: number;
+}
+
 interface RateLimitBucket {
   count: number;
   resetAt: number;
 }
 
+const LOCAL_ONLY_STATE_KEYS = new Set<string>([
+  'smartschool_current_user',
+  'smartschool_workspace_mode',
+  'smartschool_language_v1',
+  'smartschool_teacher_selected_class_v1',
+  'smartschool_parent_selected_child_v1',
+  'smartschool_current_school_id',
+  'smartschool_single_school_test_v1',
+  'smartschool_mode_demo_flag',
+  'smartschool_cloud_workspace_id_v1',
+  'smartschool_last_activity_v1',
+  'smartschool_pending_cloud_keys_v1'
+]);
+
+function isValidSyncableStateKey(key: unknown): key is string {
+  return (
+    typeof key === 'string' &&
+    key.startsWith('smartschool_') &&
+    key.length <= 160 &&
+    !key.endsWith('__ts') &&
+    !LOCAL_ONLY_STATE_KEYS.has(key)
+  );
+}
+
+function canonicalSchoolId(schoolId?: string): string {
+  if (!schoolId) return '';
+  const trimmed = schoolId.trim();
+  const upper = trimmed.toUpperCase();
+  if (
+    upper === 'ECOLE-001' ||
+    trimmed.toLowerCase() === 'sch-gn-ck-001' ||
+    upper === 'LEC-CKY'
+  ) {
+    return 'ECOLE-001';
+  }
+  return trimmed;
+}
+
 const otpChallenges = new Map<string, OtpChallenge>();
 const rateLimitStore = new Map<string, RateLimitBucket>();
+const sseClients = new Set<Response>();
 
 let memoryStore: StoredCommsData = {
   messages: [],
   requests: [],
   blockedIps: []
 };
+
+let stateStore: Record<string, StateEntry> = {};
+let stateWriteQueue: Promise<void> = Promise.resolve();
+
+function broadcastSseEvent(eventName: string, payload: unknown): void {
+  const frame = `event: ${eventName}\ndata: ${JSON.stringify(payload)}\n\n`;
+  for (const client of sseClients) {
+    try {
+      client.write(frame);
+    } catch {
+      sseClients.delete(client);
+    }
+  }
+}
 
 async function loadCommsStore(): Promise<StoredCommsData> {
   try {
@@ -74,6 +133,50 @@ async function persistCommsStore(next: StoredCommsData): Promise<void> {
   } catch {
     // Ignore disk persistence errors on read-only environments; memory store remains active
   }
+}
+
+async function loadStateStore(): Promise<Record<string, StateEntry>> {
+  try {
+    const raw = await fs.readFile(STATE_FILE, 'utf8');
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    if (parsed && typeof parsed === 'object') {
+      const cleaned: Record<string, StateEntry> = {};
+      for (const [key, entry] of Object.entries(parsed)) {
+        if (
+          isValidSyncableStateKey(key) &&
+          entry &&
+          typeof entry === 'object' &&
+          'value' in entry &&
+          typeof (entry as { updatedAt?: unknown }).updatedAt === 'number'
+        ) {
+          cleaned[key] = {
+            value: (entry as StateEntry).value,
+            updatedAt: (entry as StateEntry).updatedAt
+          };
+        }
+      }
+      stateStore = cleaned;
+    }
+  } catch {
+    // First boot or no file yet
+  }
+  return stateStore;
+}
+
+function schedulePersistStateStore(): Promise<void> {
+  stateWriteQueue = stateWriteQueue
+    .then(async () => {
+      try {
+        await fs.mkdir(DATA_DIR, { recursive: true });
+        const tmpFile = `${STATE_FILE}.tmp`;
+        await fs.writeFile(tmpFile, JSON.stringify(stateStore), 'utf8');
+        await fs.rename(tmpFile, STATE_FILE);
+      } catch {
+        // Ignore disk persistence failures on read-only environments
+      }
+    })
+    .catch(() => undefined);
+  return stateWriteQueue;
 }
 
 function getClientIp(req: Request): string {
@@ -248,7 +351,7 @@ function sanitizeText(value: unknown, maxLen = 4000): string {
 }
 
 async function startServer() {
-  await loadCommsStore();
+  await Promise.all([loadCommsStore(), loadStateStore()]);
 
   const app = express();
   app.disable('x-powered-by');
@@ -280,7 +383,7 @@ async function startServer() {
     next();
   });
 
-  app.use(express.json({ limit: '1mb' }));
+  app.use(express.json({ limit: '15mb' }));
 
   // WAF IP blocklist enforcement
   app.use((req: Request, res: Response, next: NextFunction) => {
@@ -295,9 +398,15 @@ async function startServer() {
     next();
   });
 
-  const apiLimiter = createRateLimiter({ windowMs: 60_000, maxRequests: 150, keyPrefix: 'api' });
+  const apiLimiter = createRateLimiter({ windowMs: 60_000, maxRequests: 600, keyPrefix: 'api' });
   const otpLimiter = createRateLimiter({ windowMs: 300_000, maxRequests: 15, keyPrefix: 'otp' });
-  app.use('/api', apiLimiter);
+  app.use('/api', (req: Request, res: Response, next: NextFunction) => {
+    if (req.path === '/state/stream') {
+      next();
+      return;
+    }
+    apiLimiter(req, res, next);
+  });
 
   // Periodic cleanup of expired OTP challenges & rate-limit buckets
   const cleanupTimer = setInterval(() => {
@@ -324,10 +433,105 @@ async function startServer() {
       mode: IS_PROD ? 'production' : 'development',
       uptimeSeconds: Math.floor(process.uptime()),
       timestamp: new Date().toISOString(),
+      syncedKeysCount: Object.keys(stateStore).length,
       gateways: {
         smsConfigured,
         emailConfigured
       }
+    });
+  });
+
+  // Real-time Server-Sent Events (SSE) State Stream for universal multi-user synchronization
+  app.get('/api/state/stream', (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    if (typeof res.flushHeaders === 'function') {
+      res.flushHeaders();
+    }
+
+    sseClients.add(res);
+    res.write(`event: ready\ndata: ${JSON.stringify({ ok: true, serverTime: Date.now() })}\n\n`);
+
+    const ping = setInterval(() => {
+      try {
+        res.write(': ping\n\n');
+      } catch {
+        clearInterval(ping);
+        sseClients.delete(res);
+      }
+    }, 25_000);
+
+    req.on('close', () => {
+      clearInterval(ping);
+      sseClients.delete(res);
+    });
+  });
+
+  // Universal Shared State Retrieval (Last-Write-Wins across all connected browsers)
+  app.get('/api/state', (req: Request, res: Response) => {
+    const sinceParam = Number(req.query.since || 0);
+    const since = Number.isFinite(sinceParam) && sinceParam > 0 ? sinceParam : 0;
+
+    const states: Record<string, StateEntry> = {};
+    for (const [key, entry] of Object.entries(stateStore)) {
+      if (entry.updatedAt > since) {
+        states[key] = entry;
+      }
+    }
+
+    res.json({
+      ok: true,
+      serverTime: Date.now(),
+      states
+    });
+  });
+
+  // Universal Shared State Update (single { key, value, updatedAt } or batch { entries: [...] })
+  app.post('/api/state', async (req: Request, res: Response) => {
+    const rawEntries: Array<{ key?: unknown; value?: unknown; updatedAt?: unknown }> = Array.isArray(
+      req.body?.entries
+    )
+      ? req.body.entries
+      : req.body?.key !== undefined
+      ? [{ key: req.body.key, value: req.body.value, updatedAt: req.body.updatedAt }]
+      : [];
+
+    if (rawEntries.length === 0) {
+      res.status(400).json({ ok: false, error: 'Aucune entrée de synchronisation fournie.' });
+      return;
+    }
+
+    const applied: Array<{ key: string; value: unknown; updatedAt: number }> = [];
+
+    for (const raw of rawEntries.slice(0, 60)) {
+      if (!isValidSyncableStateKey(raw.key)) continue;
+      if (raw.value === undefined) continue;
+
+      const parsedTs = Number(raw.updatedAt);
+      const nextTs = Number.isFinite(parsedTs) && parsedTs > 0 ? parsedTs : Date.now();
+      const existing = stateStore[raw.key];
+
+      if (!existing || nextTs >= existing.updatedAt) {
+        const entry: StateEntry = { value: raw.value, updatedAt: nextTs };
+        stateStore[raw.key] = entry;
+        applied.push({ key: raw.key, value: entry.value, updatedAt: entry.updatedAt });
+      }
+    }
+
+    if (applied.length > 0) {
+      await schedulePersistStateStore();
+      broadcastSseEvent('state_update', {
+        serverTime: Date.now(),
+        entries: applied
+      });
+    }
+
+    res.json({
+      ok: true,
+      appliedCount: applied.length,
+      serverTime: Date.now()
     });
   });
 
@@ -493,8 +697,14 @@ async function startServer() {
   // Shared Cross-Role Messages API
   app.get('/api/messages', (req: Request, res: Response) => {
     const schoolId = sanitizeText(req.query.schoolId, 64);
+    const canonicalTarget = canonicalSchoolId(schoolId);
     const list = schoolId
-      ? memoryStore.messages.filter(m => !m.schoolId || m.schoolId === schoolId || m.schoolId === 'NATIONAL')
+      ? memoryStore.messages.filter(
+          m =>
+            !m.schoolId ||
+            m.schoolId === 'NATIONAL' ||
+            canonicalSchoolId(String(m.schoolId)) === canonicalTarget
+        )
       : memoryStore.messages;
     res.json({ ok: true, messages: list });
   });
@@ -525,6 +735,7 @@ async function startServer() {
     ].slice(0, 500);
 
     await persistCommsStore({ ...memoryStore, messages: nextMessages });
+    broadcastSseEvent('comms_update', { kind: 'messages', id: item.id, serverTime: Date.now() });
     res.status(201).json({ ok: true, message: item });
   });
 
@@ -561,14 +772,21 @@ async function startServer() {
 
     const nextMessages = memoryStore.messages.map((m, i) => (i === idx ? updated : m));
     await persistCommsStore({ ...memoryStore, messages: nextMessages });
+    broadcastSseEvent('comms_update', { kind: 'messages', id, serverTime: Date.now() });
     res.json({ ok: true, message: updated });
   });
 
   // Shared Cross-Role Requests API
   app.get('/api/requests', (req: Request, res: Response) => {
     const schoolId = sanitizeText(req.query.schoolId, 64);
+    const canonicalTarget = canonicalSchoolId(schoolId);
     const list = schoolId
-      ? memoryStore.requests.filter(r => !r.schoolId || r.schoolId === schoolId || r.schoolId === 'NATIONAL')
+      ? memoryStore.requests.filter(
+          r =>
+            !r.schoolId ||
+            r.schoolId === 'NATIONAL' ||
+            canonicalSchoolId(String(r.schoolId)) === canonicalTarget
+        )
       : memoryStore.requests;
     res.json({ ok: true, requests: list });
   });
@@ -601,6 +819,7 @@ async function startServer() {
     ].slice(0, 500);
 
     await persistCommsStore({ ...memoryStore, requests: nextRequests });
+    broadcastSseEvent('comms_update', { kind: 'requests', id: item.id, serverTime: Date.now() });
     res.status(201).json({ ok: true, request: item });
   });
 
@@ -625,6 +844,7 @@ async function startServer() {
 
     const nextRequests = memoryStore.requests.map((r, i) => (i === idx ? updated : r));
     await persistCommsStore({ ...memoryStore, requests: nextRequests });
+    broadcastSseEvent('comms_update', { kind: 'requests', id, serverTime: Date.now() });
     res.json({ ok: true, request: updated });
   });
 

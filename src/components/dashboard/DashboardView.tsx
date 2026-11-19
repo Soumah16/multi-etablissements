@@ -9,18 +9,13 @@ import {
   Coins, 
   CreditCard, 
   ShieldAlert, 
-  ArrowUpRight, 
-  TrendingUp, 
-  Activity, 
   CheckCircle2, 
-  AlertTriangle, 
   Clock, 
-  Plus, 
-  ExternalLink,
   HardDrive,
   Image as ImageIcon
 } from 'lucide-react';
 import { GovernanceBanner } from '../common/GovernanceBanner';
+import { ActivityJournalPanel } from './ActivityJournalPanel';
 
 export const DashboardView: React.FC = () => {
   const { 
@@ -371,88 +366,58 @@ export const DashboardView: React.FC = () => {
         </div>
       </div>
 
-      {/* Tables Row: Recent Activities & System Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Platform Activities */}
-        <div className="p-5 rounded-xl bg-blue-50/60 border border-slate-200 flex flex-col">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-blue-600" />
-              <h3 className="font-semibold text-sm text-blue-950">{t.dashboard.recentActivities}</h3>
-            </div>
-            <button 
-              onClick={() => setActiveTab('security')}
-              className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
-            >
-              Voir tout le journal <ArrowUpRight className="w-3 h-3" />
-            </button>
-          </div>
+      {/* Journal des Activités (Audit Logs) - Traçabilité Admin École & Plateforme */}
+      <ActivityJournalPanel
+        auditLogs={auditLogs}
+        schools={schools}
+        onOpenFullSecurityLogs={() => setActiveTab('security')}
+      />
 
-          <div className="divide-y divide-slate-200 mt-2 flex-1">
-            {auditLogs.slice(0, 5).map((log) => (
-              <div key={log.id} className="py-2.5 flex items-start justify-between gap-3 text-xs">
-                <div>
-                  <div className="text-slate-900 font-medium">{log.action}</div>
-                  <div className="text-slate-500 text-[11px] mt-0.5 flex items-center gap-2">
-                    <span>{log.actor}</span>
-                    <span>·</span>
-                    <span className="font-mono text-slate-500">{log.ip}</span>
-                  </div>
-                </div>
-                <span className="text-[11px] text-slate-500 whitespace-nowrap font-mono">
-                  {log.timestamp.substring(11, 16)}
-                </span>
-              </div>
-            ))}
+      {/* System & Security Alerts */}
+      <div className="p-5 rounded-xl bg-white border border-slate-200 flex flex-col">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-amber-700" />
+            <h3 className="font-semibold text-sm text-blue-950">{t.dashboard.systemAlerts}</h3>
           </div>
+          <span className="text-xs font-mono text-emerald-600 flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5" /> Système 100% Opérationnel
+          </span>
         </div>
 
-        {/* System & Security Alerts */}
-        <div className="p-5 rounded-xl bg-blue-50/60 border border-slate-200 flex flex-col">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-            <div className="flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-amber-700" />
-              <h3 className="font-semibold text-sm text-blue-950">{t.dashboard.systemAlerts}</h3>
-            </div>
-            <span className="text-xs font-mono text-emerald-600 flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Système 100% Opérationnel
-            </span>
-          </div>
-
-          <div className="space-y-3 mt-3">
-            {schools
-              .filter(s => s.status === 'suspended')
-              .map(s => (
-                <div key={`susp-${s.id}`} className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs flex items-start gap-3">
-                  <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                  <div>
-                    <div className="font-medium text-rose-700">Établissement Suspendu</div>
-                    <div className="text-slate-700 text-[11px] mt-0.5">
-                      « {s.name} » ({s.city}) est actuellement hors-ligne suite à décision administrative.
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-            {schools.every(s => s.status !== 'suspended') && (
-              <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs flex items-start gap-3">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+          {schools
+            .filter(s => s.status === 'suspended')
+            .map(s => (
+              <div key={`susp-${s.id}`} className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs flex items-start gap-3">
+                <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-medium text-emerald-700">Réseau Établissements Conforme</div>
+                  <div className="font-medium text-rose-700">Établissement Suspendu</div>
                   <div className="text-slate-700 text-[11px] mt-0.5">
-                    {schools.filter(s => s.status === 'active').length} établissement(s) actif(s) · Aucun incident ou suspension en cours.
+                    « {s.name} » ({s.city}) est actuellement hors-ligne suite à décision administrative.
                   </div>
                 </div>
               </div>
-            )}
+            ))}
 
-            <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs flex items-start gap-3">
-              <Clock className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+          {schools.every(s => s.status !== 'suspended') && (
+            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs flex items-start gap-3">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <div>
-                <div className="font-medium text-blue-700">Sauvegarde Locale & Indexée Active</div>
+                <div className="font-medium text-emerald-700">Réseau Établissements Conforme</div>
                 <div className="text-slate-700 text-[11px] mt-0.5">
-                  Toutes les modifications et créations sont enregistrées automatiquement dans le stockage persistant sécurisé.
+                  {schools.filter(s => s.status === 'active').length} établissement(s) actif(s) · Aucun incident ou suspension en cours.
                 </div>
+              </div>
+            </div>
+          )}
+
+          <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs flex items-start gap-3">
+            <Clock className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+            <div>
+              <div className="font-medium text-blue-700">Traçabilité & Sauvegarde Synchronisée</div>
+              <div className="text-slate-700 text-[11px] mt-0.5">
+                Toutes les créations, modifications et suppressions des administrateurs d'écoles sont horodatées et synchronisées automatiquement.
               </div>
             </div>
           </div>

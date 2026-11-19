@@ -3,6 +3,7 @@ import { useParent } from '../../context/ParentContext';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { ParentNavTab } from '../../types/parent';
+import { useUnreadSharedMessagesCount } from '../../utils/communicationHub';
 import { ParentDashboardView } from './ParentDashboardView';
 import { ChildrenProfileView } from './ChildrenProfileView';
 import { ParentGradesReportCardView } from './ParentGradesReportCardView';
@@ -71,6 +72,7 @@ export const ParentLayout: React.FC<ParentLayoutProps> = ({
     schoolWaPhone,
     `Bonjour ${currentSchool.name}, je suis ${profile.name} (Parent d'élève).`
   );
+  const unreadMessagesCount = useUnreadSharedMessagesCount('parent', currentSchool.id);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
 
@@ -109,7 +111,7 @@ export const ParentLayout: React.FC<ParentLayoutProps> = ({
       groupTitle: 'FINANCES & COMMUNICATION',
       items: [
         { tab: 'payments', label: 'Scolarité (Orange/MTN)', icon: <CreditCard className="w-4 h-4 text-orange-600" /> },
-        { tab: 'communication', label: 'Messagerie Enseignants', icon: <Megaphone className="w-4 h-4 text-purple-600" /> },
+        { tab: 'communication', label: 'Messagerie Enseignants', icon: <Megaphone className="w-4 h-4 text-purple-600" />, badge: unreadMessagesCount, badgeColor: 'bg-blue-100 text-blue-800 border border-blue-200' },
         { tab: 'events', label: 'Agenda & Rencontres', icon: <Calendar className="w-4 h-4 text-teal-600" /> }
       ]
     }

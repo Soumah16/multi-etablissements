@@ -72,6 +72,15 @@ export const ParentCommunicationView: React.FC = () => {
         </div>
       </div>
 
+      {/* Synchronized Cross-Role Messages & Requests Hub */}
+      <CrossRoleHubPanel
+        role="parent"
+        userName={profile.name}
+        schoolId={currentSchool.id}
+        schoolName={currentSchool.name}
+        defaultRecipientRoles={['secretary', 'director', 'teacher']}
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sent Messages History */}
         <div className="p-5 rounded-2xl bg-white border border-blue-100 space-y-4">
@@ -201,15 +210,6 @@ export const ParentCommunicationView: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Synchronized Cross-Role Messages & Requests Hub */}
-      <CrossRoleHubPanel
-        role="parent"
-        userName={profile.name}
-        schoolId={currentSchool.id}
-        schoolName={currentSchool.name}
-        defaultRecipientRoles={['secretary', 'director', 'teacher']}
-      />
     </div>
   );
 };

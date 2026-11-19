@@ -3,6 +3,7 @@ import { useTeacher } from '../../context/TeacherContext';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { TeacherNavTab } from '../../types/teacher';
+import { useUnreadSharedMessagesCount } from '../../utils/communicationHub';
 import { 
   LayoutDashboard, 
   GraduationCap, 
@@ -87,6 +88,7 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
 
+  const unreadMessagesCount = useUnreadSharedMessagesCount('teacher', currentSchool.id);
   const pendingGradesCount = evaluations.filter(e => e.status === 'en_cours').length;
   const pendingHomeworkCount = homeworkList.reduce((acc, h) => acc + (h.totalSubmissions - h.evaluatedCount), 0);
   const difficultyCount = studentProfiles.filter(s => s.isDifficulty).length;
@@ -151,7 +153,7 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({
       items: [
         { tab: 'schedule', label: 'Emploi du Temps', icon: <Clock className="w-4 h-4" /> },
         { tab: 'events', label: 'Événements & Examens', icon: <CalendarDays className="w-4 h-4 text-purple-600" /> },
-        { tab: 'communication', label: 'Communication', icon: <Megaphone className="w-4 h-4" /> },
+        { tab: 'communication', label: 'Communication', icon: <Megaphone className="w-4 h-4" />, badge: unreadMessagesCount, badgeColor: 'bg-blue-100 text-blue-800 border border-blue-200' },
         { tab: 'badge', label: 'Badge Professionnel', icon: <CreditCard className="w-4 h-4" /> },
         { tab: 'security', label: 'Sécurité & Droits', icon: <ShieldCheck className="w-4 h-4" /> }
       ]

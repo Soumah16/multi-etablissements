@@ -165,7 +165,7 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
       password: cleanPassword,
       plainPassword: cleanPassword,
       status: 'actif',
-      mustChangePassword: true,
+      mustChangePassword: false,
       failedLoginAttempts: 0,
       createdAt: new Date().toISOString().split('T')[0],
       updatedAt: new Date().toISOString().split('T')[0],
@@ -283,6 +283,9 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
     if (showToast) {
       showToast(`Compte de ${acc.name} déverrouillé et réactivé.`);
     }
+    if (addLog) {
+      addLog(`Déverrouillage & réactivation du compte [${acc.matricule}] ${acc.name}`, acc.schoolName, 'securite', 'info');
+    }
   };
 
   const handleResetPassword = (e: React.FormEvent) => {
@@ -297,7 +300,7 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
           ...a, 
           password: cleanPass,
           plainPassword: cleanPass,
-          mustChangePassword: true,
+          mustChangePassword: false,
           failedLoginAttempts: 0,
           status: a.status === 'verrouille' ? ('actif' as AccountStatus) : a.status,
           updatedAt: new Date().toISOString().split('T')[0]

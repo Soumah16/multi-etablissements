@@ -3,6 +3,7 @@ import { useSecretary } from '../../context/SecretaryContext';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { SecretaryNavTab } from '../../types/secretary';
+import { useUnreadSharedMessagesCount } from '../../utils/communicationHub';
 import { 
   LayoutDashboard, 
   Users, 
@@ -75,6 +76,7 @@ export const SecretaryLayout: React.FC<SecretaryLayoutProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
 
+  const unreadMessagesCount = useUnreadSharedMessagesCount('secretary', currentSchool.id);
   const incompleteDossiersCount = students.filter(s => s.dossierStatus === 'incomplet').length;
   const todayAppointmentsCount = appointments.filter(a => a.date === '2026-11-03').length;
 
@@ -128,7 +130,7 @@ export const SecretaryLayout: React.FC<SecretaryLayoutProps> = ({
           badge: todayAppointmentsCount,
           badgeColor: 'bg-purple-100 text-purple-800 border border-purple-200'
         },
-        { tab: 'communication', label: 'Communication Familles', icon: <Megaphone className="w-4 h-4 text-blue-600" /> },
+        { tab: 'communication', label: 'Communication Familles', icon: <Megaphone className="w-4 h-4 text-blue-600" />, badge: unreadMessagesCount, badgeColor: 'bg-blue-100 text-blue-800 border border-blue-200' },
         { tab: 'security', label: 'Sécurité & Journal', icon: <ShieldCheck className="w-4 h-4" /> }
       ]
     }

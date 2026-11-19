@@ -6,6 +6,7 @@ export type AccountantNavTab =
   | 'expenses'
   | 'salaries'
   | 'scholarships'
+  | 'communication'
   | 'reports'
   | 'security';
 

@@ -12,7 +12,8 @@ import {
   GlobalSettings,
   BadgeTemplateConfig,
   LanguageCode,
-  SubscriptionTierId
+  SubscriptionTierId,
+  AuditOperationType
 } from '../types';
 import { 
   initialSuperAdminProfile, 
@@ -35,6 +36,7 @@ import {
   propagateSuperAdminProfileChange
 } from '../utils/accountSync';
 import { dispatchServerNotification, HubRole, pushSharedMessage } from '../utils/communicationHub';
+import { readCurrentSessionSnapshot, recordGlobalAuditLog } from '../utils/auditLogger';
 
 const EXTRA_MOCK_SCHOOL_IDS = new Set([
   'sch-gn-kk-002',
@@ -136,7 +138,13 @@ interface AppContextType {
   updateProfile: (updates: Partial<SuperAdminProfile>) => void;
   // Security
   auditLogs: SecurityAuditLog[];
-  addLog: (action: string, target?: string, type?: SecurityAuditLog['type'], severity?: SecurityAuditLog['severity']) => void;
+  addLog: (
+    action: string,
+    target?: string,
+    type?: SecurityAuditLog['type'],
+    severity?: SecurityAuditLog['severity'],
+    operation?: AuditOperationType
+  ) => void;
   sessions: SecuritySession[];
   terminateSession: (sessionId: string) => void;
   blockedIps: string[];
@@ -291,22 +299,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Add an audit log entry helper (visible to Super Admin)
   const addLog = (
-    action: string, 
-    target: string = 'Système MEPU-A', 
-    type: SecurityAuditLog['type'] = 'admin', 
-    severity: SecurityAuditLog['severity'] = 'info'
+    action: string,
+    target: string = 'Système MEPU-A',
+    type: SecurityAuditLog['type'] = 'admin',
+    severity: SecurityAuditLog['severity'] = 'info',
+    operation?: AuditOperationType
   ) => {
-    const newEntry: SecurityAuditLog = {
-      id: `log-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+    recordGlobalAuditLog({
       action,
-      actor: `${profile.name} (Super Admin)`,
       target,
-      ip: '197.149.198.42 (Conakry, Guinée)',
+      actorName: profile.name,
+      actorRole: 'super_admin',
       type,
-      severity
-    };
-    setAuditLogs(prev => [newEntry, ...prev].slice(0, 150));
+      severity,
+      operation
+    });
   };
 
   // School actions
@@ -328,38 +335,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     };
     setSchools(prev => [newSchool, ...prev]);
-    addLog(`Création d'un nouvel établissement [${newSchool.name}]`, newSchool.name, 'ecole', 'info');
+    addLog(`Création d'un nouvel établissement [${newSchool.name}]`, newSchool.name, 'ecole', 'info', 'create');
     showToast(`Établissement « ${newSchool.name} » créé avec succès`);
   };
 
   const updateSchool = (id: string, updates: Partial<School>) => {
+    const existingSchool = schools.find(s => s.id === id);
+    const schoolLabel = updates.name || existingSchool?.name || id;
     setSchools(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
     if (updates.name) {
       setAdmins(prev => prev.map(a => a.schoolId === id ? { ...a, schoolName: updates.name! } : a));
       propagateSchoolRename(id, updates.name);
     }
-    addLog(`Modification paramètres établissement [ID: ${id}]`, id, 'ecole', 'info');
+    const session = readCurrentSessionSnapshot();
+    const isSchoolAdminActor = session?.role === 'school_admin';
+    recordGlobalAuditLog({
+      action: `Modification paramètres établissement [${schoolLabel}]`,
+      target: schoolLabel,
+      actorName: isSchoolAdminActor ? (session?.name || 'Admin École') : profile.name,
+      actorRole: isSchoolAdminActor ? 'school_admin' : 'super_admin',
+      actorMatricule: isSchoolAdminActor ? session?.matricule : undefined,
+      schoolName: schoolLabel,
+      type: 'ecole',
+      severity: 'info',
+      operation: 'update'
+    });
     showToast("Établissement mis à jour");
   };
 
   const suspendSchool = (id: string) => {
     setSchools(prev => prev.map(s => s.id === id ? { ...s, status: 'suspended' } : s));
     const school = schools.find(s => s.id === id);
-    addLog(`Suspension immédiate de l'accès plateforme pour [${school?.name || id}]`, school?.name || id, 'ecole', 'warning');
+    addLog(`Suspension immédiate de l'accès plateforme pour [${school?.name || id}]`, school?.name || id, 'ecole', 'warning', 'update');
     showToast(`Accès suspendu pour ${school?.name || id}`);
   };
 
   const reactivateSchool = (id: string) => {
     setSchools(prev => prev.map(s => s.id === id ? { ...s, status: 'active' } : s));
     const school = schools.find(s => s.id === id);
-    addLog(`Réactivation de l'accès plateforme pour [${school?.name || id}]`, school?.name || id, 'ecole', 'info');
+    addLog(`Réactivation de l'accès plateforme pour [${school?.name || id}]`, school?.name || id, 'ecole', 'info', 'update');
     showToast(`Établissement ${school?.name || id} réactivé`);
   };
 
   const archiveSchool = (id: string) => {
     setSchools(prev => prev.map(s => s.id === id ? { ...s, status: 'archived' } : s));
     const school = schools.find(s => s.id === id);
-    addLog(`Archivage des données de l'établissement [${school?.name || id}]`, school?.name || id, 'ecole', 'info');
+    addLog(`Archivage des données de l'établissement [${school?.name || id}]`, school?.name || id, 'ecole', 'info', 'update');
     showToast(`Établissement archivé`);
   };
 
@@ -371,7 +392,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     removedAdmins.forEach(a => {
       propagateSchoolAdminChange({ oldEmail: a.email, oldSchoolId: a.schoolId, admin: a, removed: true });
     });
-    addLog(`Suppression définitive de l'établissement [${school?.name || id}]`, school?.name || id, 'ecole', 'critical');
+    addLog(`Suppression définitive de l'établissement [${school?.name || id}]`, school?.name || id, 'ecole', 'critical', 'delete');
     showToast(`Établissement supprimé`);
   };
 
@@ -396,23 +417,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       plainPassword: resolvedPassword,
       mustChangePassword: true
     });
-    addLog(`Création d'un Admin École [${newAdmin.firstName} ${newAdmin.lastName}] pour ${newAdmin.schoolName}`, newAdmin.email, 'admin', 'info');
+    addLog(`Création d'un Admin École [${newAdmin.firstName} ${newAdmin.lastName}] pour ${newAdmin.schoolName}`, newAdmin.email, 'admin', 'info', 'create');
     showToast(`Admin ${newAdmin.firstName} ${newAdmin.lastName} créé avec succès`);
     return { admin: newAdmin, initialPassword: resolvedPassword };
   };
 
   const updateAdmin = (id: string, updates: Partial<SchoolAdmin>) => {
     const existing = admins.find(a => a.id === id);
+    const updatedAdmin: SchoolAdmin | undefined = existing ? { ...existing, ...updates } : undefined;
     setAdmins(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
-    if (existing) {
-      const updatedAdmin: SchoolAdmin = { ...existing, ...updates };
+    if (existing && updatedAdmin) {
       propagateSchoolAdminChange({
         oldEmail: existing.email,
         oldSchoolId: existing.schoolId,
         admin: updatedAdmin
       });
     }
-    addLog(`Modification profil Admin École [ID: ${id}]`, id, 'admin', 'info');
+    const session = readCurrentSessionSnapshot();
+    const isSelfAdmin = session?.role === 'school_admin';
+    const fullName = updatedAdmin
+      ? `${updatedAdmin.firstName} ${updatedAdmin.lastName}`.trim()
+      : id;
+    if (!isSelfAdmin) {
+      addLog(`Modification profil Admin École [${fullName}]`, updatedAdmin?.email || id, 'admin', 'info', 'update');
+    }
     showToast("Profil administrateur d'école mis à jour");
   };
 
@@ -426,7 +454,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         admin: { ...admin, status: 'suspended' }
       });
     }
-    addLog(`Suspension du compte Admin École [${admin?.firstName} ${admin?.lastName}]`, admin?.email || id, 'admin', 'warning');
+    addLog(`Suspension du compte Admin École [${admin?.firstName} ${admin?.lastName}]`, admin?.email || id, 'admin', 'warning', 'update');
     showToast(`Compte admin suspendu`);
   };
 
@@ -440,7 +468,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         admin: { ...admin, status: 'active' }
       });
     }
-    addLog(`Réactivation du compte Admin École [${admin?.firstName} ${admin?.lastName}]`, admin?.email || id, 'admin', 'info');
+    addLog(`Réactivation du compte Admin École [${admin?.firstName} ${admin?.lastName}]`, admin?.email || id, 'admin', 'info', 'update');
     showToast(`Compte admin réactivé`);
   };
 
@@ -457,7 +485,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         mustChangePassword: true
       });
     }
-    addLog(`Génération nouveau mot de passe temporaire pour [${admin?.email}]`, admin?.email || id, 'securite', 'info');
+    addLog(`Génération nouveau mot de passe temporaire pour [${admin?.email}]`, admin?.email || id, 'securite', 'info', 'update');
     showToast(`Mot de passe réinitialisé : ${tempPassword}`);
     return tempPassword;
   };
@@ -475,7 +503,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         admin: { ...existing, schoolId: newSchoolId, schoolName: targetSchool.name }
       });
     }
-    addLog(`Mutation Admin École [ID: ${adminId}] vers [${targetSchool.name}]`, targetSchool.name, 'admin', 'info');
+    addLog(`Mutation Admin École [${existing ? `${existing.firstName} ${existing.lastName}` : adminId}] vers [${targetSchool.name}]`, targetSchool.name, 'admin', 'info', 'update');
     showToast(`Admin muté vers ${targetSchool.name}`);
   };
 
@@ -490,7 +518,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         removed: true
       });
     }
-    addLog(`Suppression du compte Admin École [${admin?.firstName} ${admin?.lastName}]`, admin?.email || id, 'admin', 'warning');
+    addLog(`Suppression du compte Admin École [${admin?.firstName} ${admin?.lastName}]`, admin?.email || id, 'admin', 'warning', 'delete');
     showToast(`Compte admin supprimé`);
   };
 
@@ -696,7 +724,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
 
-    addLog(`Diffusion annonce globale [${newAnn.title}] vers ${newAnn.deliveryCount} établissements`, newAnn.title, 'info' as any, 'info');
+    addLog(`Diffusion annonce globale [${newAnn.title}] vers ${newAnn.deliveryCount} établissements`, newAnn.title, 'admin', 'info');
     showToast("Annonce globale transmise aux destinataires");
   };
 

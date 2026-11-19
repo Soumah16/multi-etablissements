@@ -14,6 +14,9 @@ import {
   HUB_ROLE_LABELS,
   HubRole,
   SharedRequestCategory,
+  isMessageUnreadForRole,
+  isSameSchoolScope,
+  markAllSharedMessagesRead,
   markSharedMessageRead,
   pushSharedMessage,
   pushSharedRequest,
@@ -22,6 +25,7 @@ import {
   useSharedMessages,
   useSharedRequests
 } from '../../utils/communicationHub';
+import { useApp } from '../../context/AppContext';
 
 interface CrossRoleHubPanelProps {
   role: HubRole;
@@ -66,8 +70,9 @@ export const CrossRoleHubPanel: React.FC<CrossRoleHubPanelProps> = ({
   defaultRecipientRoles = ['director', 'secretary'],
   compact = false
 }) => {
-  const messages = useSharedMessages(schoolId);
-  const requests = useSharedRequests(schoolId);
+  const { schools } = useApp();
+  const messages = useSharedMessages(role === 'super_admin' ? undefined : schoolId);
+  const requests = useSharedRequests(role === 'super_admin' ? undefined : schoolId);
 
   const [activeSubTab, setActiveSubTab] = useState<'messages' | 'requests'>('messages');
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,6 +80,7 @@ export const CrossRoleHubPanel: React.FC<CrossRoleHubPanelProps> = ({
   // Message composer state
   const [composerOpen, setComposerOpen] = useState(false);
   const [recipientRole, setRecipientRole] = useState<HubRole>(defaultRecipientRoles[0] || 'school_admin');
+  const [targetSchoolId, setTargetSchoolId] = useState<string>('NATIONAL');
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
   const [channel, setChannel] = useState<'in_app' | 'email' | 'sms'>('in_app');
@@ -99,10 +105,7 @@ export const CrossRoleHubPanel: React.FC<CrossRoleHubPanelProps> = ({
     const q = searchQuery.trim().toLowerCase();
     return messages.filter(m => {
       const sameSchool =
-        role === 'super_admin' ||
-        !m.schoolId ||
-        m.schoolId === 'NATIONAL' ||
-        m.schoolId === schoolId;
+        role === 'super_admin' || isSameSchoolScope(m.schoolId, schoolId);
       const involved =
         role === 'super_admin' ||
         m.senderRole === role ||
@@ -122,10 +125,7 @@ export const CrossRoleHubPanel: React.FC<CrossRoleHubPanelProps> = ({
     const q = searchQuery.trim().toLowerCase();
     return requests.filter(r => {
       const sameSchool =
-        role === 'super_admin' ||
-        !r.schoolId ||
-        r.schoolId === 'NATIONAL' ||
-        r.schoolId === schoolId;
+        role === 'super_admin' || isSameSchoolScope(r.schoolId, schoolId);
       const involved =
         role === 'super_admin' ||
         canManageRequests ||
@@ -142,7 +142,7 @@ export const CrossRoleHubPanel: React.FC<CrossRoleHubPanelProps> = ({
   }, [requests, role, schoolId, canManageRequests, searchQuery]);
 
   const unreadCount = useMemo(
-    () => scopedMessages.filter(m => m.senderRole !== role && !m.readByRoles.includes(role)).length,
+    () => scopedMessages.filter(m => isMessageUnreadForRole(m, role)).length,
     [scopedMessages, role]
   );
 
@@ -154,8 +154,9 @@ export const CrossRoleHubPanel: React.FC<CrossRoleHubPanelProps> = ({
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!subject.trim() || !content.trim()) return;
+    const effectiveSchoolId = role === 'super_admin' ? targetSchoolId : schoolId;
     pushSharedMessage({
-      schoolId: role === 'super_admin' ? 'NATIONAL' : schoolId,
+      schoolId: effectiveSchoolId,
       senderRole: role,
       senderName: userName,
       recipientRoles: [recipientRole],
@@ -263,25 +264,40 @@ export const CrossRoleHubPanel: React.FC<CrossRoleHubPanelProps> = ({
             />
           </div>
 
-          {activeSubTab === 'messages' ? (
-            <button
-              type="button"
-              onClick={() => setComposerOpen(v => !v)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors cursor-pointer"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>{composerOpen ? 'Fermer le formulaire' : 'Nouveau Message Inter-Rôles'}</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setRequestComposerOpen(v => !v)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>{requestComposerOpen ? 'Fermer le formulaire' : 'Nouvelle Requête Officielle'}</span>
-            </button>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {activeSubTab === 'messages' && unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  markAllSharedMessagesRead(role, schoolId);
+                  showFeedback('Tous les messages ont été marqués comme lus.');
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Tout marquer lu</span>
+              </button>
+            )}
+            {activeSubTab === 'messages' ? (
+              <button
+                type="button"
+                onClick={() => setComposerOpen(v => !v)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors cursor-pointer"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>{composerOpen ? 'Fermer le formulaire' : 'Nouveau Message Inter-Rôles'}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setRequestComposerOpen(v => !v)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{requestComposerOpen ? 'Fermer le formulaire' : 'Nouvelle Requête Officielle'}</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Message Composer */}
@@ -327,6 +343,23 @@ export const CrossRoleHubPanel: React.FC<CrossRoleHubPanelProps> = ({
                 </select>
               </div>
             </div>
+            {role === 'super_admin' && (
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Établissement ciblé</label>
+                <select
+                  value={targetSchoolId}
+                  onChange={e => setTargetSchoolId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950"
+                >
+                  <option value="NATIONAL">Toutes les écoles (Diffusion Nationale)</option>
+                  {schools.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.code || s.id})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block font-semibold text-slate-700 mb-1">Objet *</label>
               <input
@@ -435,7 +468,7 @@ export const CrossRoleHubPanel: React.FC<CrossRoleHubPanelProps> = ({
               </div>
             ) : (
               scopedMessages.map(msg => {
-                const isUnread = msg.senderRole !== role && !msg.readByRoles.includes(role);
+                const isUnread = isMessageUnreadForRole(msg, role);
                 return (
                   <div
                     key={msg.id}

@@ -19,7 +19,7 @@ type LocalMutationListener = (key: string, data: unknown, updatedAt: number) => 
 const keyListeners = new Map<string, Set<KeyListener>>();
 const localMutationListeners = new Set<LocalMutationListener>();
 
-const LOCAL_ONLY_KEYS = new Set<string>([
+export const LOCAL_ONLY_KEYS = new Set<string>([
   'smartschool_current_user',
   'smartschool_workspace_mode',
   'smartschool_language_v1',
@@ -29,6 +29,7 @@ const LOCAL_ONLY_KEYS = new Set<string>([
   'smartschool_single_school_test_v1',
   'smartschool_mode_demo_flag',
   'smartschool_cloud_workspace_id_v1',
+  'smartschool_last_activity_v1',
   PENDING_CLOUD_KEYS_KEY,
 ]);
 

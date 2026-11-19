@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { KeyRound, X, AlertTriangle } from 'lucide-react';
 
@@ -15,17 +15,14 @@ export const PinVerificationModal: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
 
-  if (!pinModalOpen) return null;
-
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setPinModalOpen(false);
     setPin('');
     setErrorMsg(null);
-  };
+  }, [setPinModalOpen]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pin.length !== 6) {
+  const executeVerification = useCallback(async (pinValue: string) => {
+    if (pinValue.length !== 6) {
       setErrorMsg("Le code PIN doit comporter exactement 6 chiffres.");
       return;
     }
@@ -33,7 +30,7 @@ export const PinVerificationModal: React.FC = () => {
     setVerifying(true);
     setErrorMsg(null);
     try {
-      const res = await verifyAndExecutePin(pin);
+      const res = await verifyAndExecutePin(pinValue);
       if (!res.ok) {
         setErrorMsg(res.error || 'Vérification refusée.');
         setPin('');
@@ -44,17 +41,50 @@ export const PinVerificationModal: React.FC = () => {
     } finally {
       setVerifying(false);
     }
-  };
+  }, [verifyAndExecutePin]);
 
-  const handleDigitClick = (digit: string) => {
-    if (pin.length < 6) {
-      setPin(prev => prev + digit);
-      setErrorMsg(null);
-    }
-  };
+  const handleDigitClick = useCallback((digit: string) => {
+    setPin(prev => (prev.length < 6 ? prev + digit : prev));
+    setErrorMsg(null);
+  }, []);
 
-  const handleBackspace = () => {
+  const handleBackspace = useCallback(() => {
     setPin(prev => prev.slice(0, -1));
+  }, []);
+
+  useEffect(() => {
+    if (!pinModalOpen) {
+      setPin('');
+      setErrorMsg(null);
+      return;
+    }
+    if (isTemporarilyBlocked) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        handleDigitClick(e.key);
+      } else if (e.key === 'Backspace' || e.key === 'Delete') {
+        e.preventDefault();
+        handleBackspace();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        handleClose();
+      } else if (e.key === 'Enter' && pin.length === 6 && !verifying) {
+        e.preventDefault();
+        void executeVerification(pin);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [pinModalOpen, isTemporarilyBlocked, pin, verifying, handleDigitClick, handleBackspace, handleClose, executeVerification]);
+
+  if (!pinModalOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await executeVerification(pin);
   };
 
   return (

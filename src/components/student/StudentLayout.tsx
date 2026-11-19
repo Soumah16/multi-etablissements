@@ -3,6 +3,7 @@ import { useStudent } from '../../context/StudentContext';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { StudentNavTab } from '../../types/student';
+import { useUnreadSharedMessagesCount } from '../../utils/communicationHub';
 import { StudentDashboardView } from './StudentDashboardView';
 import { StudentProfileCardView } from './StudentProfileCardView';
 import { StudentCoursesView } from './StudentCoursesView';
@@ -68,6 +69,7 @@ export const StudentLayout: React.FC<StudentLayoutProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
 
+  const unreadMessagesCount = useUnreadSharedMessagesCount('student', currentSchool.id);
   const pendingHomeworkCount = homeworks.filter(h => h.status === 'en_attente').length;
 
   const navigationGroups: {
@@ -112,7 +114,7 @@ export const StudentLayout: React.FC<StudentLayoutProps> = ({
       items: [
         { tab: 'schedule', label: 'Emploi du Temps', icon: <Calendar className="w-4 h-4 text-indigo-600" /> },
         { tab: 'attendance', label: 'Assiduité & Présences', icon: <Clock className="w-4 h-4 text-rose-600" /> },
-        { tab: 'messages', label: 'Messagerie Enseignants', icon: <MessageSquare className="w-4 h-4 text-blue-600" /> }
+        { tab: 'messages', label: 'Messagerie Enseignants', icon: <MessageSquare className="w-4 h-4 text-blue-600" />, badge: unreadMessagesCount, badgeColor: 'bg-blue-100 text-blue-800 border border-blue-200' }
       ]
     }
   ];

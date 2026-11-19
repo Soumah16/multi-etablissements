@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { getAccountByRole, updateAccountPassword } from '../../data/accountsData';
+import { verifySaltedPasswordHash } from '../../utils/passwordCrypto';
+import { recordGlobalAuditLog } from '../../utils/auditLogger';
 import { 
   UserCheck, 
   ShieldCheck, 
@@ -27,6 +29,7 @@ export const SuperAdminProfileView: React.FC = () => {
   const [email, setEmail] = useState(profile.email);
   const [address, setAddress] = useState(profile.address);
   const [enterprise, setEnterprise] = useState(profile.enterprise);
+  const [photo, setPhoto] = useState(profile.photo || '');
   const [enterpriseLogo, setEnterpriseLogo] = useState(profile.enterpriseLogo);
   const [signatureUrl, setSignatureUrl] = useState(profile.signatureUrl);
 
@@ -45,6 +48,7 @@ export const SuperAdminProfileView: React.FC = () => {
     setEmail(profile.email);
     setAddress(profile.address);
     setEnterprise(profile.enterprise);
+    setPhoto(profile.photo || '');
     setEnterpriseLogo(profile.enterpriseLogo);
     setSignatureUrl(profile.signatureUrl);
   }, [profile]);
@@ -57,9 +61,18 @@ export const SuperAdminProfileView: React.FC = () => {
       phone,
       email,
       address,
+      photo,
       enterprise,
       enterpriseLogo,
       signatureUrl
+    });
+    recordGlobalAuditLog({
+      action: `Modification du profil Super Admin (${name})`,
+      actorName: name || 'Super Admin',
+      actorRole: 'super_admin',
+      target: email,
+      type: 'securite',
+      severity: 'info'
     });
     showToast("Profil Super Administrateur mis à jour avec succès !");
   };
@@ -69,7 +82,12 @@ export const SuperAdminProfileView: React.FC = () => {
     setPasswordError(null);
     const superAcc = getAccountByRole('super_admin');
     const expectedCurrent = String(superAcc?.plainPassword || superAcc?.password || '');
-    if (superAcc && currentPassword.trim() !== expectedCurrent.trim()) {
+    const currentMatches =
+      !superAcc ||
+      (superAcc.passwordHash && verifySaltedPasswordHash(currentPassword.trim(), superAcc.passwordHash)) ||
+      (expectedCurrent && currentPassword.trim() === expectedCurrent.trim());
+
+    if (!currentMatches) {
       setPasswordError("Le mot de passe actuel est incorrect.");
       showToast("Le mot de passe actuel est incorrect.");
       return;
@@ -89,6 +107,14 @@ export const SuperAdminProfileView: React.FC = () => {
       newPassword.trim(),
       false
     );
+    recordGlobalAuditLog({
+      action: `Changement du mot de passe Super Admin`,
+      actorName: profile.name,
+      actorRole: 'super_admin',
+      target: profile.email,
+      type: 'securite',
+      severity: 'warning'
+    });
     setIsPasswordModalOpen(false);
     setCurrentPassword('');
     setNewPassword('');
@@ -123,9 +149,17 @@ export const SuperAdminProfileView: React.FC = () => {
         <div className="lg:col-span-5 space-y-5">
           {/* Super Admin Card */}
           <div className="p-5 rounded-xl bg-blue-50/60 border border-slate-200 text-xs text-center flex flex-col items-center">
-            <div className="w-20 h-20 rounded-full bg-blue-600 text-white font-extrabold text-2xl flex items-center justify-center shadow-lg border-2 border-blue-400">
-              {profile.name.charAt(0)}
-            </div>
+            {photo ? (
+              <img
+                src={photo}
+                alt={profile.name}
+                className="w-20 h-20 rounded-full object-cover shadow-lg border-2 border-blue-400"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-blue-600 text-white font-extrabold text-2xl flex items-center justify-center shadow-lg border-2 border-blue-400">
+                {profile.name.charAt(0)}
+              </div>
+            )}
 
             <h2 className="text-base font-bold text-blue-950 mt-3">{profile.name}</h2>
             <div className="text-blue-600 font-mono text-[11px] mt-0.5">{profile.title}</div>
@@ -258,8 +292,17 @@ export const SuperAdminProfileView: React.FC = () => {
 
             <div className="pt-2 border-t border-slate-200 space-y-4">
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-blue-600">
-                Visuels & Signature Officielle
+                Photo de Profil, Logo & Signature Officielle
               </h4>
+
+              <ImageUploadField
+                label="Photo de Profil Super Admin"
+                value={photo}
+                onChange={setPhoto}
+                aspectRatio="square"
+                placeholder="https://.../avatar.jpg"
+                helperText="Visible dans l'en-tête de la plateforme et vos journaux."
+              />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <ImageUploadField

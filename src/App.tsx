@@ -45,6 +45,7 @@ import { CheckCircle2, ShieldCheck, ArrowRight, Building2 } from 'lucide-react';
 import { ACCOUNTS_STORAGE_KEY, getStoredAccounts, normalizeSchoolId } from './data/accountsData';
 import { subscribeStorageKey } from './utils/storage';
 import { CURRENT_USER_UPDATED_EVENT, hydrateActiveRoleProfileOnLogin } from './utils/accountSync';
+import { startServerSync } from './utils/serverSync';
 
 export type WorkspaceMode = 
   | 'super_admin' 
@@ -104,6 +105,10 @@ const MainLayout: React.FC = () => {
     role: WorkspaceMode;
     schoolId?: string;
   } | null>(null);
+
+  React.useEffect(() => {
+    return startServerSync();
+  }, []);
 
   const handleLogin = (user: AuthenticatedUser) => {
     try {
@@ -550,14 +555,6 @@ const MainLayout: React.FC = () => {
     // Default Super Admin Main Layout
     return (
       <div className={`min-h-screen overflow-x-hidden bg-gradient-to-b from-[#F0F5FA] via-[#E8F1FB] to-[#DFEDFA] text-slate-800 flex ${isRtl ? 'rtl' : 'ltr'}`}>
-        {/* Toast popup */}
-        {toastMessage && (
-          <div className="fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-semibold shadow-2xl animate-in fade-in slide-in-from-bottom-3 duration-200">
-            <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
-            <span className="truncate">{toastMessage}</span>
-          </div>
-        )}
-
         {/* Sidebar */}
         <Sidebar 
           mobileOpen={mobileSidebarOpen}
@@ -596,6 +593,12 @@ const MainLayout: React.FC = () => {
   return (
     <>
       {renderCurrentWorkspace()}
+      {toastMessage && (
+        <div className="fixed bottom-4 right-4 left-4 sm:left-auto z-[70] flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-semibold shadow-2xl animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
+          <span className="truncate">{toastMessage}</span>
+        </div>
+      )}
       <OfflineIndicator />
       <PWAUpdateBanner />
       {workspaceMode !== 'super_admin' && (

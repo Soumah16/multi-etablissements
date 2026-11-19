@@ -27,6 +27,7 @@ import {
   pushHomeworkSubmissionRecord,
   pushSharedMessage
 } from '../utils/communicationHub';
+import { recordGlobalAuditLog } from '../utils/auditLogger';
 
 interface StudentContextType {
   activeStudentTab: StudentNavTab;
@@ -218,6 +219,15 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       nextProfile,
       { matricule: profile.matricule }
     );
+    recordGlobalAuditLog({
+      action: 'Mise à jour photo de profil Élève',
+      target: `${profile.firstName} ${profile.lastName}`,
+      actorName: `${profile.firstName} ${profile.lastName}`,
+      actorRole: 'student',
+      actorMatricule: profile.matricule,
+      type: 'admin',
+      severity: 'info'
+    });
     showToast('Photo de profil élève mise à jour.');
   };
 
@@ -262,6 +272,15 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       maxScore: targetHw?.maxScore || 20
     });
 
+    recordGlobalAuditLog({
+      action: `Remise devoir élève : ${targetHw?.title || homeworkId}`,
+      target: fileName,
+      actorName: `${profile.firstName} ${profile.lastName}`,
+      actorRole: 'student',
+      actorMatricule: profile.matricule,
+      type: 'admin',
+      severity: 'info'
+    });
     showToast(`Devoir « ${fileName} » remis avec succès.`);
   };
 
@@ -287,6 +306,15 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       content: text,
       channel: 'in_app',
       priority: 'normal'
+    });
+    recordGlobalAuditLog({
+      action: `Message Élève envoyé à ${recipient}`,
+      target: 'Messagerie Élève',
+      actorName: `${profile.firstName} ${profile.lastName}`,
+      actorRole: 'student',
+      actorMatricule: profile.matricule,
+      type: 'admin',
+      severity: 'info'
     });
     showToast(`Message envoyé à « ${recipient} ».`);
   };

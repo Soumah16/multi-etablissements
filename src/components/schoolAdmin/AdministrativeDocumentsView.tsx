@@ -1,21 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useApp } from '../../context/AppContext';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
+import { getAccountByRole, normalizeSchoolId } from '../../data/accountsData';
 import { AdministrativeDocumentTemplate } from '../../types';
+import { StudentEnrollment } from '../../types/secretary';
+import { initialStudents } from '../../data/secretaryMockData';
+import { loadLocalStorage, usePersistedState } from '../../utils/storage';
+import { recordGlobalAuditLog } from '../../utils/auditLogger';
 import { 
   FileText, 
   Printer, 
   Check, 
-  Sparkles, 
-  Building2, 
-  GraduationCap, 
-  Award, 
-  X,
-  FileCheck
+  UserCheck
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
 
+interface SpecimenStudentInfo {
+  studentName: string;
+  studentMatricule: string;
+  studentClass: string;
+  academicYear: string;
+}
+
 export const AdministrativeDocumentsView: React.FC = () => {
+  const { admins } = useApp();
   const { documentTemplates, updateDocumentTemplate, currentSchool } = useSchoolAdmin();
+  const assignedAdmin = admins.find(
+    a => normalizeSchoolId(a.schoolId) === normalizeSchoolId(currentSchool.id)
+  );
 
   const [selectedDocId, setSelectedDocId] = useState(documentTemplates[0]?.id || '');
   const activeTemplate = documentTemplates.find(d => d.id === selectedDocId) || documentTemplates[0];
@@ -27,6 +39,39 @@ export const AdministrativeDocumentsView: React.FC = () => {
   const [includeStamp, setIncludeStamp] = useState(activeTemplate.includeStamp);
   const [themeColor, setThemeColor] = useState(activeTemplate.themeColor);
 
+  const [specimenMap, setSpecimenMap] = usePersistedState<Record<string, SpecimenStudentInfo>>(
+    'smartschool_admin_doc_specimen_v1',
+    {}
+  );
+
+  const defaultSpecimen: SpecimenStudentInfo = useMemo(() => ({
+    studentName: 'CAMARA Mohamed Sékou',
+    studentMatricule: `${currentSchool.code || 'LEC-CKY'}-2026-9042`,
+    studentClass: 'Terminale Sciences Mathématiques 1',
+    academicYear: '2026-2027'
+  }), [currentSchool.code]);
+
+  const savedSpecimen = specimenMap[currentSchool.id] || defaultSpecimen;
+
+  const [studentName, setStudentName] = useState(savedSpecimen.studentName);
+  const [studentMatricule, setStudentMatricule] = useState(savedSpecimen.studentMatricule);
+  const [studentClass, setStudentClass] = useState(savedSpecimen.studentClass);
+  const [academicYear, setAcademicYear] = useState(savedSpecimen.academicYear);
+  const [selectedPresetStudentId, setSelectedPresetStudentId] = useState('custom');
+
+  useEffect(() => {
+    const next = specimenMap[currentSchool.id] || defaultSpecimen;
+    setStudentName(next.studentName);
+    setStudentMatricule(next.studentMatricule);
+    setStudentClass(next.studentClass);
+    setAcademicYear(next.academicYear);
+  }, [currentSchool.id, specimenMap, defaultSpecimen]);
+
+  const enrolledStudents = useMemo(() => {
+    const stored = loadLocalStorage<StudentEnrollment[]>('smartschool_secretary_students_v1', initialStudents);
+    return Array.isArray(stored) && stored.length > 0 ? stored : initialStudents;
+  }, []);
+
   const handleSelectDoc = (doc: AdministrativeDocumentTemplate) => {
     setSelectedDocId(doc.id);
     setHeaderText(doc.headerText);
@@ -37,8 +82,24 @@ export const AdministrativeDocumentsView: React.FC = () => {
     setThemeColor(doc.themeColor);
   };
 
+  const handleSelectEnrolledStudent = (studentId: string) => {
+    setSelectedPresetStudentId(studentId);
+    if (studentId === 'custom') return;
+    const match = enrolledStudents.find(s => s.id === studentId);
+    if (match) {
+      setStudentName(`${match.firstName} ${match.lastName}`);
+      setStudentMatricule(match.matricule);
+      setStudentClass(match.className);
+    }
+  };
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanName = studentName.trim() || defaultSpecimen.studentName;
+    const cleanMatricule = studentMatricule.trim() || defaultSpecimen.studentMatricule;
+    const cleanClass = studentClass.trim() || defaultSpecimen.studentClass;
+    const cleanYear = academicYear.trim() || defaultSpecimen.academicYear;
+
     updateDocumentTemplate(activeTemplate.id, {
       headerText,
       footerText,
@@ -46,6 +107,28 @@ export const AdministrativeDocumentsView: React.FC = () => {
       signatoryName,
       includeStamp,
       themeColor
+    });
+
+    setSpecimenMap(prev => ({
+      ...prev,
+      [currentSchool.id]: {
+        studentName: cleanName,
+        studentMatricule: cleanMatricule,
+        studentClass: cleanClass,
+        academicYear: cleanYear
+      }
+    }));
+
+    const adminAccount = getAccountByRole('school_admin', currentSchool.id);
+    recordGlobalAuditLog({
+      action: `Personnalisation certificat « ${activeTemplate.title} » (Élève : ${cleanName})`,
+      target: `${currentSchool.name} (${cleanMatricule})`,
+      actorName: assignedAdmin ? `${assignedAdmin.firstName} ${assignedAdmin.lastName}` : (adminAccount?.name || 'Admin École'),
+      actorRole: 'school_admin',
+      actorMatricule: adminAccount?.matricule,
+      schoolName: currentSchool.name,
+      type: 'admin',
+      severity: 'info'
     });
   };
 
@@ -55,19 +138,19 @@ export const AdministrativeDocumentsView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-blue-100">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-blue-950">
-            Documents Administratifs & Modèles Officiels
+            Documents Administratifs & Certificats Officiels
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Gabarits paramétrables pour certificats de scolarité, attestations d'inscription et modèles de bulletins
+            Modifiez librement l'élève titulaire, le matricule, la classe et les mentions officielles avant impression ou export PDF
           </p>
         </div>
 
         <button
-          onClick={() => triggerPrint('admin-specimen-printable', `Document_${activeTemplate.title.replace(/\s+/g, '_')}`)}
+          onClick={() => triggerPrint('admin-specimen-printable', `Certificat_${(studentName || 'Eleve').replace(/\s+/g, '_')}`)}
           className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors whitespace-nowrap self-start sm:self-auto shadow-xs cursor-pointer"
         >
-          <Printer className="w-4 h-4 text-blue-950" />
-          <span>Imprimer Spécimen Officiel</span>
+          <Printer className="w-4 h-4 text-white" />
+          <span>Imprimer / Export PDF</span>
         </button>
       </div>
 
@@ -85,7 +168,7 @@ export const AdministrativeDocumentsView: React.FC = () => {
                   key={doc.id}
                   type="button"
                   onClick={() => handleSelectDoc(doc)}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg border text-left text-xs transition-colors ${
+                  className={`w-full flex items-center justify-between p-3 rounded-lg border text-left text-xs transition-colors cursor-pointer ${
                     selectedDocId === doc.id
                       ? 'bg-blue-50 border-blue-500 text-blue-950 font-bold'
                       : 'bg-blue-50/60 border-slate-200 text-slate-700 hover:text-blue-950'
@@ -103,6 +186,82 @@ export const AdministrativeDocumentsView: React.FC = () => {
 
           {/* Form */}
           <form onSubmit={handleSave} className="p-5 rounded-xl bg-white border border-blue-100 space-y-3.5 text-xs">
+            {/* Editable Student Identity Section */}
+            <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200 space-y-3">
+              <div className="flex items-center gap-2 text-[11px] font-bold text-blue-950 uppercase tracking-wider">
+                <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+                <span>Identité de l'Élève sur le Certificat</span>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-slate-700 font-medium">Pré-remplir depuis le registre des élèves</label>
+                <select
+                  value={selectedPresetStudentId}
+                  onChange={e => handleSelectEnrolledStudent(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950"
+                >
+                  <option value="custom">-- Saisie manuelle personnalisée --</option>
+                  {enrolledStudents.map(st => (
+                    <option key={st.id} value={st.id}>
+                      {st.firstName} {st.lastName} ({st.matricule} · {st.className})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-slate-700 font-semibold">Nom & Prénom de l'élève *</label>
+                <input
+                  type="text"
+                  required
+                  value={studentName}
+                  onChange={e => {
+                    setSelectedPresetStudentId('custom');
+                    setStudentName(e.target.value);
+                  }}
+                  placeholder="Ex: CAMARA Mohamed Sékou"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950 font-semibold focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="space-y-1">
+                  <label className="text-slate-700 font-medium">Matricule *</label>
+                  <input
+                    type="text"
+                    required
+                    value={studentMatricule}
+                    onChange={e => setStudentMatricule(e.target.value)}
+                    placeholder="Ex: LEC-CKY-2026-9042"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950 font-mono focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-700 font-medium">Année scolaire *</label>
+                  <input
+                    type="text"
+                    required
+                    value={academicYear}
+                    onChange={e => setAcademicYear(e.target.value)}
+                    placeholder="2026-2027"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950 font-mono focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-slate-700 font-medium">Classe fréquentée *</label>
+                <input
+                  type="text"
+                  required
+                  value={studentClass}
+                  onChange={e => setStudentClass(e.target.value)}
+                  placeholder="Ex: Terminale Sciences Mathématiques 1"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+
             <div className="space-y-1">
               <label className="text-slate-700 font-medium">En-tête officiel / République *</label>
               <textarea
@@ -159,7 +318,7 @@ export const AdministrativeDocumentsView: React.FC = () => {
             <div className="pt-3 border-t border-blue-100 flex justify-end">
               <button
                 type="submit"
-                className="flex items-center gap-1.5 px-4 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors text-xs shadow-sm"
+                className="flex items-center gap-1.5 px-4 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors text-xs shadow-sm cursor-pointer"
               >
                 <Check className="w-4 h-4" />
                 <span>Enregistrer les Modifications</span>
@@ -192,7 +351,7 @@ export const AdministrativeDocumentsView: React.FC = () => {
                   {currentSchool.name}
                 </div>
                 <div className="text-[10px] text-slate-600">
-                  {currentSchool.address} · Tel : {currentSchool.phone} · Conakry, Guinée
+                  {currentSchool.address} · Tel : {currentSchool.phone} · {currentSchool.city || 'Conakry'}, Guinée
                 </div>
               </div>
 
@@ -212,10 +371,10 @@ export const AdministrativeDocumentsView: React.FC = () => {
                   Le Directeur des Études de l'établissement soussigné certifie par la présente que l'élève :
                 </p>
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded text-slate-900 space-y-1 font-mono text-[11px]">
-                  <div>Nom & Prénom : <strong>CAMARA Mohamed Sékou</strong></div>
-                  <div>Matricule Établissement : <strong>{currentSchool.code}-2026-9042</strong></div>
-                  <div>Inscrit en classe de : <strong>Terminale Sciences Mathématiques 1</strong></div>
-                  <div>Année Scolaire : <strong>2026-2027</strong></div>
+                  <div>Nom & Prénom : <strong>{studentName || '—'}</strong></div>
+                  <div>Matricule Établissement : <strong>{studentMatricule || '—'}</strong></div>
+                  <div>Inscrit en classe de : <strong>{studentClass || '—'}</strong></div>
+                  <div>Année Scolaire : <strong>{academicYear || '2026-2027'}</strong></div>
                 </div>
                 <p>
                   Est régulièrement inscrit sur les registres scolaires de notre établissement pour l'année en cours et s'acquitte scrupuleusement de ses obligations académiques.

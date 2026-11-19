@@ -21,10 +21,12 @@ import {
   Lock,
   Globe,
   MessageCircle,
-  MessageSquare
+  MessageSquare,
+  UserCheck
 } from 'lucide-react';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { normalizeSchoolId } from '../../data/accountsData';
+import { useUnreadSharedMessagesCount } from '../../utils/communicationHub';
 import { SchoolAdminDashboard } from './SchoolAdminDashboard';
 import { StaffManagementView } from './StaffManagementView';
 import { ClassesManagementView } from './ClassesManagementView';
@@ -37,6 +39,7 @@ import { AdministrativeEventsView } from './AdministrativeEventsView';
 import { SchoolReportsView } from './SchoolReportsView';
 import { SchoolSecurityView } from './SchoolSecurityView';
 import { SchoolSettingsView } from './SchoolSettingsView';
+import { SchoolAdminProfileView } from './SchoolAdminProfileView';
 import { PinVerificationModal } from './PinVerificationModal';
 import { CrossRoleHubPanel } from '../common/CrossRoleHubPanel';
 import { ArrowRightLeft, ChevronDown, LogOut } from 'lucide-react';
@@ -77,6 +80,7 @@ export const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
     schoolWaPhone,
     `Bonjour ${currentSchool.name}, administration de l'établissement.`
   );
+  const unreadMessagesCount = useUnreadSharedMessagesCount('school_admin', currentSchool.id);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
@@ -111,7 +115,7 @@ export const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
     {
       groupTitle: 'ADMINISTRATION & RAPPORTS',
       items: [
-        { tab: 'communication', label: 'Messages & Requêtes', icon: <MessageSquare className="w-4 h-4 text-blue-600" /> },
+        { tab: 'communication', label: 'Messages & Requêtes', icon: <MessageSquare className="w-4 h-4 text-blue-600" />, badge: unreadMessagesCount },
         { tab: 'documents', label: 'Documents & Certificats', icon: <FileText className="w-4 h-4 text-teal-600" /> },
         { tab: 'events', label: 'Événements & Notes', icon: <Megaphone className="w-4 h-4 text-rose-600" /> },
         { tab: 'reports', label: 'Rapports & Exports', icon: <BarChart3 className="w-4 h-4 text-amber-600" /> }
@@ -120,6 +124,7 @@ export const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
     {
       groupTitle: 'SÉCURITÉ & SYSTÈME',
       items: [
+        { tab: 'profile', label: 'Mon Profil Admin', icon: <UserCheck className="w-4 h-4 text-blue-600" /> },
         { tab: 'security', label: 'Sécurité & Code PIN', icon: <ShieldCheck className="w-4 h-4 text-emerald-600" /> },
         { tab: 'settings', label: 'Paramètres École', icon: <Sliders className="w-4 h-4" /> }
       ]
@@ -149,6 +154,7 @@ export const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
       case 'documents': return <AdministrativeDocumentsView />;
       case 'events': return <AdministrativeEventsView />;
       case 'reports': return <SchoolReportsView />;
+      case 'profile': return <SchoolAdminProfileView />;
       case 'security': return <SchoolSecurityView />;
       case 'settings': return <SchoolSettingsView />;
       default: return <SchoolAdminDashboard />;
@@ -382,15 +388,28 @@ export const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
               </a>
             )}
 
-            {/* Admin identity badge */}
-            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-xs">
-              <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[10px]">
-                {assignedAdmin ? assignedAdmin.firstName.charAt(0) : 'A'}
-              </div>
-              <span className="font-semibold text-emerald-800 truncate max-w-[110px]">
-                {assignedAdmin ? `${assignedAdmin.firstName} ${assignedAdmin.lastName}` : 'Admin École'}
+            {/* Admin identity badge (clickable to edit personal profile) */}
+            <button
+              type="button"
+              onClick={() => setActiveSchoolTab('profile')}
+              className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-xs transition-colors cursor-pointer"
+              title="Ouvrir et modifier mon profil Admin École"
+            >
+              {assignedAdmin?.avatar ? (
+                <img
+                  src={assignedAdmin.avatar}
+                  alt={assignedAdmin.firstName}
+                  className="w-5 h-5 rounded-full object-cover border border-emerald-400 shrink-0"
+                />
+              ) : (
+                <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[10px]">
+                  {assignedAdmin ? assignedAdmin.firstName.charAt(0) : 'A'}
+                </div>
+              )}
+              <span className="font-semibold text-emerald-800 truncate max-w-[130px]">
+                {assignedAdmin ? `${assignedAdmin.firstName} ${assignedAdmin.lastName}` : 'Mon Profil Admin'}
               </span>
-            </div>
+            </button>
 
             {/* Compact Modules Launcher Button in Header */}
             <button

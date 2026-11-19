@@ -67,6 +67,7 @@ export interface SuperAdminProfile {
   phone: string;
   email: string;
   address: string;
+  photo?: string;
   enterprise: string;
   enterpriseLogo: string;
   signatureUrl: string;
@@ -137,6 +138,8 @@ export interface SecuritySession {
   isCurrent: boolean;
 }
 
+export type AuditOperationType = 'create' | 'update' | 'delete' | 'security' | 'other';
+
 export interface SecurityAuditLog {
   id: string;
   timestamp: string;
@@ -146,6 +149,9 @@ export interface SecurityAuditLog {
   ip: string;
   type: 'connexion' | 'ecole' | 'admin' | 'securite' | 'finance' | 'sauvegarde';
   severity: 'info' | 'warning' | 'critical';
+  operation?: AuditOperationType;
+  actorRole?: string;
+  schoolName?: string;
 }
 
 export interface BackupArchive {

@@ -188,9 +188,17 @@ export const Header: React.FC<HeaderProps> = ({
             className="flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-blue-950 transition-all text-xs font-medium"
             title="Changer de compte ou d'espace de travail"
           >
-            <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
-              {profile.name.charAt(0)}
-            </div>
+            {profile.photo ? (
+              <img
+                src={profile.photo}
+                alt={profile.name}
+                className="w-6 h-6 rounded-full object-cover border border-blue-400 shadow-xs shrink-0"
+              />
+            ) : (
+              <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
+                {profile.name.charAt(0)}
+              </div>
+            )}
             <div className="hidden sm:flex flex-col text-left">
               <span className="font-bold text-xs text-blue-950 leading-tight truncate max-w-[120px]">
                 {profile.name}
@@ -211,9 +219,17 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
-                      {profile.name.charAt(0).toUpperCase()}
-                    </div>
+                    {profile.photo ? (
+                      <img
+                        src={profile.photo}
+                        alt={profile.name}
+                        className="w-7 h-7 rounded-full object-cover border border-blue-400 shadow-xs shrink-0"
+                      />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
+                        {profile.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <div className="min-w-0 truncate">
                       <div className="font-bold text-blue-950 text-xs truncate">{profile.name}</div>
                       <div className="text-[10px] text-blue-600 truncate">{profile.email}</div>

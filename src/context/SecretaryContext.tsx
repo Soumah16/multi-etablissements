@@ -34,6 +34,7 @@ import {
   pushSharedRequest,
   updateSharedRequestStatus
 } from '../utils/communicationHub';
+import { recordGlobalAuditLog } from '../utils/auditLogger';
 
 interface SecretaryContextType {
   activeSecretaryTab: SecretaryNavTab;
@@ -186,6 +187,17 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       status: 'succes'
     };
     setSecurityLogs(prev => [newLog, ...prev]);
+    recordGlobalAuditLog({
+      action,
+      target: 'Secrétariat & Scolarité',
+      actorName: profile.name,
+      actorRole: 'secretary',
+      actorMatricule: profile.matricule,
+      schoolName: currentSchool?.name || profile.schoolName,
+      type: 'admin',
+      severity: 'info',
+      ip: '197.149.214.45'
+    });
   };
 
   const updateProfile = (partial: Partial<SecretaryProfile>) => {
@@ -197,6 +209,7 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       { email: profile.email, matricule: profile.matricule },
       nextProfile.schoolId || currentSchool?.id
     );
+    addSecurityLog(`Modification profil Secrétaire : ${nextProfile.name}`);
     showToast('Profil Secrétariat mis à jour.');
   };
 
@@ -310,6 +323,7 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }));
     }
 
+    addSecurityLog(`Modification dossier élève : ${updatedName} (${updatedStudent.matricule})`);
     showToast('Dossier élève mis à jour.');
   };
 
@@ -442,6 +456,7 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       schoolId: currentSchool?.id || profile.schoolId,
       schoolName: currentSchool?.name || profile.schoolName
     });
+    addSecurityLog(`Modification dossier parent : ${updatedParent.firstName} ${updatedParent.lastName}`);
     showToast('Informations parent mises à jour.');
   };
 
@@ -458,6 +473,7 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       schoolId: currentSchool?.id || profile.schoolId,
       schoolName: currentSchool?.name || profile.schoolName
     });
+    addSecurityLog(`Statut compte parent ${existing.firstName} ${existing.lastName} : ${nextStatus}`);
     showToast('Statut du compte parent modifié.');
   };
 
@@ -497,6 +513,7 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return s;
     }));
 
+    addSecurityLog(`Liaison parent-enfant : ${student.firstName} ${student.lastName}`);
     showToast('Liaison parent-enfant enregistrée avec succès.');
   };
 
@@ -613,6 +630,7 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const updateTransferStatus = (id: string, status: 'approuve' | 'rejete') => {
     setTransfers(prev => prev.map(t => t.id === id ? { ...t, status } : t));
     updateSharedRequestStatus(id, status, profile.name, `Transfert ${status} par le secrétariat.`);
+    addSecurityLog(`Mise à jour statut transfert #${id} : ${status}`);
     showToast(`Statut du transfert mis à jour : ${status}`);
   };
 
@@ -645,6 +663,7 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       targetRoles: ['secretary', 'director', 'school_admin'],
       status: 'en_cours'
     });
+    addSecurityLog(`Planification RDV Secrétariat : ${data.title} (${data.visitorName})`);
     showToast('Rendez-vous planifié au secrétariat.');
     return newApp;
   };
@@ -657,6 +676,7 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       profile.name,
       status === 'termine' ? 'Rendez-vous honoré.' : 'Rendez-vous annulé.'
     );
+    addSecurityLog(`Statut RDV #${id} mis à jour : ${status}`);
     showToast('Statut du rendez-vous mis à jour.');
   };
 

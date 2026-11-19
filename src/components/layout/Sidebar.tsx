@@ -18,6 +18,7 @@ import {
   Server,
   BookOpen
 } from 'lucide-react';
+import { useUnreadSharedMessagesCount } from '../../utils/communicationHub';
 
 interface SidebarProps {
   mobileOpen: boolean;
@@ -26,6 +27,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) => {
   const { activeTab, setActiveTab, t, schools, admins, isRtl } = useApp();
+  const unreadMessagesCount = useUnreadSharedMessagesCount('super_admin');
 
   // Categorized Navigation for Super Admin
   const navigationGroups: {
@@ -54,7 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
       items: [
         { tab: 'badges', label: 'Cartes PVC & Badges', icon: <QrCode className="w-4 h-4 text-teal-600" /> },
         { tab: 'architecture', label: 'Architecture & Déploiement', icon: <BookOpen className="w-4 h-4 text-cyan-600" /> },
-        { tab: 'communication', label: t.nav.communication, icon: <Megaphone className="w-4 h-4 text-rose-600" /> },
+        { tab: 'communication', label: t.nav.communication, icon: <Megaphone className="w-4 h-4 text-rose-600" />, count: unreadMessagesCount > 0 ? unreadMessagesCount : undefined },
         { tab: 'backups', label: t.nav.backups, icon: <Database className="w-4 h-4 text-indigo-600" /> }
       ]
     },

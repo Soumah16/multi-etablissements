@@ -4,7 +4,10 @@ import { resolveSchoolForContext } from '../utils/whatsapp';
 import { generateTotpSecret, verifyTotpCode } from '../utils/totp';
 import { loadLocalStorage, saveDualStorage, usePersistedState } from '../utils/storage';
 import { propagateStaffMemberChange } from '../utils/accountSync';
+import { getStoredAccounts } from '../data/accountsData';
+import { readCurrentSessionSnapshot, recordGlobalAuditLog } from '../utils/auditLogger';
 import { 
+  AuditOperationType,
   StaffMember, 
   SchoolClass, 
   SchoolSubject, 
@@ -41,7 +44,8 @@ export type SchoolAdminNavTab =
   | 'communication'
   | 'reports'
   | 'security'
-  | 'settings';
+  | 'settings'
+  | 'profile';
 
 export type School2FAMethod = 'authenticator' | 'sms' | 'email';
 
@@ -60,6 +64,54 @@ export interface SentSchoolOtp {
   deliveryStatus: 'sent' | 'gateway_not_configured' | 'failed';
   sentAt: string;
   message: string;
+}
+
+export interface StaffCredentialReceipt {
+  member: StaffMember;
+  password: string;
+  action: 'created' | 'reset' | 'updated';
+}
+
+const LEGACY_STAFF_EMAILS: Record<string, string> = {
+  'stf-001': 'direction@excellence-conakry.edu.gn',
+  'stf-002': 'secretariat@excellence-conakry.edu.gn',
+  'stf-003': 'comptabilite@excellence-conakry.edu.gn',
+  'stf-004': 'ml.bah@excellence-conakry.edu.gn',
+  'stf-006': 'bibliotheque@excellence-conakry.edu.gn',
+  'stf-007': 'surveillance@excellence-conakry.edu.gn'
+};
+
+function reconcilePersistedStaff(loaded: StaffMember[]): StaffMember[] {
+  if (!Array.isArray(loaded) || loaded.length === 0) return initialStaffMembers;
+  const accounts = getStoredAccounts();
+
+  return loaded.map((member) => {
+    const legacyEmail = LEGACY_STAFF_EMAILS[member.id];
+    const seedMatch = initialStaffMembers.find(s => s.id === member.id);
+    const migrated =
+      legacyEmail && seedMatch && member.email.toLowerCase() === legacyEmail
+        ? {
+            ...seedMatch,
+            status: member.status || seedMatch.status,
+            assignedClasses: member.assignedClasses ?? seedMatch.assignedClasses,
+            assignedSubjects: member.assignedSubjects ?? seedMatch.assignedSubjects
+          }
+        : member;
+
+    const matchedAccount = accounts.find(
+      (a) =>
+        a.email.toLowerCase() === migrated.email.toLowerCase() ||
+        a.matricule.toLowerCase() === migrated.matricule.toLowerCase() ||
+        (migrated.username && a.username && a.username.toLowerCase() === migrated.username.toLowerCase()) ||
+        (migrated.id === 'stf-001' && a.role === 'director')
+    );
+
+    const syncedPassword = matchedAccount?.plainPassword || matchedAccount?.password || migrated.temporaryPassword || seedMatch?.temporaryPassword;
+    if (syncedPassword && migrated.temporaryPassword !== syncedPassword) {
+      return { ...migrated, temporaryPassword: syncedPassword };
+    }
+    return migrated;
+  });
 }
 
 const SCHOOL_ALIAS_TO_ID: Record<string, string> = {
@@ -183,13 +235,15 @@ interface SchoolAdminContextType {
   // Staff
   staff: StaffMember[];
   createStaff: (member: Omit<StaffMember, 'id' | 'matricule' | 'qrToken' | 'credentialsSent' | 'username'>, initialPassword?: string) => StaffMember;
-  updateStaff: (id: string, updates: Partial<StaffMember>) => void;
+  updateStaff: (id: string, updates: Partial<StaffMember>, newPassword?: string) => void;
   toggleStaffStatus: (id: string) => void;
-  resetStaffPassword: (id: string) => void;
+  resetStaffPassword: (id: string, customPassword?: string) => void;
   deleteStaff: (id: string) => void;
   sendStaffCredentials: (id: string) => void;
   selectedStaffForBadge: StaffMember | null;
   setSelectedStaffForBadge: (staff: StaffMember | null) => void;
+  lastStaffCredentialReceipt: StaffCredentialReceipt | null;
+  setLastStaffCredentialReceipt: (receipt: StaffCredentialReceipt | null) => void;
 
   // Classes
   classes: SchoolClass[];
@@ -333,7 +387,7 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [canonicalSchoolId, securityConfig]);
 
   // Entities states with dual localStorage + IndexedDB persistence
-  const [staff, setStaff] = usePersistedState<StaffMember[]>('smartschool_staff', initialStaffMembers);
+  const [staff, setStaff] = usePersistedState<StaffMember[]>('smartschool_staff', initialStaffMembers, reconcilePersistedStaff);
   const [classes, setClasses] = usePersistedState<SchoolClass[]>('smartschool_classes', initialClasses);
   const [subjects, setSubjects] = usePersistedState<SchoolSubject[]>('smartschool_subjects', initialSubjects);
   const [rooms, setRooms] = usePersistedState<SchoolRoom[]>('smartschool_rooms', initialRooms);
@@ -343,6 +397,34 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const [selectedStaffForBadge, setSelectedStaffForBadge] = useState<StaffMember | null>(null);
   const [viewingDocumentTemplate, setViewingDocumentTemplate] = useState<AdministrativeDocumentTemplate | null>(null);
+  const [lastStaffCredentialReceipt, setLastStaffCredentialReceipt] = useState<StaffCredentialReceipt | null>(null);
+
+  const logAdminAudit = (
+    action: string,
+    target: string,
+    type: 'admin' | 'securite' | 'ecole' | 'connexion' = 'admin',
+    severity: 'info' | 'warning' | 'critical' = 'info',
+    operation?: AuditOperationType
+  ) => {
+    const session = readCurrentSessionSnapshot();
+    const resolvedActorName =
+      session?.role === 'school_admin' && session.name
+        ? session.name
+        : currentSchool?.name
+          ? `Admin ${currentSchool.code || 'École'}`
+          : 'Admin École';
+    recordGlobalAuditLog({
+      action,
+      target,
+      actorName: resolvedActorName,
+      actorRole: 'school_admin',
+      actorMatricule: session?.role === 'school_admin' ? session.matricule : undefined,
+      schoolName: currentSchool?.name || "Lycée d'Excellence de Conakry",
+      type,
+      severity,
+      operation
+    });
+  };
 
   const recordLog = (userName: string, status: 'succes' | 'echec', deviceLabel: string) => {
     const entry = appendSchoolLoginLog(canonicalSchoolId, {
@@ -525,6 +607,7 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (oldPin === securityConfig.adminPin && newPin.length === 6 && /^\d+$/.test(newPin)) {
       setSecurityConfig(prev => ({ ...prev, adminPin: newPin }));
       recordLog('Modification du Code PIN Admin École', 'succes', 'Console Sécurité École');
+      logAdminAudit('Modification du Code PIN Administrateur École', currentSchool?.name || 'Établissement', 'securite', 'warning');
       showToast("Code PIN Administrateur mis à jour avec succès !");
       return true;
     }
@@ -560,14 +643,31 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       schoolId: canonicalSchoolId,
       schoolName: currentSchool?.name || "Lycée d'Excellence de Conakry"
     });
+    logAdminAudit(
+      `Création collaborateur ${newStaff.firstName} ${newStaff.lastName} (${newStaff.role})`,
+      `Matricule ${newStaff.matricule}`,
+      'admin',
+      'info',
+      'create'
+    );
+    setLastStaffCredentialReceipt({
+      member: newStaff,
+      password: tempPassword,
+      action: 'created'
+    });
     showToast(`Employé ${newStaff.firstName} ${newStaff.lastName} créé (${newStaff.role})`);
     return newStaff;
   };
 
-  const updateStaff = (id: string, updates: Partial<StaffMember>) => {
+  const updateStaff = (id: string, updates: Partial<StaffMember>, newPassword?: string) => {
     const existing = staff.find(s => s.id === id);
     if (!existing) return;
-    const updatedMember: StaffMember = { ...existing, ...updates };
+    const cleanNewPass = newPassword?.trim();
+    const updatedMember: StaffMember = {
+      ...existing,
+      ...updates,
+      ...(cleanNewPass ? { temporaryPassword: cleanNewPass } : {})
+    };
     setStaff(prev => prev.map(s => (s.id === id ? updatedMember : s)));
     propagateStaffMemberChange({
       oldEmail: existing.email,
@@ -576,7 +676,21 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       schoolId: canonicalSchoolId,
       schoolName: currentSchool?.name || "Lycée d'Excellence de Conakry"
     });
-    showToast("Profil employé mis à jour");
+    logAdminAudit(
+      `Modification profil employé ${updatedMember.firstName} ${updatedMember.lastName}${cleanNewPass ? ' + mot de passe' : ''}`,
+      `${updatedMember.role} · ${updatedMember.matricule}`,
+      cleanNewPass ? 'securite' : 'admin',
+      cleanNewPass ? 'warning' : 'info',
+      'update'
+    );
+    if (cleanNewPass) {
+      setLastStaffCredentialReceipt({
+        member: updatedMember,
+        password: cleanNewPass,
+        action: 'updated'
+      });
+    }
+    showToast(cleanNewPass ? "Profil et mot de passe de l'employé mis à jour" : "Profil employé mis à jour");
   };
 
   const toggleStaffStatus = (id: string) => {
@@ -592,15 +706,26 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       schoolId: canonicalSchoolId,
       schoolName: currentSchool?.name || "Lycée d'Excellence de Conakry"
     });
+    logAdminAudit(
+      `Statut employé ${updatedMember.firstName} ${updatedMember.lastName} passé à ${nextStatus.toUpperCase()}`,
+      updatedMember.matricule,
+      'securite',
+      nextStatus === 'suspendu' ? 'warning' : 'info',
+      'update'
+    );
     showToast(`Statut employé changé : ${nextStatus.toUpperCase()}`);
   };
 
-  const resetStaffPassword = (id: string) => {
-    executeWithPin("Réinitialiser le mot de passe de l'employé", () => {
-      const currentList = loadLocalStorage<StaffMember[]>('smartschool_staff', staff);
+  const resetStaffPassword = (id: string, customPassword?: string) => {
+    const targetMember = staff.find(s => s.id === id);
+    const label = targetMember
+      ? `Définir / Réinitialiser le mot de passe de ${targetMember.firstName} ${targetMember.lastName}`
+      : "Réinitialiser le mot de passe de l'employé";
+    executeWithPin(label, () => {
+      const currentList = loadLocalStorage<StaffMember[]>('smartschool_staff', staff, reconcilePersistedStaff);
       const existing = currentList.find(s => s.id === id);
       if (!existing) return;
-      const tempPassword = `SmartPass#${Math.floor(1000 + Math.random() * 9000)}`;
+      const tempPassword = customPassword?.trim() || `SmartPass#${Math.floor(1000 + Math.random() * 9000)}`;
       const updatedMember: StaffMember = { ...existing, temporaryPassword: tempPassword };
       setStaff(currentList.map(s => (s.id === id ? updatedMember : s)));
       propagateStaffMemberChange({
@@ -610,13 +735,25 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
         schoolId: canonicalSchoolId,
         schoolName: currentSchool?.name || "Lycée d'Excellence de Conakry"
       });
-      showToast(`Nouveau mot de passe temporaire : ${tempPassword}`);
+      logAdminAudit(
+        `Réinitialisation mot de passe ${updatedMember.firstName} ${updatedMember.lastName} (${updatedMember.role})`,
+        updatedMember.matricule,
+        'securite',
+        'warning',
+        'update'
+      );
+      setLastStaffCredentialReceipt({
+        member: updatedMember,
+        password: tempPassword,
+        action: 'reset'
+      });
+      showToast(`Mot de passe activé pour ${updatedMember.firstName} ${updatedMember.lastName} : ${tempPassword}`);
     });
   };
 
   const deleteStaff = (id: string) => {
     executeWithPin("Supprimer définitivement cet employé du personnel", () => {
-      const currentList = loadLocalStorage<StaffMember[]>('smartschool_staff', staff);
+      const currentList = loadLocalStorage<StaffMember[]>('smartschool_staff', staff, reconcilePersistedStaff);
       const existing = currentList.find(s => s.id === id);
       setStaff(currentList.filter(s => s.id !== id));
       if (existing) {
@@ -628,6 +765,13 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
           schoolName: currentSchool?.name || "Lycée d'Excellence de Conakry",
           removed: true
         });
+        logAdminAudit(
+          `Suppression définitive du collaborateur ${existing.firstName} ${existing.lastName} (${existing.role})`,
+          existing.matricule,
+          'securite',
+          'critical',
+          'delete'
+        );
       }
       showToast("Employé supprimé du registre de l'école");
     });
@@ -638,6 +782,12 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!member) return;
 
     setStaff(prev => prev.map(s => s.id === id ? { ...s, credentialsSent: true } : s));
+    logAdminAudit(
+      `Envoi des identifiants de connexion à ${member.firstName} ${member.lastName}`,
+      `${member.email} · ${member.phone}`,
+      'admin',
+      'info'
+    );
     showToast(`Identifiants transmis avec succès à ${member.email} et par SMS au ${member.phone} !`);
   };
 
@@ -648,23 +798,30 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       id: `cls-${Date.now()}`
     };
     setClasses(prev => [...prev, newClass]);
+    logAdminAudit(`Création de la classe « ${newClass.name} »`, newClass.level, 'admin', 'info', 'create');
     showToast(`Classe « ${newClass.name} » créée`);
   };
 
   const updateClass = (id: string, updates: Partial<SchoolClass>) => {
+    const existing = classes.find(c => c.id === id);
     setClasses(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+    logAdminAudit(`Modification de la classe « ${updates.name || existing?.name || id} »`, existing?.level || 'Classe', 'admin', 'info', 'update');
     showToast("Classe mise à jour");
   };
 
   const deleteClass = (id: string) => {
+    const existing = classes.find(c => c.id === id);
     executeWithPin("Supprimer définitivement la classe", () => {
       setClasses(prev => prev.filter(c => c.id !== id));
+      logAdminAudit(`Suppression de la classe « ${existing?.name || id} »`, existing?.level || 'Classe', 'securite', 'warning', 'delete');
       showToast("Classe supprimée");
     });
   };
 
   const archiveClass = (id: string) => {
+    const existing = classes.find(c => c.id === id);
     setClasses(prev => prev.map(c => c.id === id ? { ...c, archived: !c.archived } : c));
+    logAdminAudit(`Archivage / Désarchivage de la classe « ${existing?.name || id} »`, existing?.level || 'Classe', 'admin', 'info', 'update');
     showToast("État d'archivage de la classe modifié");
   };
 
@@ -675,16 +832,21 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       id: `subj-${Date.now()}`
     };
     setSubjects(prev => [...prev, newSub]);
+    logAdminAudit(`Création matière « ${newSub.name} » (Coef ${newSub.coefficient})`, newSub.department, 'admin', 'info', 'create');
     showToast(`Matière « ${newSub.name} » créée (Coef ${newSub.coefficient})`);
   };
 
   const updateSubject = (id: string, updates: Partial<SchoolSubject>) => {
+    const existing = subjects.find(s => s.id === id);
     setSubjects(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+    logAdminAudit(`Modification matière « ${updates.name || existing?.name || id} »`, `Coef ${updates.coefficient ?? existing?.coefficient ?? '-'}`, 'admin', 'info', 'update');
     showToast("Matière mise à jour");
   };
 
   const toggleSubjectActive = (id: string) => {
+    const existing = subjects.find(s => s.id === id);
     setSubjects(prev => prev.map(s => s.id === id ? { ...s, active: !s.active } : s));
+    logAdminAudit(`Changement statut matière « ${existing?.name || id} »`, existing?.department || 'Matière', 'admin', 'info', 'update');
     showToast("Statut de la matière modifié");
   };
 
@@ -695,17 +857,22 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       id: `room-${Date.now()}`
     };
     setRooms(prev => [...prev, newRoom]);
+    logAdminAudit(`Création salle « ${newRoom.name} »`, `${newRoom.capacity} places`, 'admin', 'info', 'create');
     showToast(`Salle « ${newRoom.name} » créée`);
   };
 
   const updateRoom = (id: string, updates: Partial<SchoolRoom>) => {
+    const existing = rooms.find(r => r.id === id);
     setRooms(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+    logAdminAudit(`Modification salle « ${updates.name || existing?.name || id} »`, existing?.type || 'Campus', 'admin', 'info', 'update');
     showToast("Salle mise à jour");
   };
 
   const deleteRoom = (id: string) => {
+    const existing = rooms.find(r => r.id === id);
     executeWithPin("Supprimer la salle / installation", () => {
       setRooms(prev => prev.filter(r => r.id !== id));
+      logAdminAudit(`Suppression salle « ${existing?.name || id} »`, existing?.type || 'Campus', 'securite', 'warning', 'delete');
       showToast("Salle retirée de l'établissement");
     });
   };
@@ -729,13 +896,16 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
         },
         ...prev.map(y => ({ ...y, status: 'cloturee' as const }))
       ]);
+      logAdminAudit(`Ouverture année scolaire ${yearLabel}`, `${startDate} → ${endDate}`, 'admin', 'warning', 'create');
       showToast(`Année scolaire ${yearLabel} déclarée active !`);
     });
   };
 
   const closeAcademicYear = (id: string) => {
+    const existing = academicYears.find(y => y.id === id);
     executeWithPin("Clôturer officiellement l'année scolaire", () => {
       setAcademicYears(prev => prev.map(y => y.id === id ? { ...y, status: 'cloturee' } : y));
+      logAdminAudit(`Clôture année scolaire ${existing?.yearLabel || id}`, 'Archive académique', 'securite', 'warning', 'update');
       showToast("Année scolaire clôturée avec succès");
     });
   };
@@ -755,6 +925,7 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
       return s;
     }));
+    logAdminAudit(`Affectation enseignant ${teacher.firstName} ${teacher.lastName} → ${cls.name}`, teacher.matricule, 'admin', 'info', 'update');
     showToast(`${teacher.firstName} ${teacher.lastName} affecté à la classe ${cls.name}`);
   };
 
@@ -768,6 +939,7 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return s;
     }));
     if (teacher && cls) {
+      logAdminAudit(`Retrait enseignant ${teacher.firstName} ${teacher.lastName} de ${cls.name}`, teacher.matricule, 'admin', 'info', 'delete');
       showToast(`${teacher.firstName} ${teacher.lastName} retiré de la classe ${cls.name}`);
     }
   };
@@ -786,6 +958,7 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
       return s;
     }));
+    logAdminAudit(`Attribution matière ${sub.name} à ${teacher.firstName} ${teacher.lastName}`, teacher.matricule, 'admin', 'info', 'update');
     showToast(`${teacher.firstName} ${teacher.lastName} enseigne désormais ${sub.name}`);
   };
 
@@ -799,6 +972,7 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return s;
     }));
     if (teacher && sub) {
+      logAdminAudit(`Retrait matière ${sub.name} de ${teacher.firstName} ${teacher.lastName}`, teacher.matricule, 'admin', 'info', 'delete');
       showToast(`Matière ${sub.name} retirée de ${teacher.firstName} ${teacher.lastName}`);
     }
   };
@@ -813,6 +987,7 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       principalTeacherId: teacherId,
       principalTeacherName: `${teacher.firstName} ${teacher.lastName}`
     } : c));
+    logAdminAudit(`Nomination Professeur Principal ${teacher.firstName} ${teacher.lastName} (${cls.name})`, teacher.matricule, 'admin', 'info', 'update');
     showToast(`${teacher.firstName} ${teacher.lastName} nommé Professeur Principal de ${cls.name}`);
   };
 
@@ -827,12 +1002,15 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       mainRoomName: room.name
     } : c));
     setRooms(prev => prev.map(r => r.id === roomId ? { ...r, currentOccupation: cls.name } : r));
+    logAdminAudit(`Attribution salle ${room.name} à ${cls.name}`, room.type || 'Campus', 'admin', 'info', 'update');
     showToast(`Salle ${room.name} attribuée à la classe ${cls.name}`);
   };
 
   // Documents
   const updateDocumentTemplate = (id: string, updates: Partial<AdministrativeDocumentTemplate>) => {
+    const existing = documentTemplates.find(d => d.id === id);
     setDocumentTemplates(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
+    logAdminAudit(`Mise à jour modèle document « ${updates.title || existing?.title || id} »`, 'Documents Administratifs', 'admin', 'info', 'update');
     showToast("Modèle de document administratif sauvegardé");
   };
 
@@ -843,11 +1021,14 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       id: `ev-${Date.now()}`
     };
     setEvents(prev => [newEv, ...prev]);
+    logAdminAudit(`Publication événement administratif « ${newEv.title} »`, newEv.date, 'admin', 'info', 'create');
     showToast(`Événement « ${newEv.title} » publié pour le personnel`);
   };
 
   const deleteEvent = (id: string) => {
+    const existing = events.find(e => e.id === id);
     setEvents(prev => prev.filter(e => e.id !== id));
+    logAdminAudit(`Suppression événement « ${existing?.title || id} »`, existing?.date || 'Calendrier', 'admin', 'info', 'delete');
     showToast("Événement administratif supprimé");
   };
 
@@ -883,6 +1064,8 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     sendStaffCredentials,
     selectedStaffForBadge,
     setSelectedStaffForBadge,
+    lastStaffCredentialReceipt,
+    setLastStaffCredentialReceipt,
     classes,
     createClass,
     updateClass,

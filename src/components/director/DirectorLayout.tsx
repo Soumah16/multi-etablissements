@@ -3,6 +3,7 @@ import { useDirector } from '../../context/DirectorContext';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { DirectorNavTab } from '../../types/director';
+import { useUnreadSharedMessagesCount } from '../../utils/communicationHub';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -90,6 +91,8 @@ export const DirectorLayout: React.FC<DirectorLayoutProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
 
+  const unreadMessagesCount = useUnreadSharedMessagesCount('director', currentSchool.id);
+
   const pendingBulletinsCount = reportCards.filter(b => b.directorStatus === 'en_attente').length;
   const pendingExamsCount = exams.filter(e => e.status === 'en_attente').length;
   const pendingIncidentsCount = disciplineIncidents.filter(i => i.directorStatus === 'en_attente').length;
@@ -148,7 +151,7 @@ export const DirectorLayout: React.FC<DirectorLayoutProps> = ({
     {
       groupTitle: 'COMMUNICATION & CONTRÔLE',
       items: [
-        { tab: 'communication', label: 'Communication Omnicanale', icon: <Megaphone className="w-4 h-4" /> },
+        { tab: 'communication', label: 'Communication Omnicanale', icon: <Megaphone className="w-4 h-4" />, badge: unreadMessagesCount, badgeColor: 'bg-blue-100 text-blue-800 border border-blue-200' },
         { tab: 'news', label: 'Actualités & Publications', icon: <Newspaper className="w-4 h-4" /> },
         { tab: 'calendar', label: 'Calendrier & Événements', icon: <Calendar className="w-4 h-4" /> },
         { tab: 'finances', label: 'Finances (Consultation)', icon: <Wallet className="w-4 h-4 text-emerald-600" /> },

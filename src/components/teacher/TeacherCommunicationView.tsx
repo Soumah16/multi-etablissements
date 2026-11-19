@@ -101,6 +101,15 @@ export const TeacherCommunicationView: React.FC = () => {
         </div>
       </div>
 
+      {/* Synchronized Cross-Role Messages & Requests Hub */}
+      <CrossRoleHubPanel
+        role="teacher"
+        userName={`${profile.firstName} ${profile.lastName}`}
+        schoolId={currentSchool.id}
+        schoolName={currentSchool.name}
+        defaultRecipientRoles={['director', 'parent', 'student']}
+      />
+
       {/* Automated Notifications Banner */}
       <div className="rounded-2xl bg-white border border-blue-100 p-5 space-y-3">
         <div className="flex items-center justify-between">
@@ -303,15 +312,6 @@ export const TeacherCommunicationView: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Synchronized Cross-Role Messages & Requests Hub */}
-      <CrossRoleHubPanel
-        role="teacher"
-        userName={`${profile.firstName} ${profile.lastName}`}
-        schoolId={currentSchool.id}
-        schoolName={currentSchool.name}
-        defaultRecipientRoles={['director', 'parent', 'student']}
-      />
     </div>
   );
 };

@@ -22,6 +22,7 @@ import {
 } from '../data/supervisorMockData';
 import { usePersistedState } from '../utils/storage';
 import { propagateRoleProfileToAccount } from '../utils/accountSync';
+import { recordGlobalAuditLog } from '../utils/auditLogger';
 
 interface SupervisorContextType {
   activeSupervisorTab: SupervisorNavTab;
@@ -85,6 +86,23 @@ export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }, 3500);
   };
 
+  const logSupervisorAudit = (
+    action: string,
+    target: string,
+    severity: 'info' | 'warning' | 'critical' = 'info'
+  ) => {
+    recordGlobalAuditLog({
+      action,
+      target,
+      actorName: `${profile.firstName} ${profile.lastName}`,
+      actorRole: 'supervisor',
+      actorMatricule: profile.matricule,
+      schoolName: profile.schoolName,
+      type: severity === 'info' ? 'admin' : 'securite',
+      severity
+    });
+  };
+
   const updateProfile = (updated: Partial<SupervisorProfile>) => {
     const nextProfile: SupervisorProfile = { ...profile, ...updated };
     setProfile(nextProfile);
@@ -94,10 +112,12 @@ export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       { email: profile.email, matricule: profile.matricule },
       nextProfile.schoolId
     );
+    logSupervisorAudit('Mise à jour profil Surveillant', `${nextProfile.firstName} ${nextProfile.lastName}`);
     triggerToast('Profil du Surveillant mis à jour avec succès.');
   };
 
   const justifyAttendanceRecord = (id: string, reason: string) => {
+    const target = attendanceRecords.find(r => r.id === id);
     setAttendanceRecords(prev => prev.map(rec => {
       if (rec.id !== id) return rec;
       return {
@@ -107,14 +127,20 @@ export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         justifiedAt: new Date().toISOString().replace('T', ' ').substring(0, 16)
       };
     }));
+    logSupervisorAudit(
+      `Régularisation absence/retard : ${target?.studentName || id}`,
+      reason
+    );
     triggerToast('Absence/Retard régularisé avec succès.');
   };
 
   const notifyParentSms = (id: string) => {
+    const target = attendanceRecords.find(r => r.id === id);
     setAttendanceRecords(prev => prev.map(rec => {
       if (rec.id !== id) return rec;
       return { ...rec, notifiedParent: true };
     }));
+    logSupervisorAudit(`Notification SMS tuteur : ${target?.studentName || id}`, 'Vie Scolaire');
     triggerToast('Alerte SMS transmise au tuteur de l\'élève.');
   };
 
@@ -127,6 +153,7 @@ export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       supervisorSignature: true
     };
     setAdmissionSlips(prev => [newSlip, ...prev]);
+    logSupervisorAudit(`Délivrance billet de rentrée ${num}`, `${slip.studentName} (${slip.className})`);
     triggerToast(`Billet de rentrée ${num} délivré pour ${slip.studentName}.`);
   };
 
@@ -138,10 +165,12 @@ export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       incidentNumber: incNum
     };
     setIncidents(prev => [newInc, ...prev]);
+    logSupervisorAudit(`Déclaration incident disciplinaire ${incNum}`, inc.studentName, 'warning');
     triggerToast(`Incident disciplinaire ${incNum} enregistré au registre.`);
   };
 
   const resolveIncident = (id: string, sanctionApplied?: string) => {
+    const target = incidents.find(i => i.id === id);
     setIncidents(prev => prev.map(inc => {
       if (inc.id !== id) return inc;
       return {
@@ -150,10 +179,12 @@ export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         sanctionType: (sanctionApplied as any) || inc.sanctionType
       };
     }));
+    logSupervisorAudit(`Clôture incident ${target?.incidentNumber || id}`, target?.studentName || 'Discipline');
     triggerToast('Incident marqué comme résolu.');
   };
 
   const reportIncidentToDirector = (id: string) => {
+    const target = incidents.find(i => i.id === id);
     setIncidents(prev => prev.map(inc => {
       if (inc.id !== id) return inc;
       return {
@@ -162,10 +193,12 @@ export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         reportedToDirector: true
       };
     }));
+    logSupervisorAudit(`Transmission urgente incident ${target?.incidentNumber || id} à la Direction`, target?.studentName || 'Discipline', 'warning');
     triggerToast('Dossier d\'incident transmis en urgence au Directeur des Études.');
   };
 
   const addWatchlistNote = (studentId: string, note: string) => {
+    const target = watchlist.find(w => w.studentId === studentId);
     setWatchlist(prev => prev.map(std => {
       if (std.studentId !== studentId) return std;
       return {
@@ -173,6 +206,7 @@ export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         supervisorNotes: [...std.supervisorNotes, note]
       };
     }));
+    logSupervisorAudit(`Note comportement ajoutée (${target?.studentName || studentId})`, note);
     triggerToast('Note ajoutée au dossier de comportement de l\'élève.');
   };
 
@@ -183,10 +217,12 @@ export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       status: 'consigne'
     };
     setConfiscatedItems(prev => [newItem, ...prev]);
+    logSupervisorAudit(`Consigne objet confisqué : ${item.itemName}`, item.studentName, 'warning');
     triggerToast(`Objet confisqué enregistré en consigne.`);
   };
 
   const returnConfiscatedItem = (id: string) => {
+    const target = confiscatedItems.find(c => c.id === id);
     setConfiscatedItems(prev => prev.map(item => {
       if (item.id !== id) return item;
       return {
@@ -195,6 +231,7 @@ export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         returnedDate: new Date().toISOString().substring(0, 10)
       };
     }));
+    logSupervisorAudit(`Restitution objet confisqué : ${target?.itemName || id}`, target?.studentName || 'Consigne');
     triggerToast('Objet restitué au parent avec décharge signée.');
   };
 
@@ -204,6 +241,11 @@ export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       id: `pat-${Date.now()}`
     };
     setPatrols(prev => [newPatrol, ...prev]);
+    logSupervisorAudit(
+      `Enregistrement ronde de surveillance (${patrol.zone})`,
+      patrol.incidentDetected ? 'Incident détecté' : 'RAS',
+      patrol.incidentDetected ? 'warning' : 'info'
+    );
     triggerToast('Ronde de surveillance inscrite au registre.');
   };
 
@@ -214,6 +256,7 @@ export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       status: 'confirme'
     };
     setMeetings(prev => [newMeeting, ...prev]);
+    logSupervisorAudit(`Convocation disciplinaire parent : ${meeting.studentName}`, `${meeting.date} ${meeting.time}`);
     triggerToast(`Rendez-vous disciplinaire programmé pour ${meeting.studentName}.`);
   };
 

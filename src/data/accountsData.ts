@@ -384,8 +384,8 @@ const RAW_DEMO_ACCOUNTS: Omit<DemoAccount, 'password'>[] = [
 export const DEMO_ACCOUNTS: DemoAccount[] = RAW_DEMO_ACCOUNTS.map(a => ({
   ...a,
   passwordHash: hashPasswordSync(a.plainPassword),
-  password: '',
-  plainPassword: ''
+  password: a.plainPassword,
+  plainPassword: a.plainPassword
 }));
 
 export const getIconForRole = (role: WorkspaceMode): React.ComponentType<{ className?: string }> => {
@@ -456,33 +456,36 @@ export const setDemoModeActive = (_active: boolean): void => {
 };
 
 function sanitizeAccountCredentialState(item: any): DemoAccount {
-  const mustChange = Boolean(item.mustChangePassword);
   const rawPlain = String(item.plainPassword ?? item.password ?? '').trim();
   const hasSaltedHash = isSaltedPasswordHash(item.passwordHash);
+  const seedMatch = RAW_DEMO_ACCOUNTS.find(
+    r =>
+      r.id === item.id ||
+      r.email.toLowerCase() === String(item.email || '').toLowerCase() ||
+      r.matricule.toLowerCase() === String(item.matricule || '').toLowerCase()
+  );
 
   let passwordHash = hasSaltedHash ? item.passwordHash : '';
   if (!passwordHash && rawPlain) {
     passwordHash = hashPasswordSync(rawPlain);
   }
   if (!passwordHash) {
-    const seedMatch = RAW_DEMO_ACCOUNTS.find(
-      r =>
-        r.id === item.id ||
-        r.email.toLowerCase() === String(item.email || '').toLowerCase() ||
-        r.matricule.toLowerCase() === String(item.matricule || '').toLowerCase()
-    );
     passwordHash = hashPasswordSync(seedMatch?.plainPassword || 'Smart@2026');
   }
 
-  // Only keep temporary plainPassword while mustChangePassword === true (initial issuance slip)
-  const visibleTempPass = mustChange ? rawPlain : '';
+  let visiblePass = rawPlain;
+  if (!visiblePass && seedMatch?.plainPassword) {
+    if (!hasSaltedHash || verifySaltedPasswordHash(seedMatch.plainPassword, passwordHash)) {
+      visiblePass = seedMatch.plainPassword;
+    }
+  }
 
   return {
     ...item,
     name: item.name || `${item.firstName || ''} ${item.lastName || ''}`.trim(),
     passwordHash,
-    password: visibleTempPass,
-    plainPassword: visibleTempPass,
+    password: visiblePass,
+    plainPassword: visiblePass,
     icon: getIconForRole(item.role)
   };
 }
@@ -659,12 +662,14 @@ export const authenticateUser = (
   // 6. Reset failed attempts on success, upgrade legacy password hashes to salted SHA-256, and record last login
   const now = new Date().toISOString();
   const upgradedHash = hasSalted ? user.passwordHash : hashPasswordSync(trimmedInput || rawPassword);
+  const preservedPlain = user.plainPassword || user.password || trimmedInput || rawPassword;
   const updatedAccounts = accounts.map(a => {
     if (a.id === user.id) {
       return {
         ...a,
         passwordHash: upgradedHash,
-        ...(a.mustChangePassword ? {} : { plainPassword: '', password: '' }),
+        plainPassword: preservedPlain,
+        password: preservedPlain,
         failedLoginAttempts: 0,
         lastLogin: now
       };
@@ -763,9 +768,9 @@ export const upsertUserAccount = (
     const nextHash = hasIncomingPassword
       ? hashPasswordSync(incomingPass)
       : existing.passwordHash;
-    const nextTempVisible = nextMustChange
-      ? (hasIncomingPassword ? incomingPass : existing.plainPassword || existing.password || '')
-      : '';
+    const nextVisiblePass = hasIncomingPassword
+      ? incomingPass
+      : existing.plainPassword || existing.password || '';
 
     const updated: DemoAccount = {
       ...existing,
@@ -782,8 +787,8 @@ export const upsertUserAccount = (
       title: accountData.title || existing.title,
       photo: accountData.photo || existing.photo,
       passwordHash: nextHash,
-      password: nextTempVisible,
-      plainPassword: nextTempVisible,
+      password: nextVisiblePass,
+      plainPassword: nextVisiblePass,
       mustChangePassword: nextMustChange,
       status: accountData.status || existing.status,
       failedLoginAttempts: accountData.status === 'actif' ? 0 : existing.failedLoginAttempts,
@@ -800,7 +805,7 @@ export const upsertUserAccount = (
 
   const initialPassword = (accountData.plainPassword || `Smart#${Math.floor(1000 + Math.random() * 9000)}`).trim();
   const cleanMat = accountData.matricule.trim().toUpperCase();
-  const initialMustChange = accountData.mustChangePassword ?? true;
+  const initialMustChange = accountData.mustChangePassword ?? false;
 
   const created: DemoAccount = {
     id: accountData.id || `USR-${Date.now()}-${Math.floor(10 + Math.random() * 90)}`,
@@ -815,8 +820,8 @@ export const upsertUserAccount = (
     username: accountData.username?.trim().toLowerCase(),
     phone: accountData.phone || '+224 620 00 00 00',
     schoolName: accountData.schoolName,
-    password: initialMustChange ? initialPassword : '',
-    plainPassword: initialMustChange ? initialPassword : '',
+    password: initialPassword,
+    plainPassword: initialPassword,
     passwordHash: hashPasswordSync(initialPassword),
     status: accountData.status || 'actif',
     mustChangePassword: initialMustChange,
@@ -849,15 +854,14 @@ export const updateAccountPassword = (
   const accounts = getStoredAccounts();
   let updatedAccount: DemoAccount | null = null;
   const nextHash = hashPasswordSync(cleanPass);
-  const nextVisibleTemp = mustChangePassword ? cleanPass : '';
 
   const nextAccounts = accounts.map(a => {
     if (matchesAccountCriteria(a, criteria)) {
       updatedAccount = {
         ...a,
         passwordHash: nextHash,
-        password: nextVisibleTemp,
-        plainPassword: nextVisibleTemp,
+        password: cleanPass,
+        plainPassword: cleanPass,
         mustChangePassword,
         failedLoginAttempts: 0,
         status: a.status === 'verrouille' ? ('actif' as AccountStatus) : a.status,

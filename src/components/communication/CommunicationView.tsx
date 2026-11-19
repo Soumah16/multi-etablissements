@@ -84,6 +84,16 @@ export const CommunicationView: React.FC = () => {
         </div>
       </div>
 
+      {/* Synchronized Cross-Role Messages & Requests Hub */}
+      <CrossRoleHubPanel
+        role="super_admin"
+        userName={profile.name}
+        schoolId="NATIONAL"
+        schoolName="Réseau National SmartSchool Guinée"
+        canManageRequests
+        defaultRecipientRoles={['school_admin', 'director']}
+      />
+
       {/* Main 2-column layout: Broadcast Composer & History */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Composer Form */}
@@ -315,16 +325,6 @@ export const CommunicationView: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Synchronized Cross-Role Messages & Requests Hub */}
-      <CrossRoleHubPanel
-        role="super_admin"
-        userName={profile.name}
-        schoolId="NATIONAL"
-        schoolName="Réseau National SmartSchool Guinée"
-        canManageRequests
-        defaultRecipientRoles={['school_admin', 'director']}
-      />
     </div>
   );
 };

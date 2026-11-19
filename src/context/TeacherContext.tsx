@@ -43,6 +43,7 @@ import {
   pushSharedMessage,
   HubRole
 } from '../utils/communicationHub';
+import { recordGlobalAuditLog } from '../utils/auditLogger';
 
 interface TeacherContextType {
   activeTeacherTab: TeacherNavTab;
@@ -230,6 +231,23 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }, 3500);
   };
 
+  const logTeacherAudit = (
+    action: string,
+    target: string,
+    severity: 'info' | 'warning' | 'critical' = 'info'
+  ) => {
+    recordGlobalAuditLog({
+      action,
+      target,
+      actorName: `${profile.firstName} ${profile.lastName}`,
+      actorRole: 'teacher',
+      actorMatricule: profile.matricule,
+      schoolName: profile.schoolName,
+      type: 'admin',
+      severity
+    });
+  };
+
   const updateProfile = (updated: Partial<TeacherProfile>) => {
     const nextProfile: TeacherProfile = { ...profile, ...updated };
     setProfile(nextProfile);
@@ -239,6 +257,7 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       { email: profile.email, matricule: profile.matricule },
       nextProfile.schoolId
     );
+    logTeacherAudit('Mise à jour profil enseignant', `${nextProfile.firstName} ${nextProfile.lastName}`);
     triggerToast('Profil enseignant mis à jour avec succès.');
   };
 
@@ -250,11 +269,14 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       publishedDate: new Date().toISOString().substring(0, 10)
     };
     setCourses(prev => [newCourse, ...prev]);
+    logTeacherAudit(`Publication cours « ${course.title} »`, `${course.subject} · ${course.className}`);
     triggerToast(`Cours "${course.title}" publié avec succès.`);
   };
 
   const deleteCourse = (id: string) => {
+    const existing = rawCourses.find(c => c.id === id);
     setCourses(prev => prev.filter(c => c.id !== id));
+    logTeacherAudit(`Suppression cours « ${existing?.title || id} »`, existing?.className || 'Pédagogie', 'warning');
     triggerToast('Cours supprimé.');
   };
 
@@ -306,6 +328,7 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     setEvaluations(prev => [newSession, ...prev]);
+    logTeacherAudit(`Création évaluation « ${evalData.title} »`, `${evalData.subject} · ${evalData.className}`);
     triggerToast(`Session d'évaluation créée pour ${evalData.className}`);
   };
 
@@ -355,6 +378,7 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         grades: rankedGrades
       };
     }));
+    logTeacherAudit(`Saisie / Modification note (${field}: ${val})`, `Évaluation #${evalId} · Élève #${studentId}`);
   };
 
   const updateStudentAppreciation = (evalId: string, studentId: string, text: string) => {
@@ -365,6 +389,7 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         grades: ev.grades.map(g => g.studentId === studentId ? { ...g, appreciation: text } : g)
       };
     }));
+    logTeacherAudit('Mise à jour appréciation bulletin', `Évaluation #${evalId} · Élève #${studentId}`);
   };
 
   const deleteStudentGrade = (evalId: string, studentId: string) => {
@@ -386,23 +411,28 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         })
       };
     }));
+    logTeacherAudit('Réinitialisation des notes élève', `Évaluation #${evalId} · Élève #${studentId}`, 'warning');
     triggerToast('Notes de l\'élève réinitialisées.');
   };
 
   const submitEvaluationToDirector = (evalId: string) => {
+    const existing = rawEvaluations.find(e => e.id === evalId);
     setEvaluations(prev => prev.map(ev => {
       if (ev.id !== evalId) return ev;
       return { ...ev, status: 'soumis_direction' };
     }));
+    logTeacherAudit(`Soumission notes à la Direction (${existing?.title || evalId})`, existing?.className || 'Évaluation');
     triggerToast('Notes soumises à la validation du Directeur des Études.');
   };
 
   const togglePublishProvisionalGrades = (evalId: string) => {
+    const existing = rawEvaluations.find(e => e.id === evalId);
     setEvaluations(prev => prev.map(ev => {
       if (ev.id !== evalId) return ev;
       const nextState = !ev.isProvisionalPublished;
       return { ...ev, isProvisionalPublished: nextState };
     }));
+    logTeacherAudit(`Publication notes provisoires (${existing?.title || evalId})`, existing?.className || 'Évaluation');
     triggerToast('Visibilité des notes provisoires mise à jour.');
   };
 
@@ -416,6 +446,7 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       status: 'actif'
     };
     setLogbookEntries(prev => [newEntry, ...prev]);
+    logTeacherAudit(`Inscription Cahier de textes : ${entry.chapterTitle}`, `${entry.subject} · ${entry.className}`);
     triggerToast('Séance inscrite au Cahier de textes et signée numériquement.');
   };
 
@@ -428,11 +459,13 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         signedAt: new Date().toISOString()
       };
     }));
+    logTeacherAudit(`Signature séance cahier de textes #${id}`, 'Cahier de textes');
     triggerToast('Séance visée et signée.');
   };
 
   const archiveLogbookEntry = (id: string) => {
     setLogbookEntries(prev => prev.map(item => item.id === id ? { ...item, status: 'archive' } : item));
+    logTeacherAudit(`Archivage séance cahier de textes #${id}`, 'Cahier de textes');
     triggerToast('Séance archivée dans l\'historique.');
   };
 
@@ -476,6 +509,7 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       };
     });
+    logTeacherAudit(`Clôture feuille d'appel (${attendanceSession?.className || activeAttendanceClassId})`, 'Assiduité');
     triggerToast(`Feuille d'appel de ${attendanceSession?.className || ''} clôturée et transmise à la Vie Scolaire.`);
   };
 
@@ -489,6 +523,7 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       submissions: []
     };
     setHomeworkList(prev => [newItem, ...prev]);
+    logTeacherAudit(`Publication devoir « ${hw.title} »`, `${hw.subject} · ${hw.className}`);
     triggerToast(`Devoir "${hw.title}" publié avec succès.`);
   };
 
@@ -512,6 +547,7 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       };
     }));
     gradeHomeworkSubmissionRecord(homeworkId, submissionId, grade, comment);
+    logTeacherAudit(`Correction copie devoir #${submissionId} (${grade})`, `Devoir #${homeworkId}`);
     triggerToast("Copie notée et corrigé renvoyé à l'élève.");
   };
 
@@ -526,6 +562,7 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isDifficulty: true
       };
     }));
+    logTeacherAudit(`Signalement élève #${studentId} à la Direction`, reason, 'warning');
     triggerToast('Signalement transmis au Directeur des Études & Vie Scolaire.');
   };
 
@@ -538,6 +575,7 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         recommendations: [...prof.recommendations, recommendation]
       };
     }));
+    logTeacherAudit(`Ajout observation pédagogique élève #${studentId}`, observation);
     triggerToast('Observation et recommandation enregistrées.');
   };
 
@@ -548,6 +586,7 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       id: `evt-${Date.now()}`
     };
     setCalendarEvents(prev => [newEvent, ...prev]);
+    logTeacherAudit(`Programmation événement « ${evt.title} »`, evt.date);
     triggerToast(`Événement "${evt.title}" programmé.`);
   };
 
@@ -589,6 +628,7 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       priority: 'normal'
     });
 
+    logTeacherAudit(`Envoi message (${msg.channel}) : ${msg.subject}`, msg.recipient);
     triggerToast(`Message envoyé avec succès via ${msg.channel}.`);
   };
 
