@@ -340,7 +340,10 @@ export async function syncSharedMessagesFromServer(schoolId?: string): Promise<v
     const url = schoolId
       ? `/api/messages?schoolId=${encodeURIComponent(schoolId)}`
       : '/api/messages';
-    const resp = await fetch(url);
+    const resp = await fetch(url, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' }
+    });
     if (!resp.ok) return;
     const data = (await resp.json()) as { ok?: boolean; messages?: SharedMessage[] };
     if (!data.ok || !Array.isArray(data.messages) || data.messages.length === 0) return;
@@ -460,7 +463,10 @@ export async function syncSharedRequestsFromServer(schoolId?: string): Promise<v
     const url = schoolId
       ? `/api/requests?schoolId=${encodeURIComponent(schoolId)}`
       : '/api/requests';
-    const resp = await fetch(url);
+    const resp = await fetch(url, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' }
+    });
     if (!resp.ok) return;
     const data = (await resp.json()) as { ok?: boolean; requests?: SharedRequest[] };
     if (!data.ok || !Array.isArray(data.requests) || data.requests.length === 0) return;
@@ -542,16 +548,24 @@ export function useSharedMessages(schoolId?: string): SharedMessage[] {
   const [messages, setMessages] = useState<SharedMessage[]>(() => loadSharedMessages());
 
   useEffect(() => {
-    void syncSharedMessagesFromServer(schoolId);
+    const syncNow = () => {
+      void syncSharedMessagesFromServer(schoolId);
+    };
+    const onVis = () => {
+      if (document.visibilityState === 'visible') syncNow();
+    };
+    syncNow();
     const unsub = subscribeStorageKey(SHARED_MESSAGES_KEY, data => {
       if (Array.isArray(data)) setMessages(data as SharedMessage[]);
     });
-    const timer = setInterval(() => {
-      void syncSharedMessagesFromServer(schoolId);
-    }, 6_000);
+    const timer = setInterval(syncNow, 6_000);
+    window.addEventListener('online', syncNow);
+    document.addEventListener('visibilitychange', onVis);
     return () => {
       unsub();
       clearInterval(timer);
+      window.removeEventListener('online', syncNow);
+      document.removeEventListener('visibilitychange', onVis);
     };
   }, [schoolId]);
 
@@ -572,16 +586,24 @@ export function useSharedRequests(schoolId?: string): SharedRequest[] {
   const [requests, setRequests] = useState<SharedRequest[]>(() => loadSharedRequests());
 
   useEffect(() => {
-    void syncSharedRequestsFromServer(schoolId);
+    const syncNow = () => {
+      void syncSharedRequestsFromServer(schoolId);
+    };
+    const onVis = () => {
+      if (document.visibilityState === 'visible') syncNow();
+    };
+    syncNow();
     const unsub = subscribeStorageKey(SHARED_REQUESTS_KEY, data => {
       if (Array.isArray(data)) setRequests(data as SharedRequest[]);
     });
-    const timer = setInterval(() => {
-      void syncSharedRequestsFromServer(schoolId);
-    }, 6_000);
+    const timer = setInterval(syncNow, 6_000);
+    window.addEventListener('online', syncNow);
+    document.addEventListener('visibilitychange', onVis);
     return () => {
       unsub();
       clearInterval(timer);
+      window.removeEventListener('online', syncNow);
+      document.removeEventListener('visibilitychange', onVis);
     };
   }, [schoolId]);
 

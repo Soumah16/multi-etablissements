@@ -24,6 +24,7 @@ import { useApp } from '../../context/AppContext';
 import { PWAInstallButton } from '../common/PWAInstallButton';
 import { CloudSyncButton } from '../common/CloudSyncModal';
 import { validatePasswordStrength } from '../../utils/passwordCrypto';
+import { syncNowWithServer } from '../../utils/serverSync';
 import heroImg from '../../assets/images/guinea_school_hero_1794497471323.jpg';
 import classroomImg from '../../assets/images/students_modern_classroom_1794497472286.jpg';
 import teacherImg from '../../assets/images/teacher_excellence_portrait_1794497472066.jpg';
@@ -130,7 +131,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
     handleCompleteLogin(user);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -140,34 +141,37 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
     }
 
     setIsLoading(true);
+    try {
+      await syncNowWithServer(2500);
+    } catch {
+      // Proceed cleanly with local cache if offline
+    }
 
-    setTimeout(() => {
-      // Real authentication verification
-      const result = authenticateUser(identifier.trim(), password, schoolId);
-      setIsLoading(false);
+    // Real authentication verification against freshest synced accounts
+    const result = authenticateUser(identifier.trim(), password, schoolId);
+    setIsLoading(false);
 
-      if (!result.success || !result.user) {
-        const msg = result.errorMessage || 'Identifiant ou mot de passe incorrect.';
-        recordGlobalAuditLog({
-          action: `Tentative de connexion refusée : ${msg}`,
-          target: identifier.trim(),
-          actorName: identifier.trim(),
-          actorRole: 'Portail Connexion',
-          type: 'connexion',
-          severity: msg.toLowerCase().includes('verrouillé') ? 'critical' : 'warning'
-        });
-        setErrorMessage(msg);
-        return;
-      }
+    if (!result.success || !result.user) {
+      const msg = result.errorMessage || 'Identifiant ou mot de passe incorrect.';
+      recordGlobalAuditLog({
+        action: `Tentative de connexion refusée : ${msg}`,
+        target: identifier.trim(),
+        actorName: identifier.trim(),
+        actorRole: 'Portail Connexion',
+        type: 'connexion',
+        severity: msg.toLowerCase().includes('verrouillé') ? 'critical' : 'warning'
+      });
+      setErrorMessage(msg);
+      return;
+    }
 
-      // Check if user must change initial temporary password
-      if (result.mustChangePassword) {
-        setPendingFirstLoginUser(result.user);
-        return;
-      }
+    // Check if user must change initial temporary password
+    if (result.mustChangePassword) {
+      setPendingFirstLoginUser(result.user);
+      return;
+    }
 
-      proceedAfterPasswordCheck(result.user);
-    }, 350);
+    proceedAfterPasswordCheck(result.user);
   };
 
   const handleApplyNewPassword = (e: React.FormEvent) => {

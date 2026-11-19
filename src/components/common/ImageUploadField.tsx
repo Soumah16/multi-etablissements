@@ -58,16 +58,16 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
       const result = e.target?.result as string;
       if (!result) return;
 
-      // Keep SVG or small files (< 220KB) untouched
-      if (file.type === 'image/svg+xml' || file.size < 220 * 1024) {
+      // Keep SVG or tiny files (< 80KB) untouched
+      if (file.type === 'image/svg+xml' || file.size < 80 * 1024) {
         onChange(result);
         return;
       }
 
-      // Compress larger PNG/JPG/WEBP onto a canvas (max 1400px) so localStorage stays lightweight
+      // Compress larger PNG/JPG/WEBP onto a canvas so mobile sync & cloud payloads stay lightweight
       const img = new Image();
       img.onload = () => {
-        const maxDim = 1400;
+        const maxDim = aspectRatio === 'circle' ? 480 : 1080;
         let { width, height } = img;
         if (width > maxDim || height > maxDim) {
           if (width > height) {
@@ -87,7 +87,10 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
           return;
         }
         ctx.drawImage(img, 0, 0, width, height);
-        const compressed = canvas.toDataURL('image/jpeg', 0.82);
+        let compressed = canvas.toDataURL('image/jpeg', 0.78);
+        if (compressed.length > 220_000) {
+          compressed = canvas.toDataURL('image/jpeg', 0.65);
+        }
         onChange(compressed);
       };
       img.onerror = () => onChange(result);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Sliders, 
@@ -58,6 +58,27 @@ export const GlobalSettingsView: React.FC = () => {
     es: true,
     pt: true
   });
+
+  useEffect(() => {
+    setPlatformName(settings.platformName);
+    setPlatformLogo(settings.platformLogo);
+    setPrimaryColor(settings.primaryColor);
+    setSystemEmail(settings.systemEmail);
+    setSmtpHost(settings.smtpHost);
+    setSmtpPort(settings.smtpPort);
+    setSmsGatewayEnabled(settings.smsGatewayEnabled);
+    setSmsProvider(settings.smsProvider);
+    setWhatsAppEnabled(settings.whatsAppEnabled);
+    setPushNotificationsEnabled(settings.pushNotificationsEnabled);
+    setMaintenanceMode(settings.maintenanceMode);
+    setSessionTimeoutMinutes(settings.sessionTimeoutMinutes);
+    setHomepagePhotos({
+      hero: settings.homepagePhotos?.hero || '',
+      classroom: settings.homepagePhotos?.classroom || '',
+      teacher: settings.homepagePhotos?.teacher || '',
+      library: settings.homepagePhotos?.library || '',
+    });
+  }, [settings]);
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();

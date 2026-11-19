@@ -13,7 +13,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { RoleType, AccountStatus, UserAccount, ROLE_PERMISSIONS_MATRIX, ROLE_LABELS } from '../types/rbac';
-import { saveDualStorage } from '../utils/storage';
+import { loadLocalStorage, saveDualStorage } from '../utils/storage';
 import {
   hashPasswordSync,
   isSaltedPasswordHash,
@@ -492,12 +492,9 @@ function sanitizeAccountCredentialState(item: any): DemoAccount {
 
 export const getStoredAccounts = (): DemoAccount[] => {
   try {
-    const raw = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map(sanitizeAccountCredentialState);
-      }
+    const parsed = loadLocalStorage<unknown>(ACCOUNTS_STORAGE_KEY, null);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.map(sanitizeAccountCredentialState);
     }
   } catch (err) {
     console.error('Error loading stored accounts:', err);

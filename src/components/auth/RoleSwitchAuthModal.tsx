@@ -3,6 +3,7 @@ import { WorkspaceMode } from '../../App';
 import { AuthenticatedUser } from './AuthPortal';
 import { getAccountByRole, getStoredAccounts, authenticateUser, normalizeSchoolId, DemoAccount } from '../../data/accountsData';
 import { recordGlobalAuditLog } from '../../utils/auditLogger';
+import { syncNowWithServer } from '../../utils/serverSync';
 import {
   ShieldCheck,
   Lock,
@@ -77,7 +78,7 @@ export const RoleSwitchAuthModal: React.FC<RoleSwitchAuthModalProps> = ({
     });
   };
 
-  const handleVerify = (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -95,8 +96,16 @@ export const RoleSwitchAuthModal: React.FC<RoleSwitchAuthModalProps> = ({
       return;
     }
 
+    setIsLoading(true);
+    try {
+      await syncNowWithServer(2500);
+    } catch {
+      // Proceed cleanly with local cache if offline
+    }
+
     const auth = authenticateUser(targetAccount.email, password, effectiveSchoolId || 'ALL');
     if (!auth.success || !auth.user) {
+      setIsLoading(false);
       recordGlobalAuditLog({
         action: `Échec bascule vers l'espace [${targetAccount.title}]`,
         target: targetAccount.email,
@@ -125,11 +134,8 @@ export const RoleSwitchAuthModal: React.FC<RoleSwitchAuthModalProps> = ({
       severity: 'info'
     });
 
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      completeSwitch(auth.user!);
-    }, 250);
+    setIsLoading(false);
+    completeSwitch(auth.user);
   };
 
   return (

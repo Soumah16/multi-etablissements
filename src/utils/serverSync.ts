@@ -1,5 +1,6 @@
 import {
   getLocalTimestamp,
+  hydrateKeysFromIdb,
   isSyncableKey,
   listModifiedSyncableKeys,
   onLocalStorageMutation,
@@ -19,6 +20,7 @@ interface RemoteStateEntry {
 let started = false;
 let cleanupFn: (() => void) | null = null;
 let lastSyncSince = 0;
+let activeSyncHook: (() => Promise<boolean>) | null = null;
 
 function applyRemoteEntry(key: string, entry: RemoteStateEntry): void {
   if (!isSyncableKey(key) || !entry || typeof entry.updatedAt !== 'number') return;
@@ -30,24 +32,43 @@ function applyRemoteEntry(key: string, entry: RemoteStateEntry): void {
 
 async function pushEntriesToServer(
   entries: Array<{ key: string; value: unknown; updatedAt: number }>
-): Promise<void> {
-  if (typeof window === 'undefined' || entries.length === 0) return;
+): Promise<boolean> {
+  if (typeof window === 'undefined' || entries.length === 0) return true;
+  const CHUNK_SIZE = 35;
   try {
-    await fetch('/api/state', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ entries })
-    });
+    for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
+      const chunk = entries.slice(i, i + CHUNK_SIZE);
+      const resp = await fetch('/api/state', {
+        method: 'POST',
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
+        body: JSON.stringify({ entries: chunk })
+      });
+      if (!resp.ok) {
+        return false;
+      }
+    }
+    return true;
   } catch {
-    // Offline or transient network issue — local storage keeps pending state for next sync
+    return false;
   }
 }
 
 async function pullRemoteState(since = 0): Promise<Record<string, RemoteStateEntry> | null> {
   if (typeof window === 'undefined') return null;
   try {
-    const url = since > 0 ? `/api/state?since=${encodeURIComponent(String(since))}` : '/api/state';
-    const resp = await fetch(url);
+    const url =
+      since > 0 ? `/api/state?since=${encodeURIComponent(String(since))}` : '/api/state';
+    const resp = await fetch(url, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache'
+      }
+    });
     if (!resp.ok) return null;
     const data = (await resp.json()) as {
       ok?: boolean;
@@ -72,9 +93,18 @@ async function pullRemoteState(since = 0): Promise<Record<string, RemoteStateEnt
   }
 }
 
-async function reconcileInitialServerState(): Promise<void> {
+async function reconcileInitialServerState(): Promise<boolean> {
+  await hydrateKeysFromIdb([
+    'smartschool_accounts_v3',
+    'smartschool_profile',
+    'smartschool_global_settings',
+    'smartschool_schools',
+    'smartschool_admins',
+    'smartschool_staff'
+  ]);
+
   const remoteStates = await pullRemoteState(0);
-  if (!remoteStates) return;
+  if (!remoteStates) return false;
 
   // Push any local modifications that are newer than the server snapshot
   const localKeys = listModifiedSyncableKeys();
@@ -93,8 +123,35 @@ async function reconcileInitialServerState(): Promise<void> {
   }
 
   if (toPush.length > 0) {
-    await pushEntriesToServer(toPush);
+    return pushEntriesToServer(toPush);
   }
+  return true;
+}
+
+/**
+ * Forces an immediate full bidirectional synchronization with the Express server
+ * (used prior to login/role switch, on mobile resume, and via "Actualiser").
+ */
+export async function syncNowWithServer(timeoutMs = 3500): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  const runSync = async (): Promise<boolean> => {
+    const flushed = activeSyncHook ? await activeSyncHook() : true;
+    const reconciled = await reconcileInitialServerState();
+    await Promise.all([
+      syncSharedMessagesFromServer(),
+      syncSharedRequestsFromServer()
+    ]);
+    return flushed && reconciled;
+  };
+
+  if (timeoutMs <= 0) return runSync();
+
+  return Promise.race([
+    runSync(),
+    new Promise<boolean>(resolve => {
+      setTimeout(() => resolve(false), timeoutMs);
+    })
+  ]);
 }
 
 export function startServerSync(): () => void {
@@ -104,18 +161,47 @@ export function startServerSync(): () => void {
 
   const pendingQueue = new Map<string, { value: unknown; updatedAt: number }>();
   let flushTimer: ReturnType<typeof setTimeout> | null = null;
+  let retryTimer: ReturnType<typeof setTimeout> | null = null;
+  let sseReconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let isFlushing = false;
   let eventSource: EventSource | null = null;
+  let disposed = false;
 
-  const flushMutations = async () => {
-    if (pendingQueue.size === 0) return;
-    const entries = Array.from(pendingQueue.entries()).map(([key, item]) => ({
+  const flushMutations = async (): Promise<boolean> => {
+    if (isFlushing) return true;
+    if (pendingQueue.size === 0) return true;
+    isFlushing = true;
+
+    const batch = Array.from(pendingQueue.entries()).map(([key, item]) => ({
       key,
       value: item.value,
       updatedAt: item.updatedAt
     }));
-    pendingQueue.clear();
-    await pushEntriesToServer(entries);
+
+    const ok = await pushEntriesToServer(batch);
+    if (ok) {
+      for (const pushed of batch) {
+        const cur = pendingQueue.get(pushed.key);
+        if (cur && cur.updatedAt <= pushed.updatedAt) {
+          pendingQueue.delete(pushed.key);
+        }
+      }
+    } else if (!disposed && !retryTimer) {
+      retryTimer = setTimeout(() => {
+        retryTimer = null;
+        void flushMutations();
+      }, 2500);
+    }
+
+    isFlushing = false;
+
+    if (ok && pendingQueue.size > 0 && !disposed) {
+      return flushMutations();
+    }
+    return ok;
   };
+
+  activeSyncHook = flushMutations;
 
   const unsubMutations = onLocalStorageMutation((key, value, updatedAt) => {
     if (!isSyncableKey(key)) return;
@@ -124,17 +210,34 @@ export function startServerSync(): () => void {
     flushTimer = setTimeout(() => {
       flushTimer = null;
       void flushMutations();
-    }, 150);
+    }, 120);
   });
 
-  // Initial state hydration & push of any offline local changes
+  // Initial full state hydration & push of any offline local changes
   void reconcileInitialServerState();
+  void syncSharedMessagesFromServer();
+  void syncSharedRequestsFromServer();
 
-  // Real-time Server-Sent Events stream for instant cross-browser sync
-  if ('EventSource' in window) {
+  const connectSse = () => {
+    if (disposed || typeof window === 'undefined' || !('EventSource' in window)) return;
     try {
-      eventSource = new EventSource('/api/state/stream');
-      eventSource.addEventListener('state_update', (ev: MessageEvent) => {
+      if (eventSource) {
+        eventSource.close();
+      }
+      let hadError = false;
+      const es = new EventSource('/api/state/stream');
+      eventSource = es;
+
+      es.addEventListener('ready', () => {
+        if (hadError) {
+          hadError = false;
+          void pullRemoteState(0);
+          void syncSharedMessagesFromServer();
+          void syncSharedRequestsFromServer();
+        }
+      });
+
+      es.addEventListener('state_update', (ev: MessageEvent) => {
         try {
           const payload = JSON.parse(String(ev.data || '{}')) as {
             entries?: Array<{ key: string; value: unknown; updatedAt: number }>;
@@ -152,7 +255,7 @@ export function startServerSync(): () => void {
         }
       });
 
-      eventSource.addEventListener('comms_update', (ev: MessageEvent) => {
+      es.addEventListener('comms_update', (ev: MessageEvent) => {
         try {
           const payload = JSON.parse(String(ev.data || '{}')) as { kind?: string };
           if (payload.kind === 'messages') {
@@ -165,32 +268,69 @@ export function startServerSync(): () => void {
           void syncSharedRequestsFromServer();
         }
       });
+
+      es.onerror = () => {
+        hadError = true;
+        if (es.readyState === EventSource.CLOSED && !disposed && !sseReconnectTimer) {
+          sseReconnectTimer = setTimeout(() => {
+            sseReconnectTimer = null;
+            connectSse();
+          }, 4000);
+        }
+      };
     } catch {
       // Fallback polling remains active below
     }
-  }
+  };
 
-  // Fallback poll every 8 seconds + instant catch-up when returning online or focusing tab
+  connectSse();
+
+  // Fallback poll every 6 seconds (plus periodic full catch-up every 5th cycle)
+  let pollTick = 0;
   const pollTimer = setInterval(() => {
-    void pullRemoteState(lastSyncSince);
-  }, 8_000);
+    pollTick += 1;
+    if (pendingQueue.size > 0) {
+      void flushMutations();
+    }
+    if (pollTick % 5 === 0) {
+      void pullRemoteState(0);
+    } else {
+      void pullRemoteState(lastSyncSince);
+    }
+  }, 6_000);
 
   const handleResume = () => {
-    void pullRemoteState(lastSyncSince);
-    void syncSharedMessagesFromServer();
-    void syncSharedRequestsFromServer();
+    if (disposed) return;
+    if (eventSource && eventSource.readyState === EventSource.CLOSED) {
+      connectSse();
+    }
+    void syncNowWithServer(0);
+  };
+
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      handleResume();
+    }
   };
 
   window.addEventListener('focus', handleResume);
   window.addEventListener('online', handleResume);
+  window.addEventListener('pageshow', handleResume);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 
   cleanupFn = () => {
+    disposed = true;
+    activeSyncHook = null;
     unsubMutations();
     if (flushTimer) clearTimeout(flushTimer);
+    if (retryTimer) clearTimeout(retryTimer);
+    if (sseReconnectTimer) clearTimeout(sseReconnectTimer);
     if (eventSource) eventSource.close();
     clearInterval(pollTimer);
     window.removeEventListener('focus', handleResume);
     window.removeEventListener('online', handleResume);
+    window.removeEventListener('pageshow', handleResume);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
     started = false;
     cleanupFn = null;
   };

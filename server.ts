@@ -405,6 +405,9 @@ async function startServer() {
       next();
       return;
     }
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     apiLimiter(req, res, next);
   });
 
@@ -505,7 +508,7 @@ async function startServer() {
 
     const applied: Array<{ key: string; value: unknown; updatedAt: number }> = [];
 
-    for (const raw of rawEntries.slice(0, 60)) {
+    for (const raw of rawEntries.slice(0, 250)) {
       if (!isValidSyncableStateKey(raw.key)) continue;
       if (raw.value === undefined) continue;
 

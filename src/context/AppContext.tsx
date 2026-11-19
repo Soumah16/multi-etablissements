@@ -275,16 +275,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
   }, [language, isRtl]);
 
-  // Sync WAF blocked IPs to Express server middleware
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    void fetch('/api/security/blocklist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ blockedIps })
-    }).catch(() => undefined);
-  }, [blockedIps]);
-
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
@@ -641,14 +631,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const toggleBlockIp = (ip: string) => {
+    const next = blockedIps.includes(ip)
+      ? blockedIps.filter(item => item !== ip)
+      : [...blockedIps, ip];
+    setBlockedIps(next);
+    if (typeof window !== 'undefined') {
+      void fetch('/api/security/blocklist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blockedIps: next })
+      }).catch(() => undefined);
+    }
     if (blockedIps.includes(ip)) {
-      const next = blockedIps.filter(item => item !== ip);
-      setBlockedIps(next);
       addLog(`Déblocage de l'adresse IP [${ip}]`, ip, 'securite', 'info');
       showToast(`IP ${ip} débloquée`);
     } else {
-      const next = [...blockedIps, ip];
-      setBlockedIps(next);
       addLog(`Blocage immédiat de l'adresse IP [${ip}]`, ip, 'securite', 'critical');
       showToast(`IP ${ip} ajoutée à la liste de blocage`);
     }

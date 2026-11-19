@@ -18,6 +18,8 @@ type LocalMutationListener = (key: string, data: unknown, updatedAt: number) => 
 
 const keyListeners = new Map<string, Set<KeyListener>>();
 const localMutationListeners = new Set<LocalMutationListener>();
+const memoryDualStore = new Map<string, { value: unknown; updatedAt: number }>();
+let highestRemoteTimestamp = 0;
 
 export const LOCAL_ONLY_KEYS = new Set<string>([
   'smartschool_current_user',
@@ -38,6 +40,10 @@ export function isSyncableKey(key: string): boolean {
   if (LOCAL_ONLY_KEYS.has(key)) return false;
   if (key.endsWith('__ts')) return false;
   return true;
+}
+
+export function getMonotonicWriteTimestamp(floorTs = 0): number {
+  return Math.max(Date.now(), highestRemoteTimestamp + 1, floorTs);
 }
 
 export function subscribeStorageKey(key: string, listener: KeyListener): () => void {
@@ -97,6 +103,11 @@ export function removePendingCloudKeys(keys: string[]): void {
 
 export function listModifiedSyncableKeys(): string[] {
   const keys = new Set<string>(getPendingCloudKeys());
+  for (const k of memoryDualStore.keys()) {
+    if (isSyncableKey(k) && getLocalTimestamp(k) > 0) {
+      keys.add(k);
+    }
+  }
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
@@ -178,16 +189,55 @@ function tsKey(key: string): string {
   return `${key}__ts`;
 }
 
-export function getLocalTimestamp(key: string): number {
+export function isIdbAuthoritative(key: string): boolean {
   try {
     const raw = localStorage.getItem(tsKey(key));
-    if (!raw) return 0;
-    const cleaned = raw.startsWith('idb:') ? raw.slice(4) : raw;
-    const n = Number(cleaned);
-    return Number.isFinite(n) ? n : 0;
+    return Boolean(raw && raw.startsWith('idb:'));
   } catch {
-    return 0;
+    return false;
   }
+}
+
+export function getLocalTimestamp(key: string): number {
+  const memTs = memoryDualStore.get(key)?.updatedAt || 0;
+  let lsTs = 0;
+  try {
+    const raw = localStorage.getItem(tsKey(key));
+    if (raw) {
+      const cleaned = raw.startsWith('idb:') ? raw.slice(4) : raw;
+      const n = Number(cleaned);
+      if (Number.isFinite(n)) lsTs = n;
+    }
+  } catch {
+    lsTs = 0;
+  }
+  return Math.max(lsTs, memTs);
+}
+
+export async function hydrateKeysFromIdb(keys: string[]): Promise<void> {
+  if (typeof window === 'undefined') return;
+  await Promise.all(
+    keys.map(async key => {
+      const rec = await idbGetRecord<unknown>(key);
+      if (!rec) return;
+      const existing = memoryDualStore.get(key);
+      if (!existing || rec.updatedAt >= existing.updatedAt) {
+        memoryDualStore.set(key, { value: rec.data, updatedAt: rec.updatedAt });
+      }
+      if (isIdbAuthoritative(key) || localStorage.getItem(key) === null) {
+        const listeners = keyListeners.get(key);
+        if (listeners) {
+          listeners.forEach(cb => {
+            try {
+              cb(rec.data, rec.updatedAt, 'remote');
+            } catch {
+              // ignore
+            }
+          });
+        }
+      }
+    })
+  );
 }
 
 export function loadLocalStorage<T>(
@@ -200,26 +250,49 @@ export function loadLocalStorage<T>(
 
   if (typeof window === 'undefined') return resolveFallback();
 
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw !== null) {
-      const parsed = JSON.parse(raw) as T;
-      return transform ? transform(parsed) : parsed;
-    }
-  } catch {
-    // ignore corrupted JSON
+  const mem = memoryDualStore.get(key);
+  const idbOnly = isIdbAuthoritative(key);
+
+  if (mem && (idbOnly || mem.updatedAt >= getLocalTimestamp(key))) {
+    const cloned = mem.value as T;
+    return transform ? transform(cloned) : cloned;
   }
+
+  if (!idbOnly) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw !== null) {
+        const parsed = JSON.parse(raw) as T;
+        return transform ? transform(parsed) : parsed;
+      }
+    } catch {
+      // ignore corrupted JSON
+    }
+  }
+
+  if (mem) {
+    const cloned = mem.value as T;
+    return transform ? transform(cloned) : cloned;
+  }
+
   const initial = resolveFallback();
   return transform ? transform(initial) : initial;
 }
 
 export async function readDualStorageValue(key: string): Promise<{ found: boolean; value: unknown }> {
   if (typeof window === 'undefined') return { found: false, value: null };
+  const mem = memoryDualStore.get(key);
+  const localTs = getLocalTimestamp(key);
+  if (mem && mem.updatedAt >= localTs) {
+    return { found: true, value: mem.value };
+  }
   try {
-    const tsMarker = localStorage.getItem(tsKey(key));
-    if (tsMarker && tsMarker.startsWith('idb:')) {
+    if (isIdbAuthoritative(key)) {
       const idbRec = await idbGetRecord<unknown>(key);
-      if (idbRec) return { found: true, value: idbRec.data };
+      if (idbRec) {
+        memoryDualStore.set(key, { value: idbRec.data, updatedAt: idbRec.updatedAt });
+        return { found: true, value: idbRec.data };
+      }
     }
     const raw = localStorage.getItem(key);
     if (raw !== null) {
@@ -229,17 +302,26 @@ export async function readDualStorageValue(key: string): Promise<{ found: boolea
     // ignore parse/storage error and try IDB fallback
   }
   const idbRec = await idbGetRecord<unknown>(key);
-  if (idbRec) return { found: true, value: idbRec.data };
+  if (idbRec) {
+    memoryDualStore.set(key, { value: idbRec.data, updatedAt: idbRec.updatedAt });
+    return { found: true, value: idbRec.data };
+  }
   return { found: false, value: null };
 }
 
 export function saveDualStorage<T>(
   key: string,
   value: T,
-  timestamp = Date.now(),
+  timestamp = getMonotonicWriteTimestamp(),
   source: StorageWriteSource = 'local'
 ): void {
   if (typeof window === 'undefined') return;
+
+  if (source === 'remote' && timestamp > highestRemoteTimestamp) {
+    highestRemoteTimestamp = timestamp;
+  }
+
+  memoryDualStore.set(key, { value, updatedAt: timestamp });
 
   // Always write full payload to IndexedDB (handles large base64 files/photos seamlessly)
   void idbSetRecord(key, value, timestamp);
@@ -248,8 +330,9 @@ export function saveDualStorage<T>(
     localStorage.setItem(key, JSON.stringify(value));
     localStorage.setItem(tsKey(key), String(timestamp));
   } catch {
-    // localStorage quota exceeded (e.g. large uploaded PDF/image) — mark IDB as authoritative
+    // localStorage quota exceeded (e.g. large uploaded PDF/image) — remove stale localStorage payload & mark IDB as authoritative
     try {
+      localStorage.removeItem(key);
       localStorage.setItem(tsKey(key), `idb:${timestamp}`);
     } catch {
       // ignore if even tiny timestamp cannot be stored
@@ -301,9 +384,10 @@ export function usePersistedState<T>(
   useEffect(() => {
     let active = true;
     const localTs = getLocalTimestamp(key);
+    const idbAuthoritative = isIdbAuthoritative(key);
     const hasLocal = (() => {
       try {
-        return localStorage.getItem(key) !== null;
+        return localStorage.getItem(key) !== null && !idbAuthoritative;
       } catch {
         return false;
       }
@@ -311,7 +395,8 @@ export function usePersistedState<T>(
 
     void idbGetRecord<T>(key).then(rec => {
       if (!active || !rec || userMutatedRef.current) return;
-      if (!hasLocal || rec.updatedAt > localTs) {
+      if (!hasLocal || idbAuthoritative || rec.updatedAt > localTs) {
+        memoryDualStore.set(key, { value: rec.data, updatedAt: rec.updatedAt });
         const next = transformRef.current ? transformRef.current(rec.data) : rec.data;
         setState(next);
       }
@@ -339,7 +424,9 @@ export function usePersistedState<T>(
         typeof valueOrUpdater === 'function'
           ? (valueOrUpdater as (prevState: T) => T)(prev)
           : valueOrUpdater;
-      const writeTs = Math.max(Date.now(), mountedAtRef.current + 1, lastWrittenTsRef.current + 1);
+      const writeTs = getMonotonicWriteTimestamp(
+        Math.max(mountedAtRef.current + 1, lastWrittenTsRef.current + 1)
+      );
       lastWrittenTsRef.current = writeTs;
       saveDualStorage(key, next, writeTs, 'local');
       return next;

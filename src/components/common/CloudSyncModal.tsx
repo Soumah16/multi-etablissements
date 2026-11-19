@@ -18,6 +18,7 @@ import {
 import { useFirebase } from '../../context/FirebaseContext';
 import { firebaseConfig } from '../../firebase';
 import { DEFAULT_WORKSPACE_ID, parseInviteAccessInput } from '../../utils/cloudSync';
+import { syncNowWithServer } from '../../utils/serverSync';
 
 export const CloudSyncButton: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { firebaseUser, syncStatus, setShowCloudModal } = useFirebase();
@@ -139,10 +140,27 @@ export const CloudSyncModal: React.FC = () => {
     }
   };
 
+  const handleServerRefresh = async () => {
+    setBusy(true);
+    setFeedback(null);
+    try {
+      const ok = await syncNowWithServer(5000);
+      setFeedback({
+        text: ok
+          ? 'Données actualisées depuis le serveur de ce site !'
+          : 'Serveur inaccessible momentanément. Vérifiez votre connexion Internet.',
+        isError: !ok,
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const handleForceSync = async () => {
     setBusy(true);
     setFeedback(null);
     try {
+      await syncNowWithServer(4000);
       const count = await forceSyncNow();
       setFeedback({
         text:
@@ -323,19 +341,25 @@ export const CloudSyncModal: React.FC = () => {
                 </div>
               )}
 
-              <div className="p-4 rounded-2xl bg-blue-50/80 border border-blue-100 space-y-2">
+              <div className="p-4 rounded-2xl bg-blue-50/80 border border-blue-100 space-y-2.5">
                 <div className="flex items-center gap-2 font-bold text-blue-950">
                   <Smartphone className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span>Comment synchroniser plusieurs appareils ?</span>
+                  <span>Synchronisation PC ↔ Téléphone</span>
                 </div>
                 <p className="text-slate-600 leading-relaxed">
-                  1. Connectez votre compte Google sur cet appareil.
+                  • <strong>Même lien sur PC et téléphone :</strong> toutes vos modifications sont synchronisées automatiquement via le serveur sans compte Google.
                   <br />
-                  2. Ouvrez l’application sur un autre téléphone ou ordinateur avec le{' '}
-                  <strong>même compte Google</strong> (ou via un code d’invitation).
-                  <br />
-                  3. Toutes vos modifications (élèves, notes, paiements, badges, certificats) apparaissent instantanément partout.
+                  • <strong>Deux liens différents</strong> (ex : aperçu éditeur <code>ais-dev</code> sur PC et lien partagé <code>ais-pre</code> sur téléphone) : utilisez le <strong>même lien partagé</strong> sur vos deux appareils ou connectez votre compte Google ci-dessous.
                 </p>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={handleServerRefresh}
+                  className="w-full py-2.5 px-3 rounded-xl bg-white hover:bg-blue-100/70 border border-blue-200 text-blue-900 font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 text-blue-600 ${busy ? 'animate-spin' : ''}`} />
+                  <span>Actualiser les données depuis le serveur</span>
+                </button>
               </div>
 
               <button
@@ -345,7 +369,7 @@ export const CloudSyncModal: React.FC = () => {
                 className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
               >
                 <ShieldCheck className="w-4 h-4" />
-                <span>{busy ? 'Connexion en cours...' : 'Connecter avec Google'}</span>
+                <span>{busy ? 'Connexion en cours...' : 'Connecter le Cloud Google (multi-liens)'}</span>
               </button>
             </div>
           ) : (

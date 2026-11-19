@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useApp } from './AppContext';
 import { resolveSchoolForContext } from '../utils/whatsapp';
 import { generateTotpSecret, verifyTotpCode } from '../utils/totp';
-import { loadLocalStorage, saveDualStorage, usePersistedState } from '../utils/storage';
+import { loadLocalStorage, saveDualStorage, subscribeStorageKey, usePersistedState } from '../utils/storage';
 import { propagateStaffMemberChange } from '../utils/accountSync';
 import { getStoredAccounts } from '../data/accountsData';
 import { readCurrentSessionSnapshot, recordGlobalAuditLog } from '../utils/auditLogger';
@@ -164,18 +164,12 @@ export function loadSchoolSecurityConfig(schoolIdOrAlias?: string): SchoolSecuri
     // ignore storage read errors
   }
 
-  const fresh: SchoolSecurityConfig = {
+  return {
     adminPin: '123456',
     twoFactorEnabled: false,
     twoFactorMethod: 'authenticator',
     totpSecret: generateTotpSecret(16)
   };
-  try {
-    localStorage.setItem(key, JSON.stringify(fresh));
-  } catch {
-    // ignore storage write errors
-  }
-  return fresh;
 }
 
 export function saveSchoolSecurityConfig(schoolIdOrAlias: string | undefined, config: SchoolSecurityConfig): void {
@@ -359,12 +353,22 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const lock = readPersistedPinLock(canonicalSchoolId);
     setFailedPinAttempts(lock.attempts);
     setPinBlockedUntil(lock.blockedUntil);
-    try {
-      const raw = localStorage.getItem(logsStorageKey(canonicalSchoolId));
-      setSchoolLogs(raw ? JSON.parse(raw) : initialSchoolLoginLogs);
-    } catch {
-      setSchoolLogs(initialSchoolLoginLogs);
-    }
+    setSchoolLogs(loadLocalStorage<SchoolLoginLog[]>(logsStorageKey(canonicalSchoolId), initialSchoolLoginLogs));
+
+    const unsubSec = subscribeStorageKey(securityStorageKey(canonicalSchoolId), (data, _ts, src) => {
+      if (src === 'remote' && data && typeof data === 'object') {
+        setSecurityConfig(data as SchoolSecurityConfig);
+      }
+    });
+    const unsubLogs = subscribeStorageKey(logsStorageKey(canonicalSchoolId), (data, _ts, src) => {
+      if (src === 'remote' && Array.isArray(data)) {
+        setSchoolLogs(data as SchoolLoginLog[]);
+      }
+    });
+    return () => {
+      unsubSec();
+      unsubLogs();
+    };
   }, [canonicalSchoolId]);
 
   useEffect(() => {
@@ -381,10 +385,6 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }, ms);
     return () => clearTimeout(timer);
   }, [pinBlockedUntil, canonicalSchoolId]);
-
-  useEffect(() => {
-    saveSchoolSecurityConfig(canonicalSchoolId, securityConfig);
-  }, [canonicalSchoolId, securityConfig]);
 
   // Entities states with dual localStorage + IndexedDB persistence
   const [staff, setStaff] = usePersistedState<StaffMember[]>('smartschool_staff', initialStaffMembers, reconcilePersistedStaff);
@@ -443,6 +443,8 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const toggleTwoFactor = (enabled?: boolean) => {
     setSecurityConfig(prev => {
       const nextEnabled = typeof enabled === 'boolean' ? enabled : !prev.twoFactorEnabled;
+      const nextConfig: SchoolSecurityConfig = { ...prev, twoFactorEnabled: nextEnabled };
+      saveSchoolSecurityConfig(canonicalSchoolId, nextConfig);
       showToast(
         nextEnabled
           ? 'Double Authentification (2FA) activée et exigée pour les connexions et validations.'
@@ -453,12 +455,16 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
         'succes',
         'Console Sécurité École'
       );
-      return { ...prev, twoFactorEnabled: nextEnabled };
+      return nextConfig;
     });
   };
 
   const setTwoFactorMethod = (method: School2FAMethod) => {
-    setSecurityConfig(prev => ({ ...prev, twoFactorMethod: method }));
+    setSecurityConfig(prev => {
+      const nextConfig: SchoolSecurityConfig = { ...prev, twoFactorMethod: method };
+      saveSchoolSecurityConfig(canonicalSchoolId, nextConfig);
+      return nextConfig;
+    });
     setActiveChallengeToken(null);
     setLastSentOtp(null);
     const label =
@@ -472,11 +478,15 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const regenerateTotpSecret = () => {
     const nextSecret = generateTotpSecret(16);
-    setSecurityConfig(prev => ({
-      ...prev,
-      totpSecret: nextSecret,
-      lastVerifiedAt: undefined
-    }));
+    setSecurityConfig(prev => {
+      const nextConfig: SchoolSecurityConfig = {
+        ...prev,
+        totpSecret: nextSecret,
+        lastVerifiedAt: undefined
+      };
+      saveSchoolSecurityConfig(canonicalSchoolId, nextConfig);
+      return nextConfig;
+    });
     recordLog('Admin École (Renouvellement clé TOTP)', 'succes', 'Console Sécurité École');
     showToast('Nouvelle clé QR Authenticator générée. Scannez-la dans votre application.');
   };
@@ -542,7 +552,11 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
 
     const verifiedAt = new Date().toLocaleString('fr-FR');
-    setSecurityConfig(prev => ({ ...prev, lastVerifiedAt: verifiedAt }));
+    setSecurityConfig(prev => {
+      const nextConfig: SchoolSecurityConfig = { ...prev, lastVerifiedAt: verifiedAt };
+      saveSchoolSecurityConfig(canonicalSchoolId, nextConfig);
+      return nextConfig;
+    });
     setActiveChallengeToken(null);
     recordLog('Vérification 2FA Admin École confirmée', 'succes', 'Console Sécurité École');
     showToast('Double Authentification (2FA) vérifiée et opérationnelle !');
@@ -605,7 +619,11 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const updateAdminPin = (oldPin: string, newPin: string): boolean => {
     if (oldPin === securityConfig.adminPin && newPin.length === 6 && /^\d+$/.test(newPin)) {
-      setSecurityConfig(prev => ({ ...prev, adminPin: newPin }));
+      setSecurityConfig(prev => {
+        const nextConfig: SchoolSecurityConfig = { ...prev, adminPin: newPin };
+        saveSchoolSecurityConfig(canonicalSchoolId, nextConfig);
+        return nextConfig;
+      });
       recordLog('Modification du Code PIN Admin École', 'succes', 'Console Sécurité École');
       logAdminAudit('Modification du Code PIN Administrateur École', currentSchool?.name || 'Établissement', 'securite', 'warning');
       showToast("Code PIN Administrateur mis à jour avec succès !");

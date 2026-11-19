@@ -135,6 +135,12 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const localLoansTs = Number(localStorage.getItem(`smartschool_lib_loans_${schoolKey}__ts`)?.replace('idb:', '') || 0);
     const localLogsTs = Number(localStorage.getItem(`smartschool_lib_logs_${schoolKey}__ts`)?.replace('idb:', '') || 0);
 
+    const idbProfileAuth = Boolean(localStorage.getItem(`smartschool_lib_profile_${schoolKey}__ts`)?.startsWith('idb:'));
+    const idbBooksAuth = Boolean(localStorage.getItem(`smartschool_lib_books_${schoolKey}__ts`)?.startsWith('idb:'));
+    const idbEbooksAuth = Boolean(localStorage.getItem(`smartschool_lib_ebooks_${schoolKey}__ts`)?.startsWith('idb:'));
+    const idbLoansAuth = Boolean(localStorage.getItem(`smartschool_lib_loans_${schoolKey}__ts`)?.startsWith('idb:'));
+    const idbLogsAuth = Boolean(localStorage.getItem(`smartschool_lib_logs_${schoolKey}__ts`)?.startsWith('idb:'));
+
     void Promise.all([
       idbGetRecord<LibrarianProfile>(`smartschool_lib_profile_${schoolKey}`),
       idbGetRecord<BookItem[]>(`smartschool_lib_books_${schoolKey}`),
@@ -144,11 +150,11 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     ]).then(([pRec, bRec, eRec, lRec, logRec]) => {
       if (!active) return;
       skipPersistRef.current = true;
-      if (pRec?.data && pRec.updatedAt > localProfileTs) setProfile(pRec.data);
-      if (bRec?.data && bRec.updatedAt > localBooksTs) setBooks(bRec.data);
-      if (eRec?.data && eRec.updatedAt > localEbooksTs) setEbooks(eRec.data);
-      if (lRec?.data && lRec.updatedAt > localLoansTs) setLoans(lRec.data);
-      if (logRec?.data && logRec.updatedAt > localLogsTs) setLibraryAuditLogs(logRec.data);
+      if (pRec?.data && (idbProfileAuth || pRec.updatedAt > localProfileTs)) setProfile(pRec.data);
+      if (bRec?.data && (idbBooksAuth || bRec.updatedAt > localBooksTs)) setBooks(bRec.data);
+      if (eRec?.data && (idbEbooksAuth || eRec.updatedAt > localEbooksTs)) setEbooks(eRec.data);
+      if (lRec?.data && (idbLoansAuth || lRec.updatedAt > localLoansTs)) setLoans(lRec.data);
+      if (logRec?.data && (idbLogsAuth || logRec.updatedAt > localLogsTs)) setLibraryAuditLogs(logRec.data);
       setHydratedSchoolKey(schoolKey);
     });
 
