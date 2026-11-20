@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSupervisor } from '../../context/SupervisorContext';
 import { 
   ShieldCheck, 
@@ -13,6 +13,10 @@ export const SupervisorSecurityView: React.FC = () => {
   const [currentPin, setCurrentPin] = useState(profile.pinCode || '7412');
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
+
+  useEffect(() => {
+    setCurrentPin(profile.pinCode || '7412');
+  }, [profile.pinCode]);
 
   const handleUpdatePin = (e: React.FormEvent) => {
     e.preventDefault();

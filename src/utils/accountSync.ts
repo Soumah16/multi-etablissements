@@ -33,7 +33,12 @@ import { ParentRecord, SecretaryProfile, StudentEnrollment } from '../types/secr
 import { StudentProfile } from '../types/student';
 import { SupervisorProfile } from '../types/supervisor';
 import { TeacherProfile } from '../types/teacher';
-import { loadLocalStorage, saveDualStorage } from './storage';
+import {
+  getMonotonicWriteTimestamp,
+  loadLocalStorage,
+  saveDualStorage,
+  StorageWriteSource
+} from './storage';
 
 export interface CurrentSessionUserLike {
   role: WorkspaceMode;
@@ -72,20 +77,21 @@ export const splitFullName = (fullName: string): { firstName: string; lastName: 
   return { firstName, lastName };
 };
 
-const writeProfileIfChanged = <T extends Record<string, any>>(key: string, nextValue: T): void => {
+const writeProfileIfChanged = <T extends Record<string, any>>(
+  key: string,
+  nextValue: T,
+  source: StorageWriteSource = 'local'
+): void => {
   if (typeof window === 'undefined') return;
   try {
-    const raw = localStorage.getItem(key);
-    if (raw) {
-      const current = JSON.parse(raw);
-      if (JSON.stringify(current) === JSON.stringify(nextValue)) {
-        return;
-      }
+    const current = loadLocalStorage<T | null>(key, null);
+    if (current && JSON.stringify(current) === JSON.stringify(nextValue)) {
+      return;
     }
   } catch {
     // ignore parse error and write fresh
   }
-  saveDualStorage(key, nextValue, Date.now(), 'local');
+  saveDualStorage(key, nextValue, getMonotonicWriteTimestamp(), source);
 };
 
 export const syncCurrentUserSession = (
@@ -136,7 +142,10 @@ export const syncCurrentUserSession = (
   }
 };
 
-export const hydrateActiveRoleProfileOnLogin = (sessionUser: CurrentSessionUserLike | DemoAccount): void => {
+export const hydrateActiveRoleProfileOnLogin = (
+  sessionUser: CurrentSessionUserLike | DemoAccount,
+  source: StorageWriteSource = 'local'
+): void => {
   if (typeof window === 'undefined') return;
   const accounts = getStoredAccounts();
   const matchedAcc = accounts.find(
@@ -166,9 +175,10 @@ export const hydrateActiveRoleProfileOnLogin = (sessionUser: CurrentSessionUserL
         ...current,
         name: resolvedName || current.name,
         email: resolvedEmail || current.email,
-        ...(resolvedPhone ? { phone: resolvedPhone } : {})
+        ...(resolvedPhone ? { phone: resolvedPhone } : {}),
+        ...(resolvedPhoto ? { photo: resolvedPhoto } : {})
       };
-      writeProfileIfChanged('smartschool_profile', next);
+      writeProfileIfChanged('smartschool_profile', next, source);
       break;
     }
     case 'director': {
@@ -185,7 +195,7 @@ export const hydrateActiveRoleProfileOnLogin = (sessionUser: CurrentSessionUserL
         photo: resolvedPhoto || current.photo,
         badgeNumber: sessionUser.badgeNumber || matchedAcc?.badgeNumber || current.badgeNumber
       };
-      writeProfileIfChanged('smartschool_director_profile_v1', next);
+      writeProfileIfChanged('smartschool_director_profile_v1', next, source);
       break;
     }
     case 'secretary': {
@@ -201,7 +211,7 @@ export const hydrateActiveRoleProfileOnLogin = (sessionUser: CurrentSessionUserL
         schoolName: resolvedSchoolName || current.schoolName,
         photo: resolvedPhoto || current.photo
       };
-      writeProfileIfChanged('smartschool_secretary_profile_v1', next);
+      writeProfileIfChanged('smartschool_secretary_profile_v1', next, source);
       break;
     }
     case 'teacher': {
@@ -217,7 +227,7 @@ export const hydrateActiveRoleProfileOnLogin = (sessionUser: CurrentSessionUserL
         schoolName: resolvedSchoolName || current.schoolName,
         photo: resolvedPhoto || current.photo
       };
-      writeProfileIfChanged('smartschool_teacher_profile_v1', next);
+      writeProfileIfChanged('smartschool_teacher_profile_v1', next, source);
       break;
     }
     case 'supervisor': {
@@ -234,7 +244,7 @@ export const hydrateActiveRoleProfileOnLogin = (sessionUser: CurrentSessionUserL
         schoolName: resolvedSchoolName || current.schoolName,
         photo: resolvedPhoto || current.photo
       };
-      writeProfileIfChanged('smartschool_supervisor_profile_v1', next);
+      writeProfileIfChanged('smartschool_supervisor_profile_v1', next, source);
       break;
     }
     case 'accountant': {
@@ -251,7 +261,7 @@ export const hydrateActiveRoleProfileOnLogin = (sessionUser: CurrentSessionUserL
         schoolName: resolvedSchoolName || current.schoolName,
         photo: resolvedPhoto || current.photo
       };
-      writeProfileIfChanged('smartschool_accountant_profile_v1', next);
+      writeProfileIfChanged('smartschool_accountant_profile_v1', next, source);
       break;
     }
     case 'librarian': {
@@ -267,7 +277,7 @@ export const hydrateActiveRoleProfileOnLogin = (sessionUser: CurrentSessionUserL
         schoolName: resolvedSchoolName || current.schoolName,
         photo: resolvedPhoto || current.photo
       };
-      writeProfileIfChanged(libKey, next);
+      writeProfileIfChanged(libKey, next, source);
       break;
     }
     case 'parent': {
@@ -280,7 +290,7 @@ export const hydrateActiveRoleProfileOnLogin = (sessionUser: CurrentSessionUserL
         schoolName: resolvedSchoolName || current.schoolName,
         photo: resolvedPhoto || current.photo
       };
-      writeProfileIfChanged('smartschool_parent_profile_v1', next);
+      writeProfileIfChanged('smartschool_parent_profile_v1', next, source);
       break;
     }
     case 'student': {
@@ -293,7 +303,7 @@ export const hydrateActiveRoleProfileOnLogin = (sessionUser: CurrentSessionUserL
         schoolName: resolvedSchoolName || current.schoolName,
         photo: resolvedPhoto || current.photo
       };
-      writeProfileIfChanged('smartschool_student_profile_v1', next);
+      writeProfileIfChanged('smartschool_student_profile_v1', next, source);
       break;
     }
     default:
@@ -863,7 +873,7 @@ export const propagateRoleProfileToAccount = (
         };
       });
       if (changed) {
-        saveDualStorage('smartschool_staff', nextStaff, Date.now(), 'local');
+        saveDualStorage('smartschool_staff', nextStaff, getMonotonicWriteTimestamp(), 'local');
       }
     }
   }
@@ -918,7 +928,7 @@ export const propagateAccountEditToDomain = (params: {
             )
         );
         if (filtered.length !== admins.length) {
-          saveDualStorage('smartschool_admins', filtered, Date.now(), 'local');
+          saveDualStorage('smartschool_admins', filtered, getMonotonicWriteTimestamp(), 'local');
         }
       } else {
         let matchedAny = false;
@@ -957,7 +967,7 @@ export const propagateAccountEditToDomain = (params: {
             passwordResetRequired: account.mustChangePassword
           });
         }
-        saveDualStorage('smartschool_admins', nextAdmins, Date.now(), 'local');
+        saveDualStorage('smartschool_admins', nextAdmins, getMonotonicWriteTimestamp(), 'local');
       }
     }
   }
@@ -1001,7 +1011,7 @@ export const propagateAccountEditToDomain = (params: {
             };
           });
       if (changed) {
-        saveDualStorage('smartschool_staff', nextStaff, Date.now(), 'local');
+        saveDualStorage('smartschool_staff', nextStaff, getMonotonicWriteTimestamp(), 'local');
       }
     }
   }
@@ -1035,7 +1045,7 @@ export const propagateAccountEditToDomain = (params: {
         };
       });
       if (changed) {
-        saveDualStorage('smartschool_secretary_students_v1', nextStudents, Date.now(), 'local');
+        saveDualStorage('smartschool_secretary_students_v1', nextStudents, getMonotonicWriteTimestamp(), 'local');
       }
     }
   }
@@ -1066,7 +1076,7 @@ export const propagateAccountEditToDomain = (params: {
         };
       });
       if (changed) {
-        saveDualStorage('smartschool_secretary_parents_v1', nextParents, Date.now(), 'local');
+        saveDualStorage('smartschool_secretary_parents_v1', nextParents, getMonotonicWriteTimestamp(), 'local');
       }
     }
   }

@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { WorkspaceMode } from '../../App';
 import { AuthenticatedUser } from './AuthPortal';
-import { getAccountByRole, getStoredAccounts, authenticateUser, normalizeSchoolId, DemoAccount } from '../../data/accountsData';
+import { ACCOUNTS_STORAGE_KEY, getAccountByRole, getStoredAccounts, authenticateUser, normalizeSchoolId, DemoAccount } from '../../data/accountsData';
+import { subscribeStorageKey } from '../../utils/storage';
 import { recordGlobalAuditLog } from '../../utils/auditLogger';
 import { syncNowWithServer } from '../../utils/serverSync';
 import {
@@ -38,7 +39,16 @@ export const RoleSwitchAuthModal: React.FC<RoleSwitchAuthModalProps> = ({
     targetSchoolId ||
     (currentUser.ecoleId && currentUser.ecoleId !== 'NATIONAL' ? currentUser.ecoleId : undefined);
 
+  const [accountsVersion, setAccountsVersion] = useState(0);
+
+  useEffect(() => {
+    return subscribeStorageKey(ACCOUNTS_STORAGE_KEY, () => {
+      setAccountsVersion(v => v + 1);
+    });
+  }, []);
+
   const matchingAccounts = useMemo(() => {
+    void accountsVersion;
     const all = getStoredAccounts().filter(a => a.role === targetRole);
     if (effectiveSchoolId && effectiveSchoolId !== 'NATIONAL' && effectiveSchoolId !== 'ALL') {
       const canonical = normalizeSchoolId(effectiveSchoolId);
@@ -46,7 +56,7 @@ export const RoleSwitchAuthModal: React.FC<RoleSwitchAuthModalProps> = ({
       if (scoped.length > 0) return scoped;
     }
     return all;
-  }, [targetRole, effectiveSchoolId]);
+  }, [targetRole, effectiveSchoolId, accountsVersion]);
 
   const defaultAccount = getAccountByRole(targetRole, effectiveSchoolId) || matchingAccounts[0];
   const [selectedAccountId, setSelectedAccountId] = useState<string>(defaultAccount?.id || '');

@@ -5,7 +5,8 @@ import {
   listModifiedSyncableKeys,
   onLocalStorageMutation,
   readDualStorageValue,
-  saveDualStorage
+  saveDualStorage,
+  setServerClockOffset
 } from './storage';
 import {
   syncSharedMessagesFromServer,
@@ -15,11 +16,12 @@ import {
 interface RemoteStateEntry {
   value: unknown;
   updatedAt: number;
+  serverSeq?: number;
 }
 
 let started = false;
 let cleanupFn: (() => void) | null = null;
-let lastSyncSince = 0;
+let lastServerSeq = 0;
 let activeSyncHook: (() => Promise<boolean>) | null = null;
 
 function applyRemoteEntry(key: string, entry: RemoteStateEntry): void {
@@ -50,6 +52,14 @@ async function pushEntriesToServer(
       if (!resp.ok) {
         return false;
       }
+      try {
+        const data = (await resp.json()) as { serverTime?: number };
+        if (typeof data.serverTime === 'number') {
+          setServerClockOffset(data.serverTime);
+        }
+      } catch {
+        // ignore response parse error
+      }
     }
     return true;
   } catch {
@@ -57,11 +67,11 @@ async function pushEntriesToServer(
   }
 }
 
-async function pullRemoteState(since = 0): Promise<Record<string, RemoteStateEntry> | null> {
+async function pullRemoteState(forceFull = false): Promise<Record<string, RemoteStateEntry> | null> {
   if (typeof window === 'undefined') return null;
   try {
-    const url =
-      since > 0 ? `/api/state?since=${encodeURIComponent(String(since))}` : '/api/state';
+    const useSeq = !forceFull && lastServerSeq > 0 ? lastServerSeq : 0;
+    const url = `/api/state?sinceSeq=${encodeURIComponent(String(useSeq))}`;
     const resp = await fetch(url, {
       cache: 'no-store',
       headers: {
@@ -73,20 +83,31 @@ async function pullRemoteState(since = 0): Promise<Record<string, RemoteStateEnt
     const data = (await resp.json()) as {
       ok?: boolean;
       serverTime?: number;
+      serverSeq?: number;
       states?: Record<string, RemoteStateEntry>;
     };
     if (!data.ok || !data.states) return null;
 
-    let maxRemoteTs = since;
+    if (typeof data.serverTime === 'number') {
+      setServerClockOffset(data.serverTime);
+    }
+
     for (const [key, entry] of Object.entries(data.states)) {
       applyRemoteEntry(key, entry);
-      if (typeof entry?.updatedAt === 'number' && entry.updatedAt > maxRemoteTs) {
-        maxRemoteTs = entry.updatedAt;
+      if (typeof entry?.serverSeq === 'number' && entry.serverSeq > lastServerSeq) {
+        lastServerSeq = entry.serverSeq;
       }
     }
-    if (maxRemoteTs > lastSyncSince) {
-      lastSyncSince = maxRemoteTs;
+
+    if (typeof data.serverSeq === 'number') {
+      if (data.serverSeq < useSeq) {
+        // Server restarted with lower sequence; adopt new sequence
+        lastServerSeq = data.serverSeq;
+      } else if (data.serverSeq > lastServerSeq) {
+        lastServerSeq = data.serverSeq;
+      }
     }
+
     return data.states;
   } catch {
     return null;
@@ -103,7 +124,7 @@ async function reconcileInitialServerState(): Promise<boolean> {
     'smartschool_staff'
   ]);
 
-  const remoteStates = await pullRemoteState(0);
+  const remoteStates = await pullRemoteState(true);
   if (!remoteStates) return false;
 
   // Push any local modifications that are newer than the server snapshot
@@ -163,42 +184,86 @@ export function startServerSync(): () => void {
   let flushTimer: ReturnType<typeof setTimeout> | null = null;
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
   let sseReconnectTimer: ReturnType<typeof setTimeout> | null = null;
-  let isFlushing = false;
+  let activeFlushPromise: Promise<boolean> | null = null;
   let eventSource: EventSource | null = null;
   let disposed = false;
 
-  const flushMutations = async (): Promise<boolean> => {
-    if (isFlushing) return true;
-    if (pendingQueue.size === 0) return true;
-    isFlushing = true;
+  const executeFlush = async (): Promise<boolean> => {
+    let allOk = true;
+    while (pendingQueue.size > 0 && !disposed) {
+      const batch = Array.from(pendingQueue.entries()).map(([key, item]) => ({
+        key,
+        value: item.value,
+        updatedAt: item.updatedAt
+      }));
 
+      const ok = await pushEntriesToServer(batch);
+      if (ok) {
+        for (const pushed of batch) {
+          const cur = pendingQueue.get(pushed.key);
+          if (cur && cur.updatedAt <= pushed.updatedAt) {
+            pendingQueue.delete(pushed.key);
+          }
+        }
+      } else {
+        allOk = false;
+        if (!disposed && !retryTimer) {
+          retryTimer = setTimeout(() => {
+            retryTimer = null;
+            void flushMutations();
+          }, 2500);
+        }
+        break;
+      }
+    }
+    return allOk;
+  };
+
+  const flushMutations = async (): Promise<boolean> => {
+    if (flushTimer) {
+      clearTimeout(flushTimer);
+      flushTimer = null;
+    }
+    if (activeFlushPromise) {
+      const prevOk = await activeFlushPromise;
+      if (pendingQueue.size === 0 || disposed) return prevOk;
+    }
+    if (pendingQueue.size === 0) return true;
+
+    activeFlushPromise = executeFlush().finally(() => {
+      activeFlushPromise = null;
+    });
+    return activeFlushPromise;
+  };
+
+  const beaconUrgentPending = () => {
+    if (pendingQueue.size === 0 || typeof navigator === 'undefined') return;
     const batch = Array.from(pendingQueue.entries()).map(([key, item]) => ({
       key,
       value: item.value,
       updatedAt: item.updatedAt
     }));
-
-    const ok = await pushEntriesToServer(batch);
-    if (ok) {
-      for (const pushed of batch) {
-        const cur = pendingQueue.get(pushed.key);
-        if (cur && cur.updatedAt <= pushed.updatedAt) {
-          pendingQueue.delete(pushed.key);
+    try {
+      const json = JSON.stringify({ entries: batch });
+      if (json.length <= 60_000 && typeof navigator.sendBeacon === 'function') {
+        const blob = new Blob([json], { type: 'application/json' });
+        const sent = navigator.sendBeacon('/api/state', blob);
+        if (sent) {
+          return;
         }
       }
-    } else if (!disposed && !retryTimer) {
-      retryTimer = setTimeout(() => {
-        retryTimer = null;
-        void flushMutations();
-      }, 2500);
+      if (json.length <= 60_000) {
+        void fetch('/api/state', {
+          method: 'POST',
+          keepalive: true,
+          headers: { 'Content-Type': 'application/json' },
+          body: json
+        }).catch(() => undefined);
+      }
+    } catch {
+      // Fallback to normal async flush
+      void flushMutations();
     }
-
-    isFlushing = false;
-
-    if (ok && pendingQueue.size > 0 && !disposed) {
-      return flushMutations();
-    }
-    return ok;
   };
 
   activeSyncHook = flushMutations;
@@ -210,7 +275,7 @@ export function startServerSync(): () => void {
     flushTimer = setTimeout(() => {
       flushTimer = null;
       void flushMutations();
-    }, 120);
+    }, 80);
   });
 
   // Initial full state hydration & push of any offline local changes
@@ -228,27 +293,53 @@ export function startServerSync(): () => void {
       const es = new EventSource('/api/state/stream');
       eventSource = es;
 
-      es.addEventListener('ready', () => {
-        if (hadError) {
-          hadError = false;
-          void pullRemoteState(0);
-          void syncSharedMessagesFromServer();
-          void syncSharedRequestsFromServer();
+      es.addEventListener('ready', (ev: MessageEvent) => {
+        try {
+          const payload = JSON.parse(String(ev.data || '{}')) as {
+            serverTime?: number;
+            serverSeq?: number;
+          };
+          if (typeof payload.serverTime === 'number') {
+            setServerClockOffset(payload.serverTime);
+          }
+          if (hadError || (typeof payload.serverSeq === 'number' && payload.serverSeq !== lastServerSeq)) {
+            hadError = false;
+            void pullRemoteState(true);
+            void syncSharedMessagesFromServer();
+            void syncSharedRequestsFromServer();
+          }
+        } catch {
+          if (hadError) {
+            hadError = false;
+            void pullRemoteState(true);
+          }
         }
       });
 
       es.addEventListener('state_update', (ev: MessageEvent) => {
         try {
           const payload = JSON.parse(String(ev.data || '{}')) as {
-            entries?: Array<{ key: string; value: unknown; updatedAt: number }>;
+            serverTime?: number;
+            serverSeq?: number;
+            entries?: Array<{ key: string; value: unknown; updatedAt: number; serverSeq?: number }>;
           };
+          if (typeof payload.serverTime === 'number') {
+            setServerClockOffset(payload.serverTime);
+          }
           if (Array.isArray(payload.entries)) {
             for (const item of payload.entries) {
-              applyRemoteEntry(item.key, { value: item.value, updatedAt: item.updatedAt });
-              if (item.updatedAt > lastSyncSince) {
-                lastSyncSince = item.updatedAt;
+              applyRemoteEntry(item.key, {
+                value: item.value,
+                updatedAt: item.updatedAt,
+                serverSeq: item.serverSeq
+              });
+              if (typeof item.serverSeq === 'number' && item.serverSeq > lastServerSeq) {
+                lastServerSeq = item.serverSeq;
               }
             }
+          }
+          if (typeof payload.serverSeq === 'number' && payload.serverSeq > lastServerSeq) {
+            lastServerSeq = payload.serverSeq;
           }
         } catch {
           // ignore malformed SSE packet
@@ -285,19 +376,19 @@ export function startServerSync(): () => void {
 
   connectSse();
 
-  // Fallback poll every 6 seconds (plus periodic full catch-up every 5th cycle)
+  // Fallback poll every 4 seconds (plus periodic full catch-up every 8th cycle)
   let pollTick = 0;
   const pollTimer = setInterval(() => {
     pollTick += 1;
     if (pendingQueue.size > 0) {
       void flushMutations();
     }
-    if (pollTick % 5 === 0) {
-      void pullRemoteState(0);
+    if (pollTick % 8 === 0) {
+      void pullRemoteState(true);
     } else {
-      void pullRemoteState(lastSyncSince);
+      void pullRemoteState(false);
     }
-  }, 6_000);
+  }, 4_000);
 
   const handleResume = () => {
     if (disposed) return;
@@ -310,12 +401,16 @@ export function startServerSync(): () => void {
   const handleVisibilityChange = () => {
     if (document.visibilityState === 'visible') {
       handleResume();
+    } else if (document.visibilityState === 'hidden') {
+      beaconUrgentPending();
     }
   };
 
   window.addEventListener('focus', handleResume);
   window.addEventListener('online', handleResume);
   window.addEventListener('pageshow', handleResume);
+  window.addEventListener('pagehide', beaconUrgentPending);
+  window.addEventListener('beforeunload', beaconUrgentPending);
   document.addEventListener('visibilitychange', handleVisibilityChange);
 
   cleanupFn = () => {
@@ -330,6 +425,8 @@ export function startServerSync(): () => void {
     window.removeEventListener('focus', handleResume);
     window.removeEventListener('online', handleResume);
     window.removeEventListener('pageshow', handleResume);
+    window.removeEventListener('pagehide', beaconUrgentPending);
+    window.removeEventListener('beforeunload', beaconUrgentPending);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     started = false;
     cleanupFn = null;

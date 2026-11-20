@@ -27,7 +27,12 @@ import {
   initialDirectorAuditLogs
 } from '../data/directorMockData';
 import { generateTotpSecret, verifyTotpCode } from '../utils/totp';
-import { saveDualStorage, subscribeStorageKey, usePersistedState } from '../utils/storage';
+import {
+  getMonotonicWriteTimestamp,
+  saveDualStorage,
+  subscribeStorageKey,
+  usePersistedState
+} from '../utils/storage';
 import { propagateRoleProfileToAccount } from '../utils/accountSync';
 import { requestServerOtp, verifyServerOtp, maskDestinationLabel } from '../utils/otpClient';
 import { HubRole, pushSharedMessage } from '../utils/communicationHub';
@@ -231,11 +236,16 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return subscribeStorageKey(DIRECTOR_SECURITY_STORAGE_KEY, (data, _ts, src) => {
       if (src !== 'remote' || !data || typeof data !== 'object') return;
       const incoming = data as Partial<DirectorSecurityStorage>;
+      const pinChanged =
+        typeof incoming.directorPin === 'string' && incoming.directorPin !== directorPin;
+      const secretChanged =
+        typeof incoming.totpSecret === 'string' && incoming.totpSecret !== totpSecret;
+      if (!pinChanged && !secretChanged) return;
       remoteSecUpdateRef.current = true;
-      if (typeof incoming.directorPin === 'string') setDirectorPin(incoming.directorPin);
-      if (typeof incoming.totpSecret === 'string') setTotpSecret(incoming.totpSecret);
+      if (pinChanged && incoming.directorPin) setDirectorPin(incoming.directorPin);
+      if (secretChanged && incoming.totpSecret) setTotpSecret(incoming.totpSecret);
     });
-  }, []);
+  }, [directorPin, totpSecret]);
 
   useEffect(() => {
     if (!mountedSecRef.current) {
@@ -251,7 +261,7 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       totpSecret,
       twoFactorMethod: profile.twoFactorMethod
     };
-    saveDualStorage(DIRECTOR_SECURITY_STORAGE_KEY, payload, Date.now(), 'local');
+    saveDualStorage(DIRECTOR_SECURITY_STORAGE_KEY, payload, getMonotonicWriteTimestamp(), 'local');
   }, [directorPin, totpSecret, profile.twoFactorMethod]);
 
   const showToast = (msg: string) => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTeacher } from '../../context/TeacherContext';
 import { ImageUploadField } from '../common/ImageUploadField';
 import { 
@@ -24,6 +24,14 @@ export const TeacherBadgeView: React.FC = () => {
   const [lastName, setLastName] = useState(profile.lastName);
   const [phone, setPhone] = useState(profile.phone);
   const [specialty, setSpecialty] = useState(profile.specialty);
+
+  useEffect(() => {
+    setPhotoUrl(profile.photo);
+    setFirstName(profile.firstName);
+    setLastName(profile.lastName);
+    setPhone(profile.phone);
+    setSpecialty(profile.specialty);
+  }, [profile]);
 
   const qrPayload = `TEACHER|${profile.schoolId}|${profile.matricule}|${profile.firstName} ${profile.lastName}`;
 

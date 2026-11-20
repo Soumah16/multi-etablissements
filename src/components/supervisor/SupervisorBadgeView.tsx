@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSupervisor } from '../../context/SupervisorContext';
 import { ImageUploadField } from '../common/ImageUploadField';
 import { 
@@ -27,6 +27,15 @@ export const SupervisorBadgeView: React.FC = () => {
   const [phone, setPhone] = useState(profile.phone);
   const [address, setAddress] = useState(profile.address);
   const [roleTitle, setRoleTitle] = useState(profile.roleTitle);
+
+  useEffect(() => {
+    setPhotoUrl(profile.photo);
+    setFirstName(profile.firstName);
+    setLastName(profile.lastName);
+    setPhone(profile.phone);
+    setAddress(profile.address);
+    setRoleTitle(profile.roleTitle);
+  }, [profile]);
 
   const supervisorQrValue = `SUPERVISOR|${profile.matricule}|${profile.id}|${profile.firstName} ${profile.lastName}`;
 

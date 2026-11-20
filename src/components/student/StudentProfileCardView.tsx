@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStudent } from '../../context/StudentContext';
 import { ImageUploadField } from '../common/ImageUploadField';
 import { triggerPrint } from '../../utils/printHelper';
@@ -24,6 +24,10 @@ export const StudentProfileCardView: React.FC = () => {
   const { profile, updateProfilePhoto, showToast } = useStudent();
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [newPhoto, setNewPhoto] = useState(profile.photo);
+
+  useEffect(() => {
+    setNewPhoto(profile.photo);
+  }, [profile.photo]);
 
   const qrPayload = profile.qrCodeToken || `STUDENT|${profile.matricule}|${profile.firstName} ${profile.lastName}|${profile.className}`;
 

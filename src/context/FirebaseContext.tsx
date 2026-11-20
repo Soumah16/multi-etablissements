@@ -1,8 +1,10 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
   browserPopupRedirectResolver,
+  getRedirectResult,
   onAuthStateChanged,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
   User,
 } from 'firebase/auth';
@@ -224,8 +226,14 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     []
   );
 
-  // Firebase Auth listener — strictly attach Firestore listeners ONLY after auth & emailVerified
+  // Firebase Auth listener — handle redirect completions on mobile & attach Firestore listeners when verified
   useEffect(() => {
+    void getRedirectResult(auth).catch(err => {
+      const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+      setCloudError(formatFirebaseAuthError(err, hostname));
+      setSyncStatus('error');
+    });
+
     const unsubscribeAuth = onAuthStateChanged(auth, user => {
       setFirebaseUser(user);
       setIsAuthReady(true);
@@ -265,7 +273,22 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         );
         throw domainErr;
       }
-      await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
+      try {
+        await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
+      } catch (popupErr) {
+        const code =
+          typeof popupErr === 'object' && popupErr !== null && 'code' in popupErr
+            ? String((popupErr as { code?: unknown }).code || '')
+            : '';
+        if (
+          code === 'auth/popup-blocked' ||
+          code === 'auth/operation-not-supported-in-this-environment'
+        ) {
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        }
+        throw popupErr;
+      }
     } catch (err) {
       setSyncStatus('error');
       const hostname = typeof window !== 'undefined' ? window.location.hostname : '';

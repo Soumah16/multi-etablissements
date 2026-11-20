@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { loadLocalStorage, saveDualStorage, subscribeStorageKey } from './storage';
+import {
+  getMonotonicWriteTimestamp,
+  loadLocalStorage,
+  saveDualStorage,
+  subscribeStorageKey
+} from './storage';
 import { normalizeSchoolId } from '../data/accountsData';
 
 export type HubRole =
@@ -203,7 +208,7 @@ export function pushSharedMessage(input: {
 
   const current = loadSharedMessages();
   const next = [item, ...current.filter(m => m.id !== item.id)].slice(0, 300);
-  saveDualStorage(SHARED_MESSAGES_KEY, next, Date.now(), 'local');
+  saveDualStorage(SHARED_MESSAGES_KEY, next, getMonotonicWriteTimestamp(), 'local');
 
   if (typeof window !== 'undefined') {
     void fetch('/api/messages', {
@@ -271,7 +276,7 @@ export function replyToSharedMessage(
     };
   });
 
-  saveDualStorage(SHARED_MESSAGES_KEY, next, Date.now(), 'local');
+  saveDualStorage(SHARED_MESSAGES_KEY, next, getMonotonicWriteTimestamp(), 'local');
 
   if (typeof window !== 'undefined') {
     const target = next.find(m => m.id === messageId);
@@ -296,7 +301,7 @@ export function markSharedMessageRead(messageId: string, role: HubRole): void {
   });
   if (!changed) return;
 
-  saveDualStorage(SHARED_MESSAGES_KEY, next, Date.now(), 'local');
+  saveDualStorage(SHARED_MESSAGES_KEY, next, getMonotonicWriteTimestamp(), 'local');
   if (typeof window !== 'undefined') {
     const target = next.find(m => m.id === messageId);
     void fetch(`/api/messages/${encodeURIComponent(messageId)}`, {
@@ -321,7 +326,7 @@ export function markAllSharedMessagesRead(role: HubRole, schoolId?: string): voi
   });
 
   if (updatedIds.length === 0) return;
-  saveDualStorage(SHARED_MESSAGES_KEY, next, Date.now(), 'local');
+  saveDualStorage(SHARED_MESSAGES_KEY, next, getMonotonicWriteTimestamp(), 'local');
 
   if (typeof window !== 'undefined') {
     for (const item of updatedIds) {
@@ -378,7 +383,7 @@ export async function syncSharedMessagesFromServer(schoolId?: string): Promise<v
     const merged = Array.from(byId.values())
       .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
       .slice(0, 300);
-    saveDualStorage(SHARED_MESSAGES_KEY, merged, Date.now(), 'remote');
+    saveDualStorage(SHARED_MESSAGES_KEY, merged, getMonotonicWriteTimestamp(), 'remote');
   } catch {
     // Ignore transient network errors
   }
@@ -415,7 +420,7 @@ export function pushSharedRequest(input: {
 
   const current = loadSharedRequests();
   const next = [item, ...current.filter(r => r.id !== item.id)].slice(0, 300);
-  saveDualStorage(SHARED_REQUESTS_KEY, next, Date.now(), 'local');
+  saveDualStorage(SHARED_REQUESTS_KEY, next, getMonotonicWriteTimestamp(), 'local');
 
   if (typeof window !== 'undefined') {
     void fetch('/api/requests', {
@@ -446,7 +451,7 @@ export function updateSharedRequestStatus(
       updatedAt: nowIso
     };
   });
-  saveDualStorage(SHARED_REQUESTS_KEY, next, Date.now(), 'local');
+  saveDualStorage(SHARED_REQUESTS_KEY, next, getMonotonicWriteTimestamp(), 'local');
 
   if (typeof window !== 'undefined') {
     void fetch(`/api/requests/${encodeURIComponent(requestId)}`, {
@@ -489,7 +494,7 @@ export async function syncSharedRequestsFromServer(schoolId?: string): Promise<v
     const merged = Array.from(byId.values())
       .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
       .slice(0, 300);
-    saveDualStorage(SHARED_REQUESTS_KEY, merged, Date.now(), 'remote');
+    saveDualStorage(SHARED_REQUESTS_KEY, merged, getMonotonicWriteTimestamp(), 'remote');
   } catch {
     // Ignore transient network errors
   }
@@ -519,7 +524,7 @@ export function pushHomeworkSubmissionRecord(sub: Omit<SharedHomeworkSubmission,
     )
   ].slice(0, 300);
 
-  saveDualStorage(SHARED_HOMEWORK_SUBMISSIONS_KEY, next, Date.now(), 'local');
+  saveDualStorage(SHARED_HOMEWORK_SUBMISSIONS_KEY, next, getMonotonicWriteTimestamp(), 'local');
   return record;
 }
 
@@ -541,7 +546,7 @@ export function gradeHomeworkSubmissionRecord(
     }
     return item;
   });
-  saveDualStorage(SHARED_HOMEWORK_SUBMISSIONS_KEY, next, Date.now(), 'local');
+  saveDualStorage(SHARED_HOMEWORK_SUBMISSIONS_KEY, next, getMonotonicWriteTimestamp(), 'local');
 }
 
 export function useSharedMessages(schoolId?: string): SharedMessage[] {

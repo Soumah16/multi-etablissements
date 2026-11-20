@@ -79,6 +79,8 @@ const MainLayout: React.FC = () => {
       return null;
     }
   });
+  const currentUserRef = React.useRef<AuthenticatedUser | null>(currentUser);
+  currentUserRef.current = currentUser;
 
   // Mode switcher across all workspaces
   const [workspaceMode, setWorkspaceModeState] = useState<WorkspaceMode>(() => {
@@ -233,40 +235,40 @@ const MainLayout: React.FC = () => {
     };
     window.addEventListener(CURRENT_USER_UPDATED_EVENT, handleSessionUpdated);
 
-    const unsubAccounts = subscribeStorageKey(ACCOUNTS_STORAGE_KEY, () => {
-      setCurrentUser(prev => {
-        if (!prev) return prev;
-        const accounts = getStoredAccounts();
-        const match = accounts.find(
-          a =>
-            (prev.email && a.email.toLowerCase() === prev.email.toLowerCase()) ||
-            (prev.matricule && a.matricule.toLowerCase() === prev.matricule.toLowerCase())
-        );
-        if (!match) return prev;
-        if (match.status === 'verrouille' || match.status === 'desactive') {
-          setTimeout(() => handleLogout('Compte suspendu ou verrouillé.'), 0);
-          return null;
-        }
-        const nextUser: AuthenticatedUser = {
-          ...prev,
-          name: match.name || prev.name,
-          email: match.email || prev.email,
-          matricule: match.matricule || prev.matricule,
-          schoolName: match.schoolName || prev.schoolName,
-          photo: match.photo || prev.photo,
-          ecoleId: match.ecoleId || prev.ecoleId,
-          status: match.status || prev.status,
-          mustChangePassword: match.mustChangePassword
-        };
-        if (JSON.stringify(nextUser) === JSON.stringify(prev)) return prev;
-        try {
-          localStorage.setItem('smartschool_current_user', JSON.stringify(nextUser));
-        } catch {
-          // ignore
-        }
-        hydrateActiveRoleProfileOnLogin(nextUser);
-        return nextUser;
-      });
+    const unsubAccounts = subscribeStorageKey(ACCOUNTS_STORAGE_KEY, (_data, _ts, source) => {
+      const prev = currentUserRef.current;
+      if (!prev) return;
+      const accounts = getStoredAccounts();
+      const match = accounts.find(
+        a =>
+          (prev.email && a.email.toLowerCase() === prev.email.toLowerCase()) ||
+          (prev.matricule && a.matricule.toLowerCase() === prev.matricule.toLowerCase())
+      );
+      if (!match) return;
+      if (match.status === 'verrouille' || match.status === 'desactive') {
+        handleLogout('Compte suspendu ou verrouillé.');
+        return;
+      }
+      const nextUser: AuthenticatedUser = {
+        ...prev,
+        name: match.name || prev.name,
+        email: match.email || prev.email,
+        matricule: match.matricule || prev.matricule,
+        schoolName: match.schoolName || prev.schoolName,
+        photo: match.photo || prev.photo,
+        ecoleId: match.ecoleId || prev.ecoleId,
+        status: match.status || prev.status,
+        mustChangePassword: match.mustChangePassword
+      };
+      if (JSON.stringify(nextUser) === JSON.stringify(prev)) return;
+      try {
+        localStorage.setItem('smartschool_current_user', JSON.stringify(nextUser));
+      } catch {
+        // ignore
+      }
+      currentUserRef.current = nextUser;
+      setCurrentUser(nextUser);
+      hydrateActiveRoleProfileOnLogin(nextUser, source);
     });
 
     return () => {

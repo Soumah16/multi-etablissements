@@ -1,6 +1,6 @@
 import { AuditOperationType, SecurityAuditLog } from '../types';
 import { initialAuditLogs } from '../data/mockData';
-import { loadLocalStorage, saveDualStorage } from './storage';
+import { getMonotonicWriteTimestamp, loadLocalStorage, saveDualStorage } from './storage';
 
 export const AUDIT_LOGS_STORAGE_KEY = 'smartschool_audit_logs_v1';
 const MAX_AUDIT_LOGS = 300;
@@ -134,7 +134,7 @@ export function recordGlobalAuditLog(input: GlobalAuditInput): SecurityAuditLog 
     const current = loadLocalStorage<SecurityAuditLog[]>(AUDIT_LOGS_STORAGE_KEY, initialAuditLogs);
     const list = Array.isArray(current) ? current : initialAuditLogs;
     const next = [entry, ...list].slice(0, MAX_AUDIT_LOGS);
-    saveDualStorage(AUDIT_LOGS_STORAGE_KEY, next, Date.now(), 'local');
+    saveDualStorage(AUDIT_LOGS_STORAGE_KEY, next, getMonotonicWriteTimestamp(), 'local');
   } catch {
     // ignore storage failures
   }

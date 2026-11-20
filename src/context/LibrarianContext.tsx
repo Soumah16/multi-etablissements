@@ -14,7 +14,15 @@ import {
 } from '../data/librarianMockData';
 import { AuthenticatedUser } from '../components/auth/AuthPortal';
 import { authenticateUser, normalizeSchoolId } from '../data/accountsData';
-import { idbGetRecord, saveDualStorage, subscribeStorageKey } from '../utils/storage';
+import {
+  getLocalTimestamp,
+  getMonotonicWriteTimestamp,
+  idbGetRecord,
+  isIdbAuthoritative,
+  loadLocalStorage,
+  saveDualStorage,
+  subscribeStorageKey
+} from '../utils/storage';
 import { propagateRoleProfileToAccount } from '../utils/accountSync';
 import { recordGlobalAuditLog } from '../utils/auditLogger';
 
@@ -76,15 +84,7 @@ interface LibrarianContextType {
 const LibrarianContext = createContext<LibrarianContextType | undefined>(undefined);
 
 const safeLoadJson = <T,>(key: string, fallback: T): T => {
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw) {
-      return JSON.parse(raw) as T;
-    }
-  } catch {
-    // ignore storage errors
-  }
-  return fallback;
+  return loadLocalStorage<T>(key, fallback);
 };
 
 export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -129,17 +129,6 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setLibraryAuditLogs(safeLoadJson(`smartschool_lib_logs_${schoolKey}`, []));
 
     let active = true;
-    const localProfileTs = Number(localStorage.getItem(`smartschool_lib_profile_${schoolKey}__ts`)?.replace('idb:', '') || 0);
-    const localBooksTs = Number(localStorage.getItem(`smartschool_lib_books_${schoolKey}__ts`)?.replace('idb:', '') || 0);
-    const localEbooksTs = Number(localStorage.getItem(`smartschool_lib_ebooks_${schoolKey}__ts`)?.replace('idb:', '') || 0);
-    const localLoansTs = Number(localStorage.getItem(`smartschool_lib_loans_${schoolKey}__ts`)?.replace('idb:', '') || 0);
-    const localLogsTs = Number(localStorage.getItem(`smartschool_lib_logs_${schoolKey}__ts`)?.replace('idb:', '') || 0);
-
-    const idbProfileAuth = Boolean(localStorage.getItem(`smartschool_lib_profile_${schoolKey}__ts`)?.startsWith('idb:'));
-    const idbBooksAuth = Boolean(localStorage.getItem(`smartschool_lib_books_${schoolKey}__ts`)?.startsWith('idb:'));
-    const idbEbooksAuth = Boolean(localStorage.getItem(`smartschool_lib_ebooks_${schoolKey}__ts`)?.startsWith('idb:'));
-    const idbLoansAuth = Boolean(localStorage.getItem(`smartschool_lib_loans_${schoolKey}__ts`)?.startsWith('idb:'));
-    const idbLogsAuth = Boolean(localStorage.getItem(`smartschool_lib_logs_${schoolKey}__ts`)?.startsWith('idb:'));
 
     void Promise.all([
       idbGetRecord<LibrarianProfile>(`smartschool_lib_profile_${schoolKey}`),
@@ -150,11 +139,16 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     ]).then(([pRec, bRec, eRec, lRec, logRec]) => {
       if (!active) return;
       skipPersistRef.current = true;
-      if (pRec?.data && (idbProfileAuth || pRec.updatedAt > localProfileTs)) setProfile(pRec.data);
-      if (bRec?.data && (idbBooksAuth || bRec.updatedAt > localBooksTs)) setBooks(bRec.data);
-      if (eRec?.data && (idbEbooksAuth || eRec.updatedAt > localEbooksTs)) setEbooks(eRec.data);
-      if (lRec?.data && (idbLoansAuth || lRec.updatedAt > localLoansTs)) setLoans(lRec.data);
-      if (logRec?.data && (idbLogsAuth || logRec.updatedAt > localLogsTs)) setLibraryAuditLogs(logRec.data);
+      const pKey = `smartschool_lib_profile_${schoolKey}`;
+      const bKey = `smartschool_lib_books_${schoolKey}`;
+      const eKey = `smartschool_lib_ebooks_${schoolKey}`;
+      const lKey = `smartschool_lib_loans_${schoolKey}`;
+      const logKey = `smartschool_lib_logs_${schoolKey}`;
+      if (pRec?.data && (isIdbAuthoritative(pKey) || pRec.updatedAt > getLocalTimestamp(pKey))) setProfile(pRec.data);
+      if (bRec?.data && (isIdbAuthoritative(bKey) || bRec.updatedAt > getLocalTimestamp(bKey))) setBooks(bRec.data);
+      if (eRec?.data && (isIdbAuthoritative(eKey) || eRec.updatedAt > getLocalTimestamp(eKey))) setEbooks(eRec.data);
+      if (lRec?.data && (isIdbAuthoritative(lKey) || lRec.updatedAt > getLocalTimestamp(lKey))) setLoans(lRec.data);
+      if (logRec?.data && (isIdbAuthoritative(logKey) || logRec.updatedAt > getLocalTimestamp(logKey))) setLibraryAuditLogs(logRec.data);
       setHydratedSchoolKey(schoolKey);
     });
 
@@ -192,7 +186,7 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       skipPersistRef.current = false;
       return;
     }
-    const now = Date.now();
+    const now = getMonotonicWriteTimestamp();
     lastProfileWriteTsRef.current = now;
     saveDualStorage(`smartschool_lib_profile_${schoolKey}`, profile, now, 'local');
     saveDualStorage(`smartschool_lib_books_${schoolKey}`, books, now, 'local');

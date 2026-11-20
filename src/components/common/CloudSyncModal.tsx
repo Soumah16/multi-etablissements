@@ -46,6 +46,11 @@ export const CloudSyncButton: React.FC<{ compact?: boolean }> = ({ compact = fal
       ) : (
         <CloudOff className="w-3.5 h-3.5 text-blue-600 shrink-0" />
       )}
+      {compact && (
+        <span className="sm:hidden">
+          {isSyncing ? 'Sync...' : isConnected ? 'Cloud' : 'Sync'}
+        </span>
+      )}
       <span className={compact ? 'hidden sm:inline' : ''}>
         {isSyncing
           ? 'Sync...'

@@ -37,6 +37,7 @@ interface StoredCommsData {
 interface StateEntry {
   value: unknown;
   updatedAt: number;
+  serverSeq: number;
 }
 
 interface RateLimitBucket {
@@ -51,6 +52,7 @@ const LOCAL_ONLY_STATE_KEYS = new Set<string>([
   'smartschool_teacher_selected_class_v1',
   'smartschool_parent_selected_child_v1',
   'smartschool_current_school_id',
+  'smartschool_current_school_id_v1',
   'smartschool_single_school_test_v1',
   'smartschool_mode_demo_flag',
   'smartschool_cloud_workspace_id_v1',
@@ -93,6 +95,7 @@ let memoryStore: StoredCommsData = {
 };
 
 let stateStore: Record<string, StateEntry> = {};
+let currentServerSeq = 0;
 let stateWriteQueue: Promise<void> = Promise.resolve();
 
 function broadcastSseEvent(eventName: string, payload: unknown): void {
@@ -141,6 +144,7 @@ async function loadStateStore(): Promise<Record<string, StateEntry>> {
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     if (parsed && typeof parsed === 'object') {
       const cleaned: Record<string, StateEntry> = {};
+      let maxSeq = 0;
       for (const [key, entry] of Object.entries(parsed)) {
         if (
           isValidSyncableStateKey(key) &&
@@ -149,13 +153,18 @@ async function loadStateStore(): Promise<Record<string, StateEntry>> {
           'value' in entry &&
           typeof (entry as { updatedAt?: unknown }).updatedAt === 'number'
         ) {
+          const rawSeq = (entry as { serverSeq?: unknown }).serverSeq;
+          const seq = typeof rawSeq === 'number' && Number.isFinite(rawSeq) && rawSeq > 0 ? rawSeq : ++maxSeq;
+          if (seq > maxSeq) maxSeq = seq;
           cleaned[key] = {
             value: (entry as StateEntry).value,
-            updatedAt: (entry as StateEntry).updatedAt
+            updatedAt: (entry as StateEntry).updatedAt,
+            serverSeq: seq
           };
         }
       }
       stateStore = cleaned;
+      currentServerSeq = maxSeq;
     }
   } catch {
     // First boot or no file yet
@@ -383,7 +392,7 @@ async function startServer() {
     next();
   });
 
-  app.use(express.json({ limit: '15mb' }));
+  app.use(express.json({ limit: '15mb', type: ['application/json', 'text/plain'] }));
 
   // WAF IP blocklist enforcement
   app.use((req: Request, res: Response, next: NextFunction) => {
@@ -455,7 +464,9 @@ async function startServer() {
     }
 
     sseClients.add(res);
-    res.write(`event: ready\ndata: ${JSON.stringify({ ok: true, serverTime: Date.now() })}\n\n`);
+    res.write(
+      `event: ready\ndata: ${JSON.stringify({ ok: true, serverTime: Date.now(), serverSeq: currentServerSeq })}\n\n`
+    );
 
     const ping = setInterval(() => {
       try {
@@ -472,21 +483,35 @@ async function startServer() {
     });
   });
 
-  // Universal Shared State Retrieval (Last-Write-Wins across all connected browsers)
+  // Universal Shared State Retrieval (Monotonic serverSeq cursor + Last-Write-Wins fallback)
   app.get('/api/state', (req: Request, res: Response) => {
+    const hasSinceSeq = req.query.sinceSeq !== undefined;
+    const sinceSeqParam = Number(req.query.sinceSeq || 0);
     const sinceParam = Number(req.query.since || 0);
     const since = Number.isFinite(sinceParam) && sinceParam > 0 ? sinceParam : 0;
 
     const states: Record<string, StateEntry> = {};
-    for (const [key, entry] of Object.entries(stateStore)) {
-      if (entry.updatedAt > since) {
-        states[key] = entry;
+    if (hasSinceSeq) {
+      // If client sequence is 0 or exceeds currentServerSeq (e.g. server reboot), send complete snapshot
+      const useCursor =
+        Number.isFinite(sinceSeqParam) && sinceSeqParam > 0 && sinceSeqParam <= currentServerSeq;
+      for (const [key, entry] of Object.entries(stateStore)) {
+        if (!useCursor || entry.serverSeq > sinceSeqParam) {
+          states[key] = entry;
+        }
+      }
+    } else {
+      for (const [key, entry] of Object.entries(stateStore)) {
+        if (entry.updatedAt > since) {
+          states[key] = entry;
+        }
       }
     }
 
     res.json({
       ok: true,
       serverTime: Date.now(),
+      serverSeq: currentServerSeq,
       states
     });
   });
@@ -506,7 +531,7 @@ async function startServer() {
       return;
     }
 
-    const applied: Array<{ key: string; value: unknown; updatedAt: number }> = [];
+    const applied: Array<{ key: string; value: unknown; updatedAt: number; serverSeq: number }> = [];
 
     for (const raw of rawEntries.slice(0, 250)) {
       if (!isValidSyncableStateKey(raw.key)) continue;
@@ -517,9 +542,15 @@ async function startServer() {
       const existing = stateStore[raw.key];
 
       if (!existing || nextTs >= existing.updatedAt) {
-        const entry: StateEntry = { value: raw.value, updatedAt: nextTs };
+        currentServerSeq += 1;
+        const entry: StateEntry = { value: raw.value, updatedAt: nextTs, serverSeq: currentServerSeq };
         stateStore[raw.key] = entry;
-        applied.push({ key: raw.key, value: entry.value, updatedAt: entry.updatedAt });
+        applied.push({
+          key: raw.key,
+          value: entry.value,
+          updatedAt: entry.updatedAt,
+          serverSeq: entry.serverSeq
+        });
       }
     }
 
@@ -527,6 +558,7 @@ async function startServer() {
       await schedulePersistStateStore();
       broadcastSseEvent('state_update', {
         serverTime: Date.now(),
+        serverSeq: currentServerSeq,
         entries: applied
       });
     }
@@ -534,7 +566,8 @@ async function startServer() {
     res.json({
       ok: true,
       appliedCount: applied.length,
-      serverTime: Date.now()
+      serverTime: Date.now(),
+      serverSeq: currentServerSeq
     });
   });
 

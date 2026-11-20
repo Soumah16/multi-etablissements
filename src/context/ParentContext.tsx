@@ -80,7 +80,7 @@ export const ParentProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     const syncIncoming = (list: SharedMessage[]) => {
       const relevant = list.filter(
-        m => m.senderRole !== 'parent' && m.recipientRoles.includes('parent')
+        m => m.id !== 'smsg-init-1' && m.senderRole !== 'parent' && m.recipientRoles.includes('parent')
       );
       if (relevant.length === 0) return;
       setNotifications(prev => {

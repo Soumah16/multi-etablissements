@@ -132,7 +132,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     const syncIncomingMessages = (list: SharedMessage[]) => {
       const relevant = list.filter(
-        m => m.senderRole !== 'student' && m.recipientRoles.includes('student')
+        m => m.id !== 'smsg-init-1' && m.senderRole !== 'student' && m.recipientRoles.includes('student')
       );
       if (relevant.length === 0) return;
       setNotifications(prev => {
@@ -171,8 +171,9 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
           s.studentMatricule.toLowerCase() === profile.matricule.toLowerCase()
       );
       if (mine.length === 0) return;
-      setHomeworks(prev =>
-        prev.map(hw => {
+      setHomeworks(prev => {
+        let changed = false;
+        const next = prev.map(hw => {
           const match = mine.find(
             s =>
               s.homeworkId === hw.id ||
@@ -180,14 +181,20 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 s.homeworkTitle.toLowerCase() === hw.title.toLowerCase())
           );
           if (!match) return hw;
+          const nextFeedback = match.teacherComment || hw.teacherFeedback;
+          if (hw.status === 'corrige' && hw.score === match.grade && hw.teacherFeedback === nextFeedback) {
+            return hw;
+          }
+          changed = true;
           return {
             ...hw,
-            status: 'corrige',
+            status: 'corrige' as const,
             score: match.grade,
-            teacherFeedback: match.teacherComment || hw.teacherFeedback
+            teacherFeedback: nextFeedback
           };
-        })
-      );
+        });
+        return changed ? next : prev;
+      });
     };
 
     syncIncomingMessages(loadSharedMessages());

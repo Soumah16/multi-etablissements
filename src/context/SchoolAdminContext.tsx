@@ -140,9 +140,8 @@ function pinLockStorageKey(schoolIdOrAlias?: string): string {
 export function loadSchoolSecurityConfig(schoolIdOrAlias?: string): SchoolSecurityConfig {
   const key = securityStorageKey(schoolIdOrAlias);
   try {
-    const raw = localStorage.getItem(key);
-    if (raw) {
-      const parsed = JSON.parse(raw);
+    const parsed = loadLocalStorage<Partial<SchoolSecurityConfig> | null>(key, null);
+    if (parsed && typeof parsed === 'object') {
       return {
         adminPin:
           typeof parsed.adminPin === 'string' && /^\d{6}$/.test(parsed.adminPin)
@@ -189,9 +188,9 @@ export function appendSchoolLoginLog(
   };
   try {
     const key = logsStorageKey(schoolIdOrAlias);
-    const raw = localStorage.getItem(key);
-    const existing: SchoolLoginLog[] = raw ? JSON.parse(raw) : initialSchoolLoginLogs;
-    saveDualStorage(key, [newLog, ...existing].slice(0, 40));
+    const existing = loadLocalStorage<SchoolLoginLog[]>(key, initialSchoolLoginLogs);
+    const list = Array.isArray(existing) ? existing : initialSchoolLoginLogs;
+    saveDualStorage(key, [newLog, ...list].slice(0, 40));
   } catch {
     // ignore storage errors
   }

@@ -20,6 +20,7 @@ const keyListeners = new Map<string, Set<KeyListener>>();
 const localMutationListeners = new Set<LocalMutationListener>();
 const memoryDualStore = new Map<string, { value: unknown; updatedAt: number }>();
 let highestRemoteTimestamp = 0;
+let serverClockOffsetMs = 0;
 
 export const LOCAL_ONLY_KEYS = new Set<string>([
   'smartschool_current_user',
@@ -28,12 +29,24 @@ export const LOCAL_ONLY_KEYS = new Set<string>([
   'smartschool_teacher_selected_class_v1',
   'smartschool_parent_selected_child_v1',
   'smartschool_current_school_id',
+  'smartschool_current_school_id_v1',
   'smartschool_single_school_test_v1',
   'smartschool_mode_demo_flag',
   'smartschool_cloud_workspace_id_v1',
   'smartschool_last_activity_v1',
   PENDING_CLOUD_KEYS_KEY,
 ]);
+
+export function setServerClockOffset(serverTime: number): void {
+  if (typeof serverTime !== 'number' || !Number.isFinite(serverTime) || serverTime <= 0) return;
+  const offset = serverTime - Date.now();
+  // Smooth large transient spikes only if reasonable; track direct server skew
+  serverClockOffsetMs = offset;
+}
+
+export function getServerAlignedNow(): number {
+  return Date.now() + serverClockOffsetMs;
+}
 
 export function isSyncableKey(key: string): boolean {
   if (!key || !key.startsWith('smartschool_')) return false;
@@ -43,7 +56,7 @@ export function isSyncableKey(key: string): boolean {
 }
 
 export function getMonotonicWriteTimestamp(floorTs = 0): number {
-  return Math.max(Date.now(), highestRemoteTimestamp + 1, floorTs);
+  return Math.max(getServerAlignedNow(), highestRemoteTimestamp + 1, floorTs);
 }
 
 export function subscribeStorageKey(key: string, listener: KeyListener): () => void {
@@ -317,23 +330,29 @@ export function saveDualStorage<T>(
 ): void {
   if (typeof window === 'undefined') return;
 
-  if (source === 'remote' && timestamp > highestRemoteTimestamp) {
-    highestRemoteTimestamp = timestamp;
+  let effectiveTs = Number.isFinite(timestamp) && timestamp > 0 ? timestamp : getMonotonicWriteTimestamp();
+  if (source === 'remote') {
+    if (effectiveTs > highestRemoteTimestamp) {
+      highestRemoteTimestamp = effectiveTs;
+    }
+  } else {
+    const prevLocalTs = getLocalTimestamp(key);
+    effectiveTs = Math.max(effectiveTs, highestRemoteTimestamp + 1, prevLocalTs + 1);
   }
 
-  memoryDualStore.set(key, { value, updatedAt: timestamp });
+  memoryDualStore.set(key, { value, updatedAt: effectiveTs });
 
   // Always write full payload to IndexedDB (handles large base64 files/photos seamlessly)
-  void idbSetRecord(key, value, timestamp);
+  void idbSetRecord(key, value, effectiveTs);
 
   try {
     localStorage.setItem(key, JSON.stringify(value));
-    localStorage.setItem(tsKey(key), String(timestamp));
+    localStorage.setItem(tsKey(key), String(effectiveTs));
   } catch {
     // localStorage quota exceeded (e.g. large uploaded PDF/image) — remove stale localStorage payload & mark IDB as authoritative
     try {
       localStorage.removeItem(key);
-      localStorage.setItem(tsKey(key), `idb:${timestamp}`);
+      localStorage.setItem(tsKey(key), `idb:${effectiveTs}`);
     } catch {
       // ignore if even tiny timestamp cannot be stored
     }
@@ -344,7 +363,7 @@ export function saveDualStorage<T>(
   if (listeners) {
     listeners.forEach(cb => {
       try {
-        cb(value, timestamp, source);
+        cb(value, effectiveTs, source);
       } catch {
         // ignore listener failure
       }
@@ -356,7 +375,7 @@ export function saveDualStorage<T>(
     addPendingCloudKey(key);
     localMutationListeners.forEach(cb => {
       try {
-        cb(key, value, timestamp);
+        cb(key, value, effectiveTs);
       } catch {
         // ignore listener failure
       }
@@ -374,7 +393,8 @@ export function usePersistedState<T>(
   transform?: (loaded: T) => T
 ): [T, React.Dispatch<React.SetStateAction<T>>] {
   const [state, setState] = useState<T>(() => loadLocalStorage<T>(key, initialValue, transform));
-  const mountedAtRef = useRef<number>(Date.now());
+  const stateRef = useRef<T>(state);
+  const mountedAtRef = useRef<number>(getServerAlignedNow());
   const userMutatedRef = useRef<boolean>(false);
   const lastWrittenTsRef = useRef<number>(0);
   const transformRef = useRef(transform);
@@ -383,21 +403,24 @@ export function usePersistedState<T>(
   // Hydrate from IndexedDB on mount if IDB holds a newer or quota-overflowed snapshot
   useEffect(() => {
     let active = true;
-    const localTs = getLocalTimestamp(key);
-    const idbAuthoritative = isIdbAuthoritative(key);
-    const hasLocal = (() => {
-      try {
-        return localStorage.getItem(key) !== null && !idbAuthoritative;
-      } catch {
-        return false;
-      }
-    })();
 
     void idbGetRecord<T>(key).then(rec => {
       if (!active || !rec || userMutatedRef.current) return;
-      if (!hasLocal || idbAuthoritative || rec.updatedAt > localTs) {
+      // Read live timestamps AFTER await so stale IDB never clobbers fresh server/remote updates
+      const liveTs = getLocalTimestamp(key);
+      const idbAuthoritative = isIdbAuthoritative(key);
+      const hasLocal = (() => {
+        try {
+          return localStorage.getItem(key) !== null && !idbAuthoritative;
+        } catch {
+          return false;
+        }
+      })();
+
+      if (!hasLocal || idbAuthoritative || rec.updatedAt > liveTs) {
         memoryDualStore.set(key, { value: rec.data, updatedAt: rec.updatedAt });
         const next = transformRef.current ? transformRef.current(rec.data) : rec.data;
+        stateRef.current = next;
         setState(next);
       }
     });
@@ -407,6 +430,7 @@ export function usePersistedState<T>(
       if (!active) return;
       if (source !== 'remote' && updatedAt === lastWrittenTsRef.current) return;
       const next = transformRef.current ? transformRef.current(data as T) : (data as T);
+      stateRef.current = next;
       setState(next);
     });
 
@@ -416,21 +440,27 @@ export function usePersistedState<T>(
     };
   }, [key]);
 
-  // Persist every local change immediately to localStorage, IndexedDB, and Cloud Sync queue
+  // Persist every genuine local change synchronously outside React state updater
   const setPersistedState: React.Dispatch<React.SetStateAction<T>> = valueOrUpdater => {
+    const prev = stateRef.current;
+    const next =
+      typeof valueOrUpdater === 'function'
+        ? (valueOrUpdater as (prevState: T) => T)(prev)
+        : valueOrUpdater;
+
+    // Ignore no-op updates (e.g. updater returning `prev` unchanged) so we never stamp bogus timestamps
+    if (Object.is(next, prev)) {
+      return;
+    }
+
     userMutatedRef.current = true;
-    setState(prev => {
-      const next =
-        typeof valueOrUpdater === 'function'
-          ? (valueOrUpdater as (prevState: T) => T)(prev)
-          : valueOrUpdater;
-      const writeTs = getMonotonicWriteTimestamp(
-        Math.max(mountedAtRef.current + 1, lastWrittenTsRef.current + 1)
-      );
-      lastWrittenTsRef.current = writeTs;
-      saveDualStorage(key, next, writeTs, 'local');
-      return next;
-    });
+    stateRef.current = next;
+    const writeTs = getMonotonicWriteTimestamp(
+      Math.max(mountedAtRef.current + 1, lastWrittenTsRef.current + 1)
+    );
+    lastWrittenTsRef.current = writeTs;
+    setState(next);
+    saveDualStorage(key, next, writeTs, 'local');
   };
 
   return [state, setPersistedState];

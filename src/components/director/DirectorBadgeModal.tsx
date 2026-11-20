@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDirector } from '../../context/DirectorContext';
 import { ImageUploadField } from '../common/ImageUploadField';
 import { 
@@ -23,6 +23,10 @@ export const DirectorBadgeModal: React.FC = () => {
   const [photoEditOpen, setPhotoEditOpen] = useState(false);
   const [newPhotoUrl, setNewPhotoUrl] = useState(profile.photo);
   const [isScanTested, setIsScanTested] = useState(false);
+
+  useEffect(() => {
+    setNewPhotoUrl(profile.photo);
+  }, [profile.photo]);
 
   const qrPayload = `DIRECTOR|${profile.matricule}|${profile.badgeNumber}|${profile.name}|${profile.schoolName || 'SmartSchool'}`;
 

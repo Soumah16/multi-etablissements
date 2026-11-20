@@ -82,24 +82,24 @@ function getDeviceLabel(): string {
  * Recursively strip undefined, functions, and non-finite numbers so Firestore
  * never rejects the map payload.
  */
-function sanitizeFirestoreValue(val: unknown, stripLargeBase64 = false): unknown {
+function sanitizeFirestoreValue(val: unknown, maxBase64Length: number | null = null): unknown {
   if (val === null || val === undefined) return null;
   if (typeof val === 'boolean') return val;
   if (typeof val === 'number') return Number.isFinite(val) ? val : 0;
   if (typeof val === 'string') {
-    if (stripLargeBase64 && val.startsWith('data:') && val.length > 16_000) {
+    if (maxBase64Length !== null && val.startsWith('data:') && val.length > maxBase64Length) {
       return '';
     }
     return val;
   }
   if (Array.isArray(val)) {
-    return val.map(item => sanitizeFirestoreValue(item, stripLargeBase64));
+    return val.map(item => sanitizeFirestoreValue(item, maxBase64Length));
   }
   if (typeof val === 'object') {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
       if (v === undefined || typeof v === 'function' || typeof v === 'symbol') continue;
-      out[k] = sanitizeFirestoreValue(v, stripLargeBase64);
+      out[k] = sanitizeFirestoreValue(v, maxBase64Length);
     }
     return out;
   }
@@ -113,19 +113,23 @@ export function enforcePayloadBudget(rawValue: unknown): {
   safeValue: unknown;
   trimmedLargeAttachments: boolean;
 } {
-  const firstPass = sanitizeFirestoreValue(rawValue, false);
+  const firstPass = sanitizeFirestoreValue(rawValue, null);
   const encoder = new TextEncoder();
   const initialSize = encoder.encode(JSON.stringify({ v: firstPass })).length;
   if (initialSize <= MAX_SAFE_PAYLOAD_BYTES) {
     return { safeValue: firstPass, trimmedLargeAttachments: false };
   }
 
-  // Strip oversized inline base64 blobs (>16KB) from cloud mirror while preserving local IndexedDB copy
-  const stripped = sanitizeFirestoreValue(rawValue, true);
-  const strippedSize = encoder.encode(JSON.stringify({ v: stripped })).length;
-  if (strippedSize <= MAX_SAFE_PAYLOAD_BYTES) {
-    return { safeValue: stripped, trimmedLargeAttachments: true };
+  // Progressively strip only oversized inline base64 blobs (>240KB, >80KB, then >16KB)
+  for (const threshold of [240_000, 80_000, 16_000]) {
+    const candidate = sanitizeFirestoreValue(rawValue, threshold);
+    const size = encoder.encode(JSON.stringify({ v: candidate })).length;
+    if (size <= MAX_SAFE_PAYLOAD_BYTES) {
+      return { safeValue: candidate, trimmedLargeAttachments: true };
+    }
   }
+
+  const stripped = sanitizeFirestoreValue(rawValue, 16_000);
 
   // Fallback array tail trim if a log list grows extraordinarily huge
   if (Array.isArray(stripped)) {
