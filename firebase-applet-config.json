@@ -1,12 +1,12 @@
 {
-  "projectId": "august-bearing-17cvm",
-  "appId": "1:224324393343:web:be35688c5a832441db624a",
-  "apiKey": "AIzaSyBH57mizdJ7aikCxsCcIRHqYgPIy5N3Tr8",
-  "authDomain": "august-bearing-17cvm.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-smartschoolerpmu-e74c3755-7d70-4649-b656-54e0820d122b",
-  "storageBucket": "august-bearing-17cvm.firebasestorage.app",
-  "messagingSenderId": "224324393343",
-  "measurementId": "",
-  "oAuthClientId": "224324393343-ihl6b1thr5pb4nu28jdkok52p3sdrati.apps.googleusercontent.com",
+  "projectId": "multi-etablissements",
+  "appId": "1:880934793289:web:01c70220e3e2d62a9e0f98",
+  "apiKey": "AIzaSyDGT580xVAp9BkxAnIX5TR3Yg-lUUMfoOU",
+  "authDomain": "multi-etablissements.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "multi-etablissements.firebasestorage.app",
+  "messagingSenderId": "880934793289",
+  "measurementId": "G-ZSXF6FMH23",
+  "oAuthClientId": "",
   "recaptchaSiteKey": ""
 }

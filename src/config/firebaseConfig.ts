@@ -5,6 +5,7 @@ export interface SmartSchoolFirebaseConfig {
   storageBucket: string;
   messagingSenderId: string;
   appId: string;
+  measurementId: string;
 }
 
 function readEnv(key: string, fallback: string): string {
@@ -19,13 +20,14 @@ export const firebaseConfig: SmartSchoolFirebaseConfig = {
   storageBucket: readEnv('VITE_FIREBASE_STORAGE_BUCKET', 'multi-etablissements.firebasestorage.app'),
   messagingSenderId: readEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '880934793289'),
   appId: readEnv('VITE_FIREBASE_APP_ID', '1:880934793289:web:01c70220e3e2d62a9e0f98'),
+  measurementId: readEnv('VITE_FIREBASE_MEASUREMENT_ID', 'G-ZSXF6FMH23'),
 };
 
-const rawDatabaseId = readEnv('VITE_FIREBASE_DATABASE_ID', '');
+const rawDatabaseId = readEnv('VITE_FIREBASE_DATABASE_ID', '(default)');
 export const firebaseDatabaseId =
-  rawDatabaseId && rawDatabaseId !== '(default)' && rawDatabaseId !== 'default'
-    ? rawDatabaseId
-    : '';
+  !rawDatabaseId || rawDatabaseId === 'default' || rawDatabaseId === '(default)'
+    ? '(default)'
+    : rawDatabaseId;
 
 export const firebaseVapidKey = readEnv(
   'VITE_FIREBASE_VAPID_KEY',
