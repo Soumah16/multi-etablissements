@@ -23,10 +23,9 @@ auth.languageCode = 'fr';
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-export const db =
-  firebaseDatabaseId && firebaseDatabaseId !== '(default)'
-    ? getFirestore(app, firebaseDatabaseId)
-    : getFirestore(app);
+export const db = firebaseDatabaseId
+  ? getFirestore(app, firebaseDatabaseId)
+  : getFirestore(app);
 
 export const storage = getStorage(app);
 

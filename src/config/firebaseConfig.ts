@@ -21,7 +21,11 @@ export const firebaseConfig: SmartSchoolFirebaseConfig = {
   appId: readEnv('VITE_FIREBASE_APP_ID', '1:880934793289:web:01c70220e3e2d62a9e0f98'),
 };
 
-export const firebaseDatabaseId = readEnv('VITE_FIREBASE_DATABASE_ID', '(default)');
+const rawDatabaseId = readEnv('VITE_FIREBASE_DATABASE_ID', '');
+export const firebaseDatabaseId =
+  rawDatabaseId && rawDatabaseId !== '(default)' && rawDatabaseId !== 'default'
+    ? rawDatabaseId
+    : '';
 
 export const firebaseVapidKey = readEnv(
   'VITE_FIREBASE_VAPID_KEY',
