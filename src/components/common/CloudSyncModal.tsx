@@ -116,8 +116,8 @@ export const CloudSyncModal: React.FC = () => {
   if (!showCloudModal) return null;
 
   const officialSharedDomain =
-    domainCheck?.authorizedDomains.find(d => d.startsWith('ais-pre-')) ||
     domainCheck?.authorizedDomains.find(d => d.startsWith('ais-dev-')) ||
+    domainCheck?.authorizedDomains.find(d => d.startsWith('ais-pre-')) ||
     '';
 
   const handleCopy = (label: string, value: string) => {
@@ -352,9 +352,9 @@ export const CloudSyncModal: React.FC = () => {
                   <span>Synchronisation PC ↔ Téléphone</span>
                 </div>
                 <p className="text-slate-600 leading-relaxed">
-                  • <strong>Même lien sur PC et téléphone :</strong> toutes vos modifications sont synchronisées automatiquement via le serveur sans compte Google.
+                  • <strong>Même lien sur PC et téléphone :</strong> toutes vos modifications sont synchronisées automatiquement via le serveur sans compte Google. (Si vous utilisez le lien public partagé, vérifiez que le partage est bien activé dans AI Studio pour éviter une erreur <em>Page not found</em>.)
                   <br />
-                  • <strong>Deux liens différents</strong> (ex : aperçu éditeur <code>ais-dev</code> sur PC et lien partagé <code>ais-pre</code> sur téléphone) : utilisez le <strong>même lien partagé</strong> sur vos deux appareils ou connectez votre compte Google ci-dessous.
+                  • <strong>Deux liens ou instances différents :</strong> connectez le même compte Google ci-dessous sur chaque appareil pour activer la synchronisation Cloud en temps réel.
                 </p>
                 <button
                   type="button"

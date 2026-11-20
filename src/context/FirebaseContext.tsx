@@ -4,7 +4,6 @@ import {
   getRedirectResult,
   onAuthStateChanged,
   signInWithPopup,
-  signInWithRedirect,
   signOut,
   User,
 } from 'firebase/auth';
@@ -102,12 +101,14 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const knownSyncMetaRef = useRef<Map<string, SyncMetaRecord>>(new Map());
   const workspaceRef = useRef<WorkspaceInfo | null>(null);
   const userRef = useRef<User | null>(null);
+  const domainCheckRef = useRef<DomainAuthorizationCheck | null>(null);
   const pendingPushKeysRef = useRef<Set<string>>(new Set());
   const debounceTimerRef = useRef<number | null>(null);
   const unsubSyncRef = useRef<(() => void) | null>(null);
 
   workspaceRef.current = workspace;
   userRef.current = firebaseUser;
+  domainCheckRef.current = domainCheck;
 
   const flushPendingPushes = useCallback(async () => {
     const user = userRef.current;
@@ -226,13 +227,9 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     []
   );
 
-  // Firebase Auth listener — handle redirect completions on mobile & attach Firestore listeners when verified
+  // Firebase Auth listener — attach Firestore listeners when verified
   useEffect(() => {
-    void getRedirectResult(auth).catch(err => {
-      const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
-      setCloudError(formatFirebaseAuthError(err, hostname));
-      setSyncStatus('error');
-    });
+    void getRedirectResult(auth).catch(() => undefined);
 
     const unsubscribeAuth = onAuthStateChanged(auth, user => {
       setFirebaseUser(user);
@@ -265,35 +262,21 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCloudError(null);
     setSyncStatus('connecting');
     try {
-      const check = await recheckDomainAuthorization();
-      if (!check.authorized) {
-        const domainErr = Object.assign(
-          new Error(formatFirebaseAuthError({ code: 'auth/unauthorized-domain' }, check.currentHostname)),
+      const knownCheck = domainCheckRef.current;
+      if (knownCheck && !knownCheck.authorized) {
+        throw Object.assign(
+          new Error(formatFirebaseAuthError({ code: 'auth/unauthorized-domain' }, knownCheck.currentHostname)),
           { code: 'auth/unauthorized-domain' }
         );
-        throw domainErr;
       }
-      try {
-        await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
-      } catch (popupErr) {
-        const code =
-          typeof popupErr === 'object' && popupErr !== null && 'code' in popupErr
-            ? String((popupErr as { code?: unknown }).code || '')
-            : '';
-        if (
-          code === 'auth/popup-blocked' ||
-          code === 'auth/operation-not-supported-in-this-environment'
-        ) {
-          await signInWithRedirect(auth, googleProvider);
-          return;
-        }
-        throw popupErr;
-      }
+      // Call signInWithPopup immediately inside click gesture so mobile browsers do not block the popup
+      await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
     } catch (err) {
       setSyncStatus('error');
       const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
       const message = formatFirebaseAuthError(err, hostname);
       setCloudError(message);
+      void recheckDomainAuthorization();
       throw new Error(message);
     }
   };
