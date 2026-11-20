@@ -1,16 +1,65 @@
-import { initializeApp } from 'firebase/app';
+import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { doc, getDocFromServer, getFirestore } from 'firebase/firestore';
-import firebaseConfig from '../firebase-applet-config.json';
+import {
+  deleteObject,
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytes,
+  uploadString,
+} from 'firebase/storage';
+import {
+  firebaseConfig,
+  firebaseDatabaseId,
+  firebaseVapidKey,
+} from './config/firebaseConfig';
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+
 export const auth = getAuth(app);
 auth.languageCode = 'fr';
+
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-export { firebaseConfig };
+export const db =
+  firebaseDatabaseId && firebaseDatabaseId !== '(default)'
+    ? getFirestore(app, firebaseDatabaseId)
+    : getFirestore(app);
+
+export const storage = getStorage(app);
+
+export { firebaseConfig, firebaseDatabaseId, firebaseVapidKey };
+
+export async function uploadFileToStorage(
+  storagePath: string,
+  file: Blob | Uint8Array | ArrayBuffer,
+  contentType?: string
+): Promise<string> {
+  const storageRef = ref(storage, storagePath);
+  await uploadBytes(storageRef, file, contentType ? { contentType } : undefined);
+  return getDownloadURL(storageRef);
+}
+
+export async function uploadDataUrlToStorage(
+  storagePath: string,
+  dataUrl: string
+): Promise<string> {
+  const storageRef = ref(storage, storagePath);
+  await uploadString(storageRef, dataUrl, 'data_url');
+  return getDownloadURL(storageRef);
+}
+
+export async function getStorageFileUrl(storagePath: string): Promise<string> {
+  const storageRef = ref(storage, storagePath);
+  return getDownloadURL(storageRef);
+}
+
+export async function deleteStorageFile(storagePath: string): Promise<void> {
+  const storageRef = ref(storage, storagePath);
+  await deleteObject(storageRef);
+}
 
 export interface DomainAuthorizationCheck {
   authorized: boolean;
