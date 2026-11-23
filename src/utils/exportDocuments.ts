@@ -759,7 +759,74 @@ export function downloadSchoolAdminPdf(params: {
   return filename;
 }
 
+function dataUrlToBlob(dataUrl: string): Blob | null {
+  try {
+    const commaIdx = dataUrl.indexOf(',');
+    if (commaIdx === -1) return null;
+    const header = dataUrl.slice(0, commaIdx);
+    const body = dataUrl.slice(commaIdx + 1);
+    const mimeMatch = header.match(/^data:([^;]+)/i);
+    const mime = mimeMatch?.[1] || 'application/octet-stream';
+    if (/;base64/i.test(header)) {
+      const binary = atob(body);
+      const len = binary.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return new Blob([bytes], { type: mime });
+    }
+    return new Blob([decodeURIComponent(body)], { type: mime });
+  } catch {
+    return null;
+  }
+}
+
 function triggerDirectUrlDownload(url: string, filename: string): void {
+  if (url.startsWith('data:')) {
+    const blob = dataUrlToBlob(url);
+    if (blob) {
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 8000);
+      return;
+    }
+  }
+
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    fetch(url)
+      .then(res => {
+        if (!res.ok) throw new Error('HTTP download error');
+        return res.blob();
+      })
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 8000);
+      })
+      .catch(() => {
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+    return;
+  }
+
   const link = document.createElement('a');
   link.href = url;
   link.download = filename;
@@ -803,7 +870,7 @@ export function downloadCourseResourceFile(params: {
   schoolName?: string;
 }): string {
   const url = (params.fileUrl || '').trim();
-  if (url.startsWith('data:') || url.startsWith('blob:')) {
+  if (url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('http://') || url.startsWith('https://')) {
     const ext = params.resourceType ? `.${params.resourceType.toLowerCase()}` : '.pdf';
     const raw = params.resourceName || `${slugifyFilename(params.title)}${ext}`;
     triggerDirectUrlDownload(url, raw);
@@ -1161,17 +1228,22 @@ export function downloadLibraryResourcePdf(params: {
   description: string;
   content?: string;
   fileUrl?: string;
+  fileName?: string;
   schoolName?: string;
 }): string {
   const url = (params.fileUrl || '').trim();
-  if (url.startsWith('data:') || url.startsWith('blob:')) {
-    const filename = `${slugifyFilename(params.title)}.pdf`;
+  if (
+    url &&
+    url !== '#' &&
+    (url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('http://') || url.startsWith('https://'))
+  ) {
+    const filename = params.fileName?.trim() || `${slugifyFilename(params.title)}.pdf`;
     triggerDirectUrlDownload(url, filename);
     return filename;
   }
 
   if (params.content && params.content.startsWith('data:')) {
-    const filename = `${slugifyFilename(params.title)}.pdf`;
+    const filename = params.fileName?.trim() || `${slugifyFilename(params.title)}.pdf`;
     triggerDirectUrlDownload(params.content, filename);
     return filename;
   }

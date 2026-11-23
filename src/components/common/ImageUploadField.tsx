@@ -39,6 +39,14 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  React.useEffect(() => {
+    if (value && value.startsWith('data:')) {
+      setMode('upload');
+    } else if (value && /^https?:\/\//i.test(value)) {
+      setMode('url');
+    }
+  }, [value]);
+
   const handleFile = (file: File) => {
     setError(null);
     if (!file.type.startsWith('image/')) {
@@ -58,39 +66,43 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
       const result = e.target?.result as string;
       if (!result) return;
 
-      // Keep SVG or tiny files (< 80KB) untouched
-      if (file.type === 'image/svg+xml' || file.size < 80 * 1024) {
+      // Keep SVG or tiny files (< 40KB) untouched
+      if (file.type === 'image/svg+xml' || (file.size < 40 * 1024 && result.length < 60_000)) {
         onChange(result);
         return;
       }
 
-      // Compress larger PNG/JPG/WEBP onto a canvas so mobile sync & cloud payloads stay lightweight
+      // Compress larger PNG/JPG/WEBP iteratively so mobile & Firestore/Storage sync stays fast and lightweight
+      const maxBudget = aspectRatio === 'banner' ? 150_000 : 110_000;
       const img = new Image();
       img.onload = () => {
-        const maxDim = aspectRatio === 'circle' ? 480 : 1080;
-        let { width, height } = img;
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
+        let maxDim = aspectRatio === 'circle' ? 380 : aspectRatio === 'square' ? 480 : 880;
+        let quality = 0.78;
+        let compressed = result;
+
+        for (let attempt = 0; attempt < 5; attempt++) {
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.max(1, Math.round((height * maxDim) / width));
+              width = maxDim;
+            } else {
+              width = Math.max(1, Math.round((width * maxDim) / height));
+              height = maxDim;
+            }
           }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) break;
+          ctx.drawImage(img, 0, 0, width, height);
+          compressed = canvas.toDataURL('image/jpeg', quality);
+          if (compressed.length <= maxBudget) break;
+          quality = Math.max(0.45, quality - 0.1);
+          maxDim = Math.max(200, Math.round(maxDim * 0.75));
         }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          onChange(result);
-          return;
-        }
-        ctx.drawImage(img, 0, 0, width, height);
-        let compressed = canvas.toDataURL('image/jpeg', 0.78);
-        if (compressed.length > 220_000) {
-          compressed = canvas.toDataURL('image/jpeg', 0.65);
-        }
+
         onChange(compressed);
       };
       img.onerror = () => onChange(result);
@@ -274,10 +286,10 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[11px] font-semibold text-blue-950 truncate max-w-[160px]">
-                    {fileName || (isDataUrl ? 'Fichier importé du PC' : 'Image en ligne')}
+                    {fileName || (isDataUrl ? 'Fichier importé' : 'Image synchronisée')}
                   </span>
                   <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                    {isDataUrl ? 'Local PC' : 'URL Web'}
+                    {isDataUrl ? 'Appareil' : 'URL Cloud'}
                   </span>
                 </div>
                 <div className="text-[10px] text-emerald-600 flex items-center gap-1 mt-0.5">

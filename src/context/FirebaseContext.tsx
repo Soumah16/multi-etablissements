@@ -16,6 +16,7 @@ import {
 import {
   attachWorkspaceSyncListeners,
   bootstrapOrResolveWorkspace,
+  CORE_SYNC_KEYS,
   createWorkspaceInvite,
   DEFAULT_WORKSPACE_ID,
   ensureUserProfiles,
@@ -23,6 +24,7 @@ import {
   pushAllLocalKeysToCloud,
   pushSyncKeyToCloud,
   redeemWorkspaceInvite,
+  sanitizeDocId,
   SyncMetaRecord,
   WorkspaceInfo,
 } from '../utils/cloudSync';
@@ -120,6 +122,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     pendingPushKeysRef.current.clear();
 
     setSyncStatus('syncing');
+    let firstError: string | null = null;
     for (const key of keysToPush) {
       try {
         const { found, value } = await readDualStorageValue(key);
@@ -136,10 +139,16 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           knownSyncMeta: knownSyncMetaRef.current,
         });
       } catch (err) {
-        setCloudError(err instanceof Error ? err.message : String(err));
-        setSyncStatus('error');
-        return;
+        pendingPushKeysRef.current.add(key);
+        if (!firstError) {
+          firstError = err instanceof Error ? err.message : String(err);
+        }
       }
+    }
+    if (firstError) {
+      setCloudError(firstError);
+      setSyncStatus('error');
+      return;
     }
     setLastSyncedAt(Date.now());
     setSyncStatus('synced');
@@ -181,6 +190,11 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setWorkspace(resolvedWs);
         workspaceRef.current = resolvedWs;
 
+        let resolveInitialSnapshot!: () => void;
+        const initialSnapshotPromise = new Promise<void>(resolve => {
+          resolveInitialSnapshot = resolve;
+        });
+
         unsubSyncRef.current = attachWorkspaceSyncListeners({
           user,
           workspaceId: resolvedWs.id,
@@ -201,13 +215,25 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             setLastSyncedAt(syncedAt);
             setSyncStatus('synced');
           },
+          onInitialReady: () => {
+            resolveInitialSnapshot();
+          },
           onError: err => {
+            resolveInitialSnapshot();
             setCloudError(err.message);
             setSyncStatus('error');
           },
         });
 
-        // Push any local pending edits made offline or prior to sign-in
+        // Wait briefly for initial cloud snapshot so remote Firestore state hydrates BEFORE pushing local deltas
+        await Promise.race([
+          initialSnapshotPromise,
+          new Promise<void>(resolve => {
+            window.setTimeout(resolve, 3500);
+          }),
+        ]);
+
+        // Push any local pending edits made offline or prior to sign-in (only when strictly newer than cloud)
         const pushed = await pushAllLocalKeysToCloud({
           user,
           workspaceId: resolvedWs.id,
@@ -303,12 +329,16 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCloudError(null);
     try {
       await flushPendingPushes();
+      const missingCoreKeys = CORE_SYNC_KEYS.filter(
+        k => !knownSyncMetaRef.current.has(sanitizeDocId(k))
+      );
       const res = await pushAllLocalKeysToCloud({
         user,
         workspaceId: ws.id,
         workspaceOwnerUid: ws.ownerUid,
         memberUids: ws.memberUids,
         knownSyncMeta: knownSyncMetaRef.current,
+        extraKeys: missingCoreKeys,
       });
       setLastSyncedAt(Date.now());
       setSyncStatus('synced');

@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTeacher } from '../../context/TeacherContext';
+import { useLibrarian } from '../../context/LibrarianContext';
+import { BookReaderModal } from '../librarian/BookReaderModal';
+import { BookItem, EbookItem } from '../../types/librarian';
 import { downloadLibraryResourcePdf } from '../../utils/exportDocuments';
 import {
   BookMarked,
@@ -9,16 +12,54 @@ import {
   Video,
   Headphones,
   BookOpen,
-  Lock
+  Lock,
+  Eye
 } from 'lucide-react';
 
 export const TeacherLibraryView: React.FC = () => {
   const { libraryResources, incrementDownloadCount, triggerToast } = useTeacher();
+  const { ebooks, incrementEbookDownload } = useLibrarian();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  const [previewBook, setPreviewBook] = useState<BookItem | EbookItem | null>(null);
 
-  const filteredResources = libraryResources.filter(res => {
+  const combinedResources = useMemo(() => {
+    const mappedEbooks = ebooks.map(eb => ({
+      id: `lib-${eb.id}`,
+      rawEbook: eb,
+      title: eb.title,
+      type:
+        eb.format === 'Vidéo'
+          ? 'video'
+          : eb.format === 'Audio'
+          ? 'audio'
+          : eb.format === 'PDF'
+          ? 'pdf'
+          : 'ebook',
+      subject: eb.subject,
+      level: eb.level,
+      className: eb.targetClass,
+      size: eb.fileSize,
+      description: eb.description,
+      downloadCount: eb.downloadCount,
+      fileUrl: (eb.url && eb.url !== '#' ? eb.url : eb.fileData) || eb.url,
+      fileName: eb.fileName
+    }));
+
+    const existingTitles = new Set(mappedEbooks.map(m => m.title.toLowerCase()));
+    const teacherItems = libraryResources
+      .filter(r => !existingTitles.has(r.title.toLowerCase()))
+      .map(r => ({
+        ...r,
+        rawEbook: null as EbookItem | null,
+        fileName: undefined as string | undefined
+      }));
+
+    return [...mappedEbooks, ...teacherItems];
+  }, [ebooks, libraryResources]);
+
+  const filteredResources = combinedResources.filter(res => {
     const matchesSearch =
       res.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       res.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -67,7 +108,7 @@ export const TeacherLibraryView: React.FC = () => {
             <span>Bibliothèque Pédagogique &amp; E-Learning</span>
           </h1>
           <p className="text-xs text-slate-500">
-            Consultation des manuels officiels CIAM, annales corrigées, fiches TP, podcasts &amp; capsules vidéo.
+            Consultation des manuels officiels CIAM, annales corrigées, PDFs déposés par la bibliothèque &amp; ressources multimédias.
           </p>
         </div>
 
@@ -156,35 +197,58 @@ export const TeacherLibraryView: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-3 border-t border-blue-100 flex items-center justify-between">
+            <div className="pt-3 border-t border-blue-100 flex items-center justify-between gap-2">
               <span className="text-[10px] text-slate-400 flex items-center gap-1">
                 <Lock className="w-3 h-3" />
                 <span>Lecture seule</span>
               </span>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                {resource.rawEbook && (
+                  <button
+                    onClick={() => setPreviewBook(resource.rawEbook)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-blue-100 text-slate-800 border border-slate-200 text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Lire</span>
+                  </button>
+                )}
                 <button
                   onClick={() => {
-                    incrementDownloadCount(resource.id);
+                    if (resource.rawEbook) {
+                      incrementEbookDownload(resource.rawEbook.id);
+                    } else {
+                      incrementDownloadCount(resource.id);
+                    }
                     const file = downloadLibraryResourcePdf({
                       title: resource.title,
+                      author: resource.rawEbook?.author,
                       subject: resource.subject,
                       level: resource.level,
                       description: resource.description,
-                      fileUrl: resource.fileUrl
+                      content: resource.rawEbook?.content,
+                      fileUrl: resource.fileUrl,
+                      fileName: resource.fileName
                     });
                     triggerToast(`Document téléchargé : ${file}`);
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold transition-colors cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>Consulter / Télécharger</span>
+                  <span>Télécharger</span>
                 </button>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {previewBook && (
+        <BookReaderModal
+          book={previewBook}
+          onClose={() => setPreviewBook(null)}
+        />
+      )}
     </div>
   );
 };

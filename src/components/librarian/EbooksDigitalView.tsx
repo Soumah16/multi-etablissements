@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useLibrarian } from '../../context/LibrarianContext';
 import { EbookItem } from '../../types/librarian';
 import { BookReaderModal } from './BookReaderModal';
@@ -8,8 +8,36 @@ import {
   Upload,
   Download,
   Eye,
-  Trash2
+  Trash2,
+  FileText,
+  CheckCircle2,
+  X
 } from 'lucide-react';
+
+const INITIAL_FORM_DATA: Omit<EbookItem, 'id' | 'downloadCount'> = {
+  title: '',
+  author: '',
+  format: 'PDF',
+  level: 'Lycée',
+  targetClass: 'Terminale SM',
+  subject: 'Mathématiques',
+  fileSize: '4.8 Mo',
+  url: '#',
+  description: '',
+  thumbnailUrl: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80',
+  content: '',
+  fileName: ''
+};
+
+function detectFormatFromFile(fileName: string): EbookItem['format'] {
+  const lower = fileName.toLowerCase();
+  if (lower.endsWith('.epub')) return 'EPUB';
+  if (lower.endsWith('.docx') || lower.endsWith('.doc')) return 'DOCX';
+  if (lower.endsWith('.pptx') || lower.endsWith('.ppt')) return 'PPTX';
+  if (/\.(mp4|webm|mov|mkv)$/i.test(lower)) return 'Vidéo';
+  if (/\.(mp3|wav|m4a|ogg)$/i.test(lower)) return 'Audio';
+  return 'PDF';
+}
 
 export const EbooksDigitalView: React.FC = () => {
   const { ebooks, addEbook, deleteEbook, incrementEbookDownload, showToast, canManageLibrary } =
@@ -19,20 +47,12 @@ export const EbooksDigitalView: React.FC = () => {
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [previewEbook, setPreviewEbook] = useState<EbookItem | null>(null);
+  const [isReadingFile, setIsReadingFile] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dropzoneInputRef = useRef<HTMLInputElement>(null);
 
   // Form State
-  const [formData, setFormData] = useState<Omit<EbookItem, 'id' | 'downloadCount'>>({
-    title: '',
-    author: '',
-    format: 'PDF',
-    level: 'Lycée',
-    targetClass: 'Terminale SM',
-    subject: 'Mathématiques',
-    fileSize: '4.8 Mo',
-    url: '#',
-    description: '',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80'
-  });
+  const [formData, setFormData] = useState<Omit<EbookItem, 'id' | 'downloadCount'>>(INITIAL_FORM_DATA);
 
   const formats = ['all', 'PDF', 'EPUB', 'DOCX', 'PPTX', 'Vidéo', 'Audio'];
   const levels = ['all', 'Lycée', 'Collège', 'Tous niveaux'];
@@ -47,10 +67,60 @@ export const EbooksDigitalView: React.FC = () => {
     return matchesSearch && matchesFormat && matchesLevel;
   });
 
+  const handleFileSelected = (file: File) => {
+    const sizeLabel = file.size > 1024 * 1024
+      ? `${(file.size / (1024 * 1024)).toFixed(2)} Mo`
+      : `${Math.max(0.1, file.size / 1024).toFixed(1)} Ko`;
+    const isTextFile = /\.(txt|md|csv)$/i.test(file.name);
+    const detectedFormat = detectFormatFromFile(file.name);
+    const baseTitle = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+
+    setIsReadingFile(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        const resultStr = reader.result;
+        setFormData(prev => ({
+          ...prev,
+          title: prev.title.trim() ? prev.title : baseTitle,
+          format: isTextFile ? prev.format : detectedFormat,
+          ...(isTextFile
+            ? { content: resultStr }
+            : { url: resultStr, fileData: resultStr }),
+          fileName: file.name,
+          fileSize: sizeLabel,
+          description: prev.description || `Document numérique importé : ${file.name}`
+        }));
+      }
+      setIsReadingFile(false);
+    };
+    reader.onerror = () => {
+      setIsReadingFile(false);
+      showToast(`Impossible de lire le fichier « ${file.name} ».`);
+    };
+    if (isTextFile) {
+      reader.readAsText(file);
+    } else {
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleOpenUploadModal = () => {
+    setFormData(INITIAL_FORM_DATA);
+    setIsReadingFile(false);
+    setIsDragging(false);
+    setUploadModalOpen(true);
+  };
+
   const handleUploadSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canManageLibrary) return;
+    if (!canManageLibrary || isReadingFile) return;
     addEbook(formData);
+    // Reset filters so the newly added book appears immediately at the top
+    setSearch('');
+    setSelectedFormat('all');
+    setSelectedLevel('all');
+    setFormData(INITIAL_FORM_DATA);
     setUploadModalOpen(false);
   };
 
@@ -71,6 +141,8 @@ export const EbooksDigitalView: React.FC = () => {
     }
   };
 
+  const hasAttachedFile = Boolean((formData.url && formData.url !== '#') || formData.fileData);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -86,7 +158,7 @@ export const EbooksDigitalView: React.FC = () => {
 
         {canManageLibrary && (
           <button
-            onClick={() => setUploadModalOpen(true)}
+            onClick={handleOpenUploadModal}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-600/20 transition-all cursor-pointer self-start sm:self-auto"
           >
             <Upload className="w-4 h-4" />
@@ -133,79 +205,89 @@ export const EbooksDigitalView: React.FC = () => {
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredEbooks.map(eb => (
-          <div key={eb.id} className="rounded-2xl bg-white border border-blue-100 p-5 flex flex-col justify-between hover:border-purple-200 transition-all group">
-            <div className="space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  {getFormatBadge(eb.format)}
-                  <span className="text-[10px] text-slate-500 font-medium">{eb.fileSize}</span>
+        {filteredEbooks.map(eb => {
+          const hasRealFile = Boolean((eb.url && eb.url !== '#') || eb.fileData);
+          return (
+            <div key={eb.id} className="rounded-2xl bg-white border border-blue-100 p-5 flex flex-col justify-between hover:border-purple-200 transition-all group">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {getFormatBadge(eb.format)}
+                    <span className="text-[10px] text-slate-500 font-medium">{eb.fileSize}</span>
+                    {hasRealFile && (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold">
+                        <FileText className="w-2.5 h-2.5" />
+                        <span>Fichier joint</span>
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-semibold text-slate-500 px-2 py-0.5 rounded bg-slate-50 shrink-0">
+                    {eb.targetClass}
+                  </span>
                 </div>
-                <span className="text-[10px] font-semibold text-slate-500 px-2 py-0.5 rounded bg-slate-50">
-                  {eb.targetClass}
-                </span>
-              </div>
 
-              <div>
-                <h3 className="font-bold text-sm text-blue-950 group-hover:text-purple-700 transition-colors line-clamp-2">
-                  {eb.title}
-                </h3>
-                <div className="text-xs text-slate-500 mt-1">
-                  Par <span className="text-slate-700 font-medium">{eb.author}</span> · {eb.subject}
+                <div>
+                  <h3 className="font-bold text-sm text-blue-950 group-hover:text-purple-700 transition-colors line-clamp-2">
+                    {eb.title}
+                  </h3>
+                  <div className="text-xs text-slate-500 mt-1">
+                    Par <span className="text-slate-700 font-medium">{eb.author}</span> · {eb.subject}
+                  </div>
                 </div>
+
+                <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                  {eb.description}
+                </p>
               </div>
 
-              <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                {eb.description}
-              </p>
-            </div>
+              <div className="pt-4 mt-4 border-t border-blue-100 flex items-center justify-between gap-2">
+                <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                  <Download className="w-3.5 h-3.5 text-purple-600" />
+                  <span>{eb.downloadCount} téléchargements</span>
+                </div>
 
-            <div className="pt-4 mt-4 border-t border-blue-100 flex items-center justify-between gap-2">
-              <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
-                <Download className="w-3.5 h-3.5 text-purple-600" />
-                <span>{eb.downloadCount} téléchargements</span>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setPreviewEbook(eb)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-blue-100 text-slate-900 text-xs font-semibold transition-colors cursor-pointer"
-                >
-                  <Eye className="w-3.5 h-3.5 text-purple-600" />
-                  <span>Consulter</span>
-                </button>
-                <button
-                  onClick={() => {
-                    incrementEbookDownload(eb.id);
-                    const file = downloadLibraryResourcePdf({
-                      title: eb.title,
-                      author: eb.author,
-                      subject: eb.subject,
-                      level: eb.level,
-                      description: eb.description,
-                      content: eb.content,
-                      fileUrl: eb.url
-                    });
-                    showToast(`Téléchargement terminé : « ${file} »`);
-                  }}
-                  className="p-1.5 rounded-lg bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 transition-colors cursor-pointer"
-                  title="Télécharger le fichier"
-                >
-                  <Download className="w-4 h-4" />
-                </button>
-                {canManageLibrary && (
+                <div className="flex items-center gap-1.5">
                   <button
-                    onClick={() => deleteEbook(eb.id)}
-                    className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 transition-colors cursor-pointer"
-                    title="Supprimer cette ressource"
+                    onClick={() => setPreviewEbook(eb)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-blue-100 text-slate-900 text-xs font-semibold transition-colors cursor-pointer"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Eye className="w-3.5 h-3.5 text-purple-600" />
+                    <span>{hasRealFile && eb.format === 'PDF' ? 'Lire le PDF' : 'Consulter'}</span>
                   </button>
-                )}
+                  <button
+                    onClick={() => {
+                      incrementEbookDownload(eb.id);
+                      const file = downloadLibraryResourcePdf({
+                        title: eb.title,
+                        author: eb.author,
+                        subject: eb.subject,
+                        level: eb.level,
+                        description: eb.description,
+                        content: eb.content,
+                        fileUrl: (eb.url && eb.url !== '#' ? eb.url : eb.fileData) || eb.url,
+                        fileName: eb.fileName
+                      });
+                      showToast(`Téléchargement terminé : « ${file} »`);
+                    }}
+                    className="p-1.5 rounded-lg bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 transition-colors cursor-pointer"
+                    title="Télécharger le fichier"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                  {canManageLibrary && (
+                    <button
+                      onClick={() => deleteEbook(eb.id)}
+                      className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 transition-colors cursor-pointer"
+                      title="Supprimer cette ressource"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Upload E-book Modal (Librarian Admin only) */}
@@ -214,10 +296,89 @@ export const EbooksDigitalView: React.FC = () => {
           <div className="w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-4 max-h-[92vh] overflow-y-auto">
             <h3 className="text-base font-bold text-blue-950">Téléverser une Ressource Numérique</h3>
             <p className="text-xs text-slate-500">
-              Ajoutez un document PDF, EPUB, DOCX, PPTX ou un contenu multimédia au portail élève & enseignant.
+              Déposez un document PDF, EPUB, DOCX, PPTX ou un contenu multimédia pour les élèves et enseignants.
             </p>
 
             <form onSubmit={handleUploadSubmit} className="space-y-3">
+              {/* Interactive Dropzone */}
+              <div
+                onClick={() => dropzoneInputRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  const droppedFile = e.dataTransfer.files?.[0];
+                  if (droppedFile) {
+                    handleFileSelected(droppedFile);
+                  }
+                }}
+                className={`p-3.5 rounded-xl border-2 border-dashed text-center transition-colors cursor-pointer ${
+                  isDragging
+                    ? 'border-purple-600 bg-purple-100/70'
+                    : hasAttachedFile
+                    ? 'border-emerald-300 bg-emerald-50/70'
+                    : 'border-purple-200 bg-purple-50 hover:border-purple-400 hover:bg-purple-100/50'
+                }`}
+              >
+                <input
+                  ref={dropzoneInputRef}
+                  type="file"
+                  accept=".pdf,.epub,.docx,.pptx,.txt,.md,.mp4,.mp3"
+                  className="hidden"
+                  onChange={(e) => {
+                    const selected = e.target.files?.[0];
+                    if (selected) {
+                      handleFileSelected(selected);
+                    }
+                    e.target.value = '';
+                  }}
+                />
+                {isReadingFile ? (
+                  <div className="text-xs font-semibold text-purple-800 py-1">
+                    Chargement du fichier en cours...
+                  </div>
+                ) : hasAttachedFile ? (
+                  <div className="flex items-center justify-between gap-3 text-left">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-emerald-950 truncate">
+                          {formData.fileName || 'Fichier prêt'}
+                        </div>
+                        <div className="text-[10px] text-emerald-700">
+                          Format {formData.format} · {formData.fileSize} · Cliquez pour remplacer
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFormData(prev => ({ ...prev, url: '#', fileData: undefined, fileName: '' }));
+                      }}
+                      className="p-1 rounded-lg text-emerald-700 hover:bg-emerald-200/70 cursor-pointer"
+                      title="Retirer le fichier"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="w-5 h-5 mx-auto text-purple-600 mb-1" />
+                    <div className="text-xs font-semibold text-slate-900">
+                      Déposez votre livre PDF ici ou cliquez pour parcourir
+                    </div>
+                    <div className="text-[10px] text-slate-500">
+                      Formats acceptés : PDF, EPUB, DOCX, PPTX, TXT, MP4, MP3
+                    </div>
+                  </>
+                )}
+              </div>
+
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-700">Titre de la ressource *</label>
                 <input
@@ -246,7 +407,7 @@ export const EbooksDigitalView: React.FC = () => {
                   <label className="text-[11px] font-semibold text-slate-700">Format</label>
                   <select
                     value={formData.format}
-                    onChange={(e) => setFormData({ ...formData, format: e.target.value as any })}
+                    onChange={(e) => setFormData({ ...formData, format: e.target.value as EbookItem['format'] })}
                     className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                   >
                     <option value="PDF">PDF</option>
@@ -264,7 +425,7 @@ export const EbooksDigitalView: React.FC = () => {
                   <label className="text-[11px] font-semibold text-slate-700">Niveau</label>
                   <select
                     value={formData.level}
-                    onChange={(e) => setFormData({ ...formData, level: e.target.value as any })}
+                    onChange={(e) => setFormData({ ...formData, level: e.target.value as EbookItem['level'] })}
                     className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                   >
                     <option value="Lycée">Lycée</option>
@@ -308,56 +469,16 @@ export const EbooksDigitalView: React.FC = () => {
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-semibold text-slate-700">
-                    Contenu texte / Chapitres complets (Pour lecture directe)
-                  </label>
-                  <label className="text-[10px] text-purple-600 hover:text-purple-700 cursor-pointer flex items-center gap-1">
-                    <Upload className="w-3 h-3" />
-                    <span>Charger un fichier (.txt, .md, .pdf)</span>
-                    <input
-                      type="file"
-                      accept=".txt,.md,.pdf,.epub"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          const file = e.target.files[0];
-                          const sizeLabel = file.size > 1024 * 1024
-                            ? `${(file.size / (1024 * 1024)).toFixed(2)} Mo`
-                            : `${(file.size / 1024).toFixed(1)} Ko`;
-                          const isTextFile = /\.(txt|md|csv)$/i.test(file.name);
-                          const reader = new FileReader();
-                          reader.onload = () => {
-                            if (typeof reader.result === 'string') {
-                              setFormData(prev => ({
-                                ...prev,
-                                ...(isTextFile ? { content: reader.result as string } : { url: reader.result as string }),
-                                fileSize: sizeLabel,
-                                description: prev.description || `Document numérique importé : ${file.name}`
-                              }));
-                            }
-                          };
-                          if (isTextFile) {
-                            reader.readAsText(file);
-                          } else {
-                            reader.readAsDataURL(file);
-                          }
-                        }
-                      }}
-                    />
+                    Contenu texte / Chapitres (Optionnel si un PDF est joint)
                   </label>
                 </div>
                 <textarea
                   rows={3}
                   value={formData.content || ''}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  placeholder="Collez ici le cours ou les chapitres pour permettre la lecture interactive..."
+                  placeholder="Collez ici le cours ou les chapitres pour permettre la lecture texte..."
                   className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950 font-serif"
                 />
-              </div>
-
-              <div className="p-3 rounded-lg border-2 border-dashed border-purple-200 bg-purple-50 text-center">
-                <Upload className="w-5 h-5 mx-auto text-purple-600 mb-1" />
-                <div className="text-xs font-semibold text-slate-900">Ressource prête à l'intégration</div>
-                <div className="text-[10px] text-slate-500">Prêt pour streaming & consultation hors-ligne sur les tablettes élèves</div>
               </div>
 
               <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-blue-100">
@@ -370,9 +491,10 @@ export const EbooksDigitalView: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold cursor-pointer"
+                  disabled={isReadingFile}
+                  className="px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold cursor-pointer disabled:opacity-50"
                 >
-                  Mettre en ligne
+                  {isReadingFile ? 'Lecture du fichier...' : 'Mettre en ligne'}
                 </button>
               </div>
             </form>

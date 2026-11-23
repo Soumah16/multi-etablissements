@@ -35,7 +35,7 @@ export const CloudSyncButton: React.FC<{ compact?: boolean }> = ({ compact = fal
       } ${
         isConnected
           ? 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800'
-          : 'border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-900'
+          : 'border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900'
       }`}
       title="Partage et synchronisation Cloud en temps réel multi-appareils"
     >
@@ -44,11 +44,11 @@ export const CloudSyncButton: React.FC<{ compact?: boolean }> = ({ compact = fal
       ) : isConnected ? (
         <Cloud className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
       ) : (
-        <CloudOff className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+        <CloudOff className="w-3.5 h-3.5 text-amber-600 shrink-0" />
       )}
       {compact && (
         <span className="sm:hidden">
-          {isSyncing ? 'Sync...' : isConnected ? 'Cloud' : 'Sync'}
+          {isSyncing ? 'Sync...' : isConnected ? 'Cloud' : 'Local'}
         </span>
       )}
       <span className={compact ? 'hidden sm:inline' : ''}>
@@ -56,7 +56,7 @@ export const CloudSyncButton: React.FC<{ compact?: boolean }> = ({ compact = fal
           ? 'Sync...'
           : isConnected
           ? 'Cloud Temps Réel'
-          : 'Sync Multi-Appareils'}
+          : 'Sync Hors-Ligne'}
       </span>
     </button>
   );
@@ -346,24 +346,24 @@ export const CloudSyncModal: React.FC = () => {
                 </div>
               )}
 
-              <div className="p-4 rounded-2xl bg-blue-50/80 border border-blue-100 space-y-2.5">
-                <div className="flex items-center gap-2 font-bold text-blue-950">
-                  <Smartphone className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span>Synchronisation PC ↔ Téléphone</span>
+              <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 space-y-2.5">
+                <div className="flex items-center gap-2 font-bold text-amber-950">
+                  <Smartphone className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Appareil actuellement en mode local (non relié au Cloud)</span>
                 </div>
-                <p className="text-slate-600 leading-relaxed">
-                  • <strong>Même lien sur PC et téléphone :</strong> toutes vos modifications sont synchronisées automatiquement via le serveur sans compte Google. (Si vous utilisez le lien public partagé, vérifiez que le partage est bien activé dans AI Studio pour éviter une erreur <em>Page not found</em>.)
+                <p className="text-slate-700 leading-relaxed">
+                  • <strong>Sur PC et Téléphone (Vercel / Web) :</strong> chaque navigateur garde sa propre mémoire locale tant que le <strong>Cloud Google Firebase</strong> n’est pas connecté. C’est pourquoi un profil ou une image peut différer d’un appareil à l’autre.
                   <br />
-                  • <strong>Deux liens ou instances différents :</strong> connectez le même compte Google ci-dessous sur chaque appareil pour activer la synchronisation Cloud en temps réel.
+                  • <strong>Pour synchroniser à 100 % :</strong> cliquez ci-dessous et connectez le <strong>même compte Google</strong> sur PC et sur téléphone (ou utilisez un code d’invitation si le compte Google est différent) pour partager le même <strong>ID Espace</strong>.
                 </p>
                 <button
                   type="button"
                   disabled={busy}
                   onClick={handleServerRefresh}
-                  className="w-full py-2.5 px-3 rounded-xl bg-white hover:bg-blue-100/70 border border-blue-200 text-blue-900 font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+                  className="w-full py-2 px-3 rounded-xl bg-white hover:bg-amber-100/60 border border-amber-200 text-amber-950 font-semibold text-[11px] flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 text-blue-600 ${busy ? 'animate-spin' : ''}`} />
-                  <span>Actualiser les données depuis le serveur</span>
+                  <RefreshCw className={`w-3.5 h-3.5 text-amber-600 ${busy ? 'animate-spin' : ''}`} />
+                  <span>Tenter une actualisation serveur local (mode aperçu)</span>
                 </button>
               </div>
 
@@ -374,7 +374,7 @@ export const CloudSyncModal: React.FC = () => {
                 className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
               >
                 <ShieldCheck className="w-4 h-4" />
-                <span>{busy ? 'Connexion en cours...' : 'Connecter le Cloud Google (multi-liens)'}</span>
+                <span>{busy ? 'Connexion en cours...' : 'Connecter le Cloud Google (PC & Téléphone)'}</span>
               </button>
             </div>
           ) : (

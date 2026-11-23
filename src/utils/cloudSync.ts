@@ -14,7 +14,7 @@ import {
   where,
   writeBatch,
 } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { db, handleFirestoreError, OperationType, uploadDataUrlToStorage } from '../firebase';
 import {
   getLocalTimestamp,
   isSyncableKey,
@@ -23,6 +23,26 @@ import {
   removePendingCloudKeys,
   saveDualStorage,
 } from './storage';
+
+export const CORE_SYNC_KEYS = [
+  'smartschool_profile',
+  'smartschool_accounts_v3',
+  'smartschool_schools',
+  'smartschool_admins',
+  'smartschool_plans',
+  'smartschool_transactions',
+  'smartschool_global_settings',
+  'smartschool_announcements_v1',
+  'smartschool_badge_template_v1',
+  'smartschool_staff',
+  'smartschool_classes',
+  'smartschool_subjects',
+  'smartschool_rooms',
+  'smartschool_academic_years',
+];
+
+const uploadedMediaCache = new Map<string, string>();
+let storageUploadDisabledForSession = false;
 
 export const DEFAULT_WORKSPACE_ID = 'smartschool-guinee-main';
 export const BOOTSTRAP_ADMIN_EMAIL = 'saidprince712@gmail.com';
@@ -104,6 +124,146 @@ function sanitizeFirestoreValue(val: unknown, maxBase64Length: number | null = n
     return out;
   }
   return String(val);
+}
+
+function fingerprintString(input: string): string {
+  let h1 = 0x811c9dc5;
+  let h2 = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input.charCodeAt(i);
+    h1 ^= ch;
+    h1 = Math.imul(h1, 0x01000193);
+    h2 ^= (ch + i) & 0xffff;
+    h2 = Math.imul(h2, 0x01000193);
+  }
+  return `${(h1 >>> 0).toString(36)}_${(h2 >>> 0).toString(36)}_${input.length}`;
+}
+
+async function compressDataUrlFallback(dataUrl: string, maxChars = 85_000): Promise<string> {
+  if (typeof document === 'undefined' || dataUrl.length <= maxChars || dataUrl.startsWith('data:image/svg')) {
+    return dataUrl;
+  }
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      let maxDim = 640;
+      let quality = 0.72;
+      let best = dataUrl;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.max(1, Math.round((height * maxDim) / width));
+            width = maxDim;
+          } else {
+            width = Math.max(1, Math.round((width * maxDim) / height));
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) break;
+        ctx.drawImage(img, 0, 0, width, height);
+        const candidate = canvas.toDataURL('image/jpeg', quality);
+        if (candidate.length < best.length) {
+          best = candidate;
+        }
+        if (best.length <= maxChars) break;
+        quality = Math.max(0.4, quality - 0.1);
+        maxDim = Math.max(180, Math.round(maxDim * 0.72));
+      }
+      resolve(best);
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+async function resolveInlineMediaValue(
+  workspaceId: string,
+  val: unknown
+): Promise<{ value: unknown; changed: boolean }> {
+  if (val === null || val === undefined) return { value: val, changed: false };
+  if (typeof val === 'string') {
+    if (!val.startsWith('data:') || val.length <= 16_000) {
+      return { value: val, changed: false };
+    }
+    const isImage = val.startsWith('data:image/');
+    if (val.startsWith('data:image/svg') && val.length <= 45_000) {
+      return { value: val, changed: false };
+    }
+    const cacheKey = `${workspaceId}:${fingerprintString(val)}`;
+    const cachedUrl = uploadedMediaCache.get(cacheKey);
+    if (cachedUrl) {
+      return { value: cachedUrl, changed: true };
+    }
+    if (!storageUploadDisabledForSession) {
+      const mimeMatch = val.match(/^data:([^;]+);/);
+      const mime = (mimeMatch?.[1] || 'application/octet-stream').toLowerCase();
+      let ext = 'bin';
+      if (mime === 'application/pdf') ext = 'pdf';
+      else if (mime.includes('epub')) ext = 'epub';
+      else if (mime.includes('wordprocessingml')) ext = 'docx';
+      else if (mime.includes('presentationml')) ext = 'pptx';
+      else if (mime.startsWith('image/')) {
+        const raw = mime.slice('image/'.length).replace('+xml', '');
+        ext = raw === 'jpeg' ? 'jpg' : raw;
+      } else if (mime.startsWith('video/')) {
+        ext = mime.slice('video/'.length) || 'mp4';
+      } else if (mime.startsWith('audio/')) {
+        const raw = mime.slice('audio/'.length);
+        ext = raw === 'mpeg' ? 'mp3' : raw || 'mp3';
+      }
+
+      const storagePath = `workspaces/${sanitizeDocId(workspaceId)}/media/${fingerprintString(val)}.${ext}`;
+      try {
+        const downloadUrl = await uploadDataUrlToStorage(storagePath, val);
+        uploadedMediaCache.set(cacheKey, downloadUrl);
+        return { value: downloadUrl, changed: true };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        // Disable Storage for session only on permanent auth/bucket config errors
+        if (
+          msg.includes('storage/unauthorized') ||
+          msg.includes('storage/bucket-not-found') ||
+          msg.includes('storage/project-not-found')
+        ) {
+          storageUploadDisabledForSession = true;
+        }
+      }
+    }
+    if (isImage && val.length > 90_000) {
+      const slim = await compressDataUrlFallback(val, 85_000);
+      if (slim.length < val.length) {
+        return { value: slim, changed: true };
+      }
+    }
+    return { value: val, changed: false };
+  }
+  if (Array.isArray(val)) {
+    let anyChanged = false;
+    const out: unknown[] = [];
+    for (const item of val) {
+      const res = await resolveInlineMediaValue(workspaceId, item);
+      if (res.changed) anyChanged = true;
+      out.push(res.value);
+    }
+    return { value: anyChanged ? out : val, changed: anyChanged };
+  }
+  if (typeof val === 'object') {
+    let anyChanged = false;
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
+      if (v === undefined || typeof v === 'function' || typeof v === 'symbol') continue;
+      const res = await resolveInlineMediaValue(workspaceId, v);
+      if (res.changed) anyChanged = true;
+      out[k] = res.value;
+    }
+    return { value: anyChanged ? out : val, changed: anyChanged };
+  }
+  return { value: val, changed: false };
 }
 
 /**
@@ -348,7 +508,11 @@ export async function pushSyncKeyToCloud(params: {
   const docRef = doc(db, 'workspaces', workspaceId, 'syncStates', stateKey);
   const docPath = `workspaces/${workspaceId}/syncStates/${stateKey}`;
 
-  const { safeValue, trimmedLargeAttachments } = enforcePayloadBudget(value);
+  const { value: mediaResolvedValue, changed: mediaTransformed } = await resolveInlineMediaValue(
+    workspaceId,
+    value
+  );
+  const { safeValue, trimmedLargeAttachments } = enforcePayloadBudget(mediaResolvedValue);
   const boundedMembers = Array.from(new Set([workspaceOwnerUid, user.uid, ...memberUids])).slice(
     0,
     50
@@ -403,6 +567,9 @@ export async function pushSyncKeyToCloud(params: {
       });
     }
 
+    if (mediaTransformed && !trimmedLargeAttachments) {
+      saveDualStorage(rawKey, safeValue, clientUpdatedAt, 'remote');
+    }
     removePendingCloudKeys([rawKey]);
     return { trimmedLargeAttachments };
   } catch (error) {
@@ -656,9 +823,19 @@ export function attachWorkspaceSyncListeners(params: {
   knownSyncMeta: Map<string, SyncMetaRecord>;
   onWorkspaceUpdated: (ws: WorkspaceInfo) => void;
   onSyncApplied: (appliedKeys: string[], syncedAt: number) => void;
+  onInitialReady?: () => void;
   onError: (err: Error) => void;
 }): () => void {
-  const { user, workspaceId, knownSyncMeta, onWorkspaceUpdated, onSyncApplied, onError } = params;
+  const { user, workspaceId, knownSyncMeta, onWorkspaceUpdated, onSyncApplied, onInitialReady, onError } =
+    params;
+
+  let initialReadyFired = false;
+  const fireInitialReady = () => {
+    if (!initialReadyFired) {
+      initialReadyFired = true;
+      onInitialReady?.();
+    }
+  };
 
   const wsRef = doc(db, 'workspaces', workspaceId);
   const wsPath = `workspaces/${workspaceId}`;
@@ -721,9 +898,11 @@ export function attachWorkspaceSyncListeners(params: {
         }
       }
 
+      fireInitialReady();
       onSyncApplied(appliedKeys, Date.now());
     },
     error => {
+      fireInitialReady();
       try {
         handleFirestoreError(error, OperationType.LIST, statesPath);
       } catch (wrapped) {

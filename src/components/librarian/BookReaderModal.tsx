@@ -1,27 +1,47 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { BookItem, EbookItem, BookChapter } from '../../types/librarian';
-import { 
-  X, 
-  ChevronLeft, 
-  ChevronRight, 
-  BookOpen, 
-  Download, 
-  Search, 
-  Sun, 
-  Moon, 
-  Bookmark, 
-  Maximize2, 
-  Minimize2,
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Search,
   Printer,
   List,
-  Type
+  FileText,
+  ExternalLink
 } from 'lucide-react';
-import { triggerPrint, exportPrintableDocument } from '../../utils/printHelper';
+import { exportPrintableDocument } from '../../utils/printHelper';
 import { downloadLibraryResourcePdf } from '../../utils/exportDocuments';
 
 interface BookReaderModalProps {
   book: BookItem | EbookItem;
   onClose: () => void;
+}
+
+function dataUrlToObjectUrl(dataUrl: string): string | null {
+  try {
+    const commaIdx = dataUrl.indexOf(',');
+    if (commaIdx === -1) return null;
+    const header = dataUrl.slice(0, commaIdx);
+    const body = dataUrl.slice(commaIdx + 1);
+    const mimeMatch = header.match(/^data:([^;]+)/i);
+    const mime = mimeMatch?.[1] || 'application/octet-stream';
+    let blob: Blob;
+    if (/;base64/i.test(header)) {
+      const binary = atob(body);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      blob = new Blob([bytes], { type: mime });
+    } else {
+      blob = new Blob([decodeURIComponent(body)], { type: mime });
+    }
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
 }
 
 export const BookReaderModal: React.FC<BookReaderModalProps> = ({ book, onClose }) => {
@@ -31,16 +51,88 @@ export const BookReaderModal: React.FC<BookReaderModalProps> = ({ book, onClose 
   const [searchTerm, setSearchTerm] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const rawFileSource = useMemo(() => {
+    const candidate =
+      ('url' in book && book.url ? book.url : '') ||
+      book.fileData ||
+      (book.content && book.content.startsWith('data:') ? book.content : '');
+    const trimmed = candidate.trim();
+    if (!trimmed || trimmed === '#') return '';
+    return trimmed;
+  }, [book]);
+
+  const hasTextContent = Boolean(
+    (book.chapters && book.chapters.length > 0) ||
+      (book.content && book.content.trim().length > 0 && !book.content.startsWith('data:'))
+  );
+
+  const isPdfFile = useMemo(() => {
+    if (!rawFileSource) return false;
+    const lowerUrl = rawFileSource.toLowerCase();
+    const lowerName = (book.fileName || '').toLowerCase();
+    return (
+      lowerUrl.startsWith('data:application/pdf') ||
+      lowerUrl.includes('.pdf') ||
+      lowerName.endsWith('.pdf') ||
+      ('format' in book && book.format === 'PDF')
+    );
+  }, [rawFileSource, book]);
+
+  const isVideoFile = useMemo(() => {
+    if (!rawFileSource) return false;
+    const lowerUrl = rawFileSource.toLowerCase();
+    return (
+      lowerUrl.startsWith('data:video/') ||
+      /\.(mp4|webm|ogg)(\?|$)/i.test(lowerUrl) ||
+      ('format' in book && book.format === 'Vidéo')
+    );
+  }, [rawFileSource, book]);
+
+  const isAudioFile = useMemo(() => {
+    if (!rawFileSource) return false;
+    const lowerUrl = rawFileSource.toLowerCase();
+    return (
+      lowerUrl.startsWith('data:audio/') ||
+      /\.(mp3|wav|m4a|ogg)(\?|$)/i.test(lowerUrl) ||
+      ('format' in book && book.format === 'Audio')
+    );
+  }, [rawFileSource, book]);
+
+  const [viewMode, setViewMode] = useState<'file' | 'text'>(rawFileSource ? 'file' : 'text');
+  useEffect(() => {
+    setViewMode(rawFileSource ? 'file' : 'text');
+  }, [rawFileSource]);
+
+  const [viewerBlobUrl, setViewerBlobUrl] = useState<string>('');
+  useEffect(() => {
+    if (!rawFileSource) {
+      setViewerBlobUrl('');
+      return;
+    }
+    if (rawFileSource.startsWith('data:')) {
+      const objUrl = dataUrlToObjectUrl(rawFileSource);
+      if (objUrl) {
+        setViewerBlobUrl(objUrl);
+        return () => URL.revokeObjectURL(objUrl);
+      }
+    }
+    setViewerBlobUrl(rawFileSource);
+    return undefined;
+  }, [rawFileSource]);
+
   // Derive chapters or generate default chapter if only description/content exists
-  const chapters: BookChapter[] = book.chapters && book.chapters.length > 0 
-    ? book.chapters 
-    : [
-        {
-          id: 'def-1',
-          title: `Introduction & Texte Intégral : ${book.title}`,
-          content: book.content || `${book.description}\n\nCet ouvrage officiel est référencé au sein de la Bibliothèque & Médiathèque Numérique de l'établissement sous la direction du Ministère de l'Enseignement Pré-Universitaire et de l'Alphabétisation (MEPU-A).\n\nConsultez l'ensemble des modules, travaux pratiques et séries d'exercices recommandés pour votre niveau académique.`
-        }
-      ];
+  const chapters: BookChapter[] =
+    book.chapters && book.chapters.length > 0
+      ? book.chapters
+      : [
+          {
+            id: 'def-1',
+            title: `Introduction & Texte Intégral : ${book.title}`,
+            content:
+              (book.content && !book.content.startsWith('data:') ? book.content : '') ||
+              `${book.description}\n\nCet ouvrage officiel est référencé au sein de la Bibliothèque & Médiathèque Numérique de l'établissement sous la direction du Ministère de l'Enseignement Pré-Universitaire et de l'Alphabétisation (MEPU-A).\n\nConsultez l'ensemble des modules, travaux pratiques et séries d'exercices recommandés pour votre niveau académique.`
+          }
+        ];
 
   const currentChapter = chapters[selectedChapterIndex] || chapters[0];
 
@@ -58,12 +150,30 @@ export const BookReaderModal: React.FC<BookReaderModalProps> = ({ book, onClose 
 
   const getFontSizeClass = () => {
     switch (fontSize) {
-      case 'sm': return 'text-xs md:text-sm leading-relaxed';
-      case 'lg': return 'text-base md:text-lg leading-loose';
-      case 'xl': return 'text-lg md:text-xl leading-loose';
+      case 'sm':
+        return 'text-xs md:text-sm leading-relaxed';
+      case 'lg':
+        return 'text-base md:text-lg leading-loose';
+      case 'xl':
+        return 'text-lg md:text-xl leading-loose';
       case 'base':
-      default: return 'text-sm md:text-base leading-relaxed';
+      default:
+        return 'text-sm md:text-base leading-relaxed';
     }
+  };
+
+  const handleDownload = () => {
+    downloadLibraryResourcePdf({
+      title: book.title,
+      author: book.author,
+      subject: 'subject' in book ? book.subject : book.category,
+      level: 'level' in book ? book.level : undefined,
+      description: book.description,
+      content:
+        book.chapters?.map(ch => `${ch.title}\n\n${ch.content}`).join('\n\n---\n\n') || book.content,
+      fileUrl: rawFileSource || undefined,
+      fileName: book.fileName
+    });
   };
 
   const handlePrintChapter = () => {
@@ -87,97 +197,116 @@ export const BookReaderModal: React.FC<BookReaderModalProps> = ({ book, onClose 
         {/* Top Control Bar */}
         <header className="p-3 sm:p-3.5 border-b border-blue-100 bg-white flex items-center justify-between gap-2 sm:gap-3 shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-950 transition-colors cursor-pointer shrink-0"
-              title="Afficher la table des matières"
-            >
-              <List className="w-4 h-4" />
-            </button>
+            {viewMode === 'text' && (
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-950 transition-colors cursor-pointer shrink-0"
+                title="Afficher la table des matières"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            )}
 
             <div className="min-w-0">
               <h2 className="text-sm font-black text-blue-950 truncate max-w-[160px] sm:max-w-md">
                 {book.title}
               </h2>
               <div className="text-[11px] text-slate-500 truncate">
-                Par <strong className="text-slate-700">{book.author}</strong> · Chapitre {selectedChapterIndex + 1} / {chapters.length}
+                Par <strong className="text-slate-700">{book.author}</strong>
+                {rawFileSource && book.fileName ? ` · ${book.fileName}` : ` · Chapitre ${selectedChapterIndex + 1} / ${chapters.length}`}
               </div>
             </div>
           </div>
 
           {/* Reader Preferences & Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Theme selector */}
-            <div className="hidden sm:flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200">
-              <button
-                onClick={() => setTheme('light')}
-                className={`px-2 py-1 rounded text-xs font-bold transition-all ${theme === 'light' ? 'bg-amber-100 text-slate-900 shadow-xs' : 'text-slate-600 hover:text-blue-950'}`}
-                title="Thème Papier Blanc"
-              >
-                Clair
-              </button>
-              <button
-                onClick={() => setTheme('sepia')}
-                className={`px-2 py-1 rounded text-xs font-bold transition-all ${theme === 'sepia' ? 'bg-[#e8d5b5] text-[#433422] shadow-xs' : 'text-slate-600 hover:text-blue-950'}`}
-                title="Thème Sépia (Confort de lecture)"
-              >
-                Sépia
-              </button>
-              <button
-                onClick={() => setTheme('dark')}
-                className={`px-2 py-1 rounded text-xs font-bold transition-all ${theme === 'dark' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:text-blue-950'}`}
-                title="Thème Nuit Sombre"
-              >
-                Nuit
-              </button>
-            </div>
+            {rawFileSource && hasTextContent && (
+              <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200">
+                <button
+                  onClick={() => setViewMode('file')}
+                  className={`px-2 py-1 rounded text-xs font-bold transition-all cursor-pointer ${
+                    viewMode === 'file' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:text-blue-950'
+                  }`}
+                >
+                  Document
+                </button>
+                <button
+                  onClick={() => setViewMode('text')}
+                  className={`px-2 py-1 rounded text-xs font-bold transition-all cursor-pointer ${
+                    viewMode === 'text' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:text-blue-950'
+                  }`}
+                >
+                  Texte
+                </button>
+              </div>
+            )}
 
-            {/* Font size adjustments */}
-            <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200 text-xs">
-              <button
-                onClick={() => setFontSize(prev => prev === 'xl' ? 'lg' : prev === 'lg' ? 'base' : 'sm')}
-                className="px-2 py-1 text-slate-700 hover:text-blue-950 font-bold"
-                title="Réduire la police"
-              >
-                A-
-              </button>
-              <button
-                onClick={() => setFontSize(prev => prev === 'sm' ? 'base' : prev === 'base' ? 'lg' : 'xl')}
-                className="px-2 py-1 text-slate-700 hover:text-blue-950 font-bold"
-                title="Agrandir la police"
-              >
-                A+
-              </button>
-            </div>
+            {viewMode === 'text' && (
+              <>
+                {/* Theme selector */}
+                <div className="hidden sm:flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200">
+                  <button
+                    onClick={() => setTheme('light')}
+                    className={`px-2 py-1 rounded text-xs font-bold transition-all ${theme === 'light' ? 'bg-amber-100 text-slate-900 shadow-xs' : 'text-slate-600 hover:text-blue-950'}`}
+                    title="Thème Papier Blanc"
+                  >
+                    Clair
+                  </button>
+                  <button
+                    onClick={() => setTheme('sepia')}
+                    className={`px-2 py-1 rounded text-xs font-bold transition-all ${theme === 'sepia' ? 'bg-[#e8d5b5] text-[#433422] shadow-xs' : 'text-slate-600 hover:text-blue-950'}`}
+                    title="Thème Sépia (Confort de lecture)"
+                  >
+                    Sépia
+                  </button>
+                  <button
+                    onClick={() => setTheme('dark')}
+                    className={`px-2 py-1 rounded text-xs font-bold transition-all ${theme === 'dark' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:text-blue-950'}`}
+                    title="Thème Nuit Sombre"
+                  >
+                    Nuit
+                  </button>
+                </div>
+
+                {/* Font size adjustments */}
+                <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200 text-xs">
+                  <button
+                    onClick={() => setFontSize(prev => prev === 'xl' ? 'lg' : prev === 'lg' ? 'base' : 'sm')}
+                    className="px-2 py-1 text-slate-700 hover:text-blue-950 font-bold"
+                    title="Réduire la police"
+                  >
+                    A-
+                  </button>
+                  <button
+                    onClick={() => setFontSize(prev => prev === 'sm' ? 'base' : prev === 'base' ? 'lg' : 'xl')}
+                    className="px-2 py-1 text-slate-700 hover:text-blue-950 font-bold"
+                    title="Agrandir la police"
+                  >
+                    A+
+                  </button>
+                </div>
+              </>
+            )}
 
             {/* Download PDF */}
             <button
-              onClick={() =>
-                downloadLibraryResourcePdf({
-                  title: book.title,
-                  author: book.author,
-                  subject: 'subject' in book ? book.subject : book.category,
-                  level: 'level' in book ? book.level : undefined,
-                  description: book.description,
-                  content: book.chapters?.map(ch => `${ch.title}\n\n${ch.content}`).join('\n\n---\n\n') || book.content,
-                  fileUrl: 'url' in book ? book.url : undefined
-                })
-              }
+              onClick={handleDownload}
               className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-colors cursor-pointer"
-              title="Télécharger le document PDF"
+              title="Télécharger le document"
             >
               <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">PDF</span>
+              <span className="hidden sm:inline">Télécharger</span>
             </button>
 
-            {/* Print / Export Chapter */}
-            <button
-              onClick={handlePrintChapter}
-              className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors cursor-pointer"
-              title="Imprimer / Exporter ce chapitre"
-            >
-              <Printer className="w-4 h-4" />
-            </button>
+            {viewMode === 'text' && (
+              <button
+                onClick={handlePrintChapter}
+                className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors cursor-pointer"
+                title="Imprimer / Exporter ce chapitre"
+              >
+                <Printer className="w-4 h-4" />
+              </button>
+            )}
 
             {/* Close */}
             <button
@@ -190,104 +319,178 @@ export const BookReaderModal: React.FC<BookReaderModalProps> = ({ book, onClose 
         </header>
 
         {/* Reader Core Body */}
-        <div className="flex-1 flex min-h-0 relative">
-          {/* Collapsible Chapters Sidebar */}
-          {sidebarOpen && (
-            <aside className="absolute md:static inset-y-0 left-0 w-72 max-w-[85vw] bg-white border-r border-blue-100 flex flex-col z-20 shrink-0 shadow-xl md:shadow-none animate-in slide-in-from-left duration-200">
-              <div className="p-3 border-b border-blue-100 flex items-center justify-between">
-                <span className="text-xs font-bold text-blue-950 uppercase tracking-wider">
-                  Table des Matières
-                </span>
-                <span className="text-[10px] text-slate-500 font-mono">
-                  {chapters.length} chapitres
+        {viewMode === 'file' && rawFileSource ? (
+          <div className="flex-1 flex flex-col min-h-0 bg-slate-100">
+            <div className="px-4 py-2 bg-purple-50 border-b border-purple-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 text-purple-950 font-semibold min-w-0">
+                <FileText className="w-4 h-4 text-purple-600 shrink-0" />
+                <span className="truncate">
+                  {book.fileName || book.title}
                 </span>
               </div>
-
-              <div className="p-2 border-b border-blue-100">
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Chercher un chapitre..."
-                    className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 text-xs text-slate-900 placeholder-slate-400 border border-slate-200 focus:outline-hidden"
-                  />
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                {chapters
-                  .filter(ch => ch.title.toLowerCase().includes(searchTerm.toLowerCase()))
-                  .map((ch, idx) => {
-                    const isCurrent = idx === selectedChapterIndex;
-                    return (
-                      <button
-                        key={ch.id || idx}
-                        onClick={() => {
-                          setSelectedChapterIndex(idx);
-                          setSidebarOpen(false);
-                        }}
-                        className={`w-full text-left p-2.5 rounded-xl text-xs transition-all cursor-pointer ${
-                          isCurrent 
-                            ? 'bg-blue-600 text-white font-bold shadow-xs' 
-                            : 'text-slate-700 hover:bg-blue-50 hover:text-blue-950'
-                        }`}
-                      >
-                        <div className="text-[10px] opacity-75 mb-0.5">Chapitre {idx + 1}</div>
-                        <div className="line-clamp-2">{ch.title}</div>
-                      </button>
-                    );
-                  })}
-              </div>
-            </aside>
-          )}
-
-          {/* Reading Viewport */}
-          <main className={`flex-1 overflow-y-auto p-4 sm:p-6 md:p-12 transition-colors ${getThemeClasses()} flex flex-col items-center`}>
-            <article className={`max-w-2xl w-full mx-auto space-y-6 font-serif ${getFontSizeClass()}`}>
-              {/* Chapter Header */}
-              <header className="border-b pb-4 mb-6 border-current/20 text-center space-y-2">
-                <div className="text-xs uppercase tracking-widest font-sans font-bold opacity-75">
-                  {book.title} · {book.author}
-                </div>
-                <h1 className="text-xl md:text-2xl font-bold font-sans">
-                  {currentChapter.title}
-                </h1>
-              </header>
-
-              {/* Text content with preservation of paragraphs */}
-              <div className="whitespace-pre-line leading-relaxed text-justify space-y-4">
-                {currentChapter.content}
-              </div>
-
-              {/* Chapter Bottom Navigation */}
-              <footer className="pt-8 border-t border-current/20 font-sans flex items-center justify-between text-xs not-italic">
+              <div className="flex items-center gap-2">
+                {viewerBlobUrl && (
+                  <a
+                    href={viewerBlobUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold text-[11px]"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Ouvrir plein écran</span>
+                  </a>
+                )}
                 <button
-                  disabled={selectedChapterIndex === 0}
-                  onClick={() => setSelectedChapterIndex(prev => Math.max(0, prev - 1))}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed font-bold transition-all cursor-pointer"
+                  type="button"
+                  onClick={handleDownload}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-[11px] cursor-pointer"
                 >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span>Chapitre précédent</span>
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Télécharger le fichier</span>
                 </button>
+              </div>
+            </div>
 
-                <span className="font-bold font-mono">
-                  {selectedChapterIndex + 1} / {chapters.length}
-                </span>
+            <div className="flex-1 min-h-0 p-2 sm:p-4 flex flex-col items-center justify-center">
+              {isVideoFile && viewerBlobUrl ? (
+                <video
+                  src={viewerBlobUrl}
+                  controls
+                  className="w-full max-h-full rounded-xl bg-black shadow-lg"
+                />
+              ) : isAudioFile && viewerBlobUrl ? (
+                <div className="w-full max-w-md p-6 rounded-2xl bg-white border border-slate-200 shadow-md space-y-4 text-center">
+                  <div className="font-bold text-blue-950 text-sm">{book.title}</div>
+                  <p className="text-xs text-slate-500">{book.description}</p>
+                  <audio src={viewerBlobUrl} controls className="w-full" />
+                </div>
+              ) : isPdfFile && viewerBlobUrl ? (
+                <iframe
+                  src={viewerBlobUrl}
+                  title={book.title}
+                  className="w-full h-full flex-1 rounded-xl border border-slate-200 bg-white shadow-inner"
+                />
+              ) : (
+                <div className="max-w-md w-full p-6 rounded-2xl bg-white border border-slate-200 shadow-md text-center space-y-4">
+                  <FileText className="w-10 h-10 text-purple-600 mx-auto" />
+                  <div>
+                    <h3 className="font-bold text-sm text-blue-950">{book.fileName || book.title}</h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {book.description || 'Fichier numérique prêt au téléchargement ou à l’ouverture externe.'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDownload}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Télécharger et ouvrir ce document</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 flex min-h-0 relative">
+            {/* Collapsible Chapters Sidebar */}
+            {sidebarOpen && (
+              <aside className="absolute md:static inset-y-0 left-0 w-72 max-w-[85vw] bg-white border-r border-blue-100 flex flex-col z-20 shrink-0 shadow-xl md:shadow-none animate-in slide-in-from-left duration-200">
+                <div className="p-3 border-b border-blue-100 flex items-center justify-between">
+                  <span className="text-xs font-bold text-blue-950 uppercase tracking-wider">
+                    Table des Matières
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-mono">
+                    {chapters.length} chapitres
+                  </span>
+                </div>
 
-                <button
-                  disabled={selectedChapterIndex >= chapters.length - 1}
-                  onClick={() => setSelectedChapterIndex(prev => Math.min(chapters.length - 1, prev + 1))}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed font-bold transition-all cursor-pointer"
-                >
-                  <span>Chapitre suivant</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </footer>
-            </article>
-          </main>
-        </div>
+                <div className="p-2 border-b border-blue-100">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Chercher un chapitre..."
+                      className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 text-xs text-slate-900 placeholder-slate-400 border border-slate-200 focus:outline-hidden"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                  {chapters
+                    .filter(ch => ch.title.toLowerCase().includes(searchTerm.toLowerCase()))
+                    .map((ch, idx) => {
+                      const isCurrent = idx === selectedChapterIndex;
+                      return (
+                        <button
+                          key={ch.id || idx}
+                          onClick={() => {
+                            setSelectedChapterIndex(idx);
+                            setSidebarOpen(false);
+                          }}
+                          className={`w-full text-left p-2.5 rounded-xl text-xs transition-all cursor-pointer ${
+                            isCurrent
+                              ? 'bg-blue-600 text-white font-bold shadow-xs'
+                              : 'text-slate-700 hover:bg-blue-50 hover:text-blue-950'
+                          }`}
+                        >
+                          <div className="text-[10px] opacity-75 mb-0.5">Chapitre {idx + 1}</div>
+                          <div className="line-clamp-2">{ch.title}</div>
+                        </button>
+                      );
+                    })}
+                </div>
+              </aside>
+            )}
+
+            {/* Reading Viewport */}
+            <main className={`flex-1 overflow-y-auto p-4 sm:p-6 md:p-12 transition-colors ${getThemeClasses()} flex flex-col items-center`}>
+              <article className={`max-w-2xl w-full mx-auto space-y-6 font-serif ${getFontSizeClass()}`}>
+                {/* Chapter Header */}
+                <header className="border-b pb-4 mb-6 border-current/20 text-center space-y-2">
+                  <div className="text-xs uppercase tracking-widest font-sans font-bold opacity-75">
+                    {book.title} · {book.author}
+                  </div>
+                  <h1 className="text-xl md:text-2xl font-bold font-sans">
+                    {currentChapter.title}
+                  </h1>
+                </header>
+
+                {/* Text content with preservation of paragraphs */}
+                <div className="whitespace-pre-line leading-relaxed text-justify space-y-4">
+                  {currentChapter.content}
+                </div>
+
+                {/* Chapter Bottom Navigation */}
+                <footer className="pt-8 border-t border-current/20 font-sans flex items-center justify-between text-xs not-italic">
+                  <button
+                    disabled={selectedChapterIndex === 0}
+                    onClick={() => setSelectedChapterIndex(prev => Math.max(0, prev - 1))}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed font-bold transition-all cursor-pointer"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>Chapitre précédent</span>
+                  </button>
+
+                  <span className="font-bold font-mono">
+                    {selectedChapterIndex + 1} / {chapters.length}
+                  </span>
+
+                  <button
+                    disabled={selectedChapterIndex >= chapters.length - 1}
+                    onClick={() => setSelectedChapterIndex(prev => Math.min(chapters.length - 1, prev + 1))}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed font-bold transition-all cursor-pointer"
+                  >
+                    <span>Chapitre suivant</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </footer>
+              </article>
+            </main>
+          </div>
+        )}
       </div>
     </div>
   );

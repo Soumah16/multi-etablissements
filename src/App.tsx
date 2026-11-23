@@ -43,9 +43,10 @@ import { FirebaseProvider } from './context/FirebaseContext';
 import { CloudSyncButton, CloudSyncModal } from './components/common/CloudSyncModal';
 import { CheckCircle2, ShieldCheck, ArrowRight, Building2 } from 'lucide-react';
 import { ACCOUNTS_STORAGE_KEY, getStoredAccounts, normalizeSchoolId } from './data/accountsData';
-import { subscribeStorageKey } from './utils/storage';
+import { getLocalTimestamp, subscribeStorageKey } from './utils/storage';
 import { CURRENT_USER_UPDATED_EVENT, hydrateActiveRoleProfileOnLogin } from './utils/accountSync';
 import { startServerSync } from './utils/serverSync';
+import { SuperAdminProfile } from './types';
 
 export type WorkspaceMode = 
   | 'super_admin' 
@@ -118,7 +119,7 @@ const MainLayout: React.FC = () => {
     } catch {
       // ignore
     }
-    hydrateActiveRoleProfileOnLogin(user);
+    hydrateActiveRoleProfileOnLogin(user, 'local', { seedOnlyIfEmpty: true });
     setCurrentUser(user);
     setWorkspaceMode(user.role);
     if (user.ecoleId && user.ecoleId !== 'NATIONAL') {
@@ -235,14 +236,15 @@ const MainLayout: React.FC = () => {
     };
     window.addEventListener(CURRENT_USER_UPDATED_EVENT, handleSessionUpdated);
 
-    const unsubAccounts = subscribeStorageKey(ACCOUNTS_STORAGE_KEY, (_data, _ts, source) => {
+    const unsubAccounts = subscribeStorageKey(ACCOUNTS_STORAGE_KEY, (_data, ts, source) => {
       const prev = currentUserRef.current;
       if (!prev) return;
       const accounts = getStoredAccounts();
       const match = accounts.find(
         a =>
           (prev.email && a.email.toLowerCase() === prev.email.toLowerCase()) ||
-          (prev.matricule && a.matricule.toLowerCase() === prev.matricule.toLowerCase())
+          (prev.matricule && a.matricule.toLowerCase() === prev.matricule.toLowerCase()) ||
+          (prev.role === 'super_admin' && a.role === 'super_admin')
       );
       if (!match) return;
       if (match.status === 'verrouille' || match.status === 'desactive') {
@@ -255,10 +257,41 @@ const MainLayout: React.FC = () => {
         email: match.email || prev.email,
         matricule: match.matricule || prev.matricule,
         schoolName: match.schoolName || prev.schoolName,
-        photo: match.photo || prev.photo,
+        photo: match.photo !== undefined ? match.photo : prev.photo,
         ecoleId: match.ecoleId || prev.ecoleId,
         status: match.status || prev.status,
         mustChangePassword: match.mustChangePassword
+      };
+      if (JSON.stringify(nextUser) !== JSON.stringify(prev)) {
+        try {
+          localStorage.setItem('smartschool_current_user', JSON.stringify(nextUser));
+        } catch {
+          // ignore
+        }
+        currentUserRef.current = nextUser;
+        setCurrentUser(nextUser);
+      }
+
+      if (source === 'local') {
+        hydrateActiveRoleProfileOnLogin(nextUser, 'local');
+      } else {
+        const profileKey = prev.role === 'super_admin' ? 'smartschool_profile' : '';
+        if (!profileKey || getLocalTimestamp(profileKey) < ts) {
+          hydrateActiveRoleProfileOnLogin(nextUser, 'remote', { explicitTimestamp: ts });
+        }
+      }
+    });
+
+    const unsubSuperProfile = subscribeStorageKey('smartschool_profile', data => {
+      const prev = currentUserRef.current;
+      if (!prev || prev.role !== 'super_admin' || !data || typeof data !== 'object') return;
+      const prof = data as Partial<SuperAdminProfile>;
+      const nextUser: AuthenticatedUser = {
+        ...prev,
+        name: prof.name || prev.name,
+        email: prof.email || prev.email,
+        schoolName: prof.enterprise || prev.schoolName,
+        photo: prof.photo !== undefined ? prof.photo : prev.photo
       };
       if (JSON.stringify(nextUser) === JSON.stringify(prev)) return;
       try {
@@ -268,12 +301,12 @@ const MainLayout: React.FC = () => {
       }
       currentUserRef.current = nextUser;
       setCurrentUser(nextUser);
-      hydrateActiveRoleProfileOnLogin(nextUser, source);
     });
 
     return () => {
       window.removeEventListener(CURRENT_USER_UPDATED_EVENT, handleSessionUpdated);
       unsubAccounts();
+      unsubSuperProfile();
     };
   }, [handleLogout]);
 
@@ -322,7 +355,7 @@ const MainLayout: React.FC = () => {
     } catch {
       // ignore
     }
-    hydrateActiveRoleProfileOnLogin(newUser);
+    hydrateActiveRoleProfileOnLogin(newUser, 'local', { seedOnlyIfEmpty: true });
     const nextSchoolId =
       pendingRoleSwitch?.schoolId ||
       (newUser.ecoleId && newUser.ecoleId !== 'NATIONAL' ? newUser.ecoleId : undefined);

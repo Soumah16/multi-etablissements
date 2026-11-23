@@ -1,30 +1,52 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useStudent } from '../../context/StudentContext';
+import { useLibrarian } from '../../context/LibrarianContext';
 import { StudentCourseResource } from '../../types/student';
 import { BookReaderModal } from '../librarian/BookReaderModal';
 import { downloadCourseResourceFile } from '../../utils/exportDocuments';
 import { 
-  BookOpen, 
   Search, 
   Download, 
-  Eye, 
-  FileText, 
-  Video, 
-  Music, 
-  Layers, 
-  CheckCircle2,
-  X
+  Eye
 } from 'lucide-react';
 
 export const StudentCoursesView: React.FC = () => {
   const { courses, showToast } = useStudent();
+  const { ebooks } = useLibrarian();
   const [search, setSearch] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
-  const [viewerModalCourse, setViewerModalCourse] = useState<StudentCourseResource | null>(null);
+  const [viewerModalCourse, setViewerModalCourse] = useState<
+    (StudentCourseResource & { fileName?: string }) | null
+  >(null);
+
+  const combinedCourses = useMemo<(StudentCourseResource & { fileName?: string })[]>(() => {
+    const libraryItems: (StudentCourseResource & { fileName?: string })[] = ebooks.map(eb => ({
+      id: `lib-${eb.id}`,
+      title: eb.title,
+      subject: eb.subject,
+      teacherName: `${eb.author} (Bibliothèque)`,
+      type:
+        eb.format === 'Vidéo'
+          ? 'Vidéo'
+          : eb.format === 'Audio'
+          ? 'Audio'
+          : eb.format === 'PPTX'
+          ? 'PowerPoint'
+          : eb.format === 'DOCX'
+          ? 'Word'
+          : 'PDF',
+      fileSize: eb.fileSize,
+      date: 'Bibliothèque Numérique',
+      description: eb.description,
+      downloadUrl: (eb.url && eb.url !== '#' ? eb.url : eb.fileData) || eb.url,
+      fileName: eb.fileName
+    }));
+    return [...libraryItems, ...courses];
+  }, [ebooks, courses]);
 
   const subjects = ['all', 'Mathématiques', 'Physique-Chimie', 'Philosophie', 'SVT', 'Français'];
 
-  const filteredCourses = courses.filter(c => {
+  const filteredCourses = combinedCourses.filter(c => {
     const matchesSearch = c.title.toLowerCase().includes(search.toLowerCase()) ||
       c.teacherName.toLowerCase().includes(search.toLowerCase()) ||
       c.description.toLowerCase().includes(search.toLowerCase());
@@ -51,9 +73,9 @@ export const StudentCoursesView: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl md:text-2xl font-black text-blue-950">Supports de Cours & Ressources Pédagogiques</h1>
+        <h1 className="text-xl md:text-2xl font-black text-blue-950">Supports de Cours &amp; Bibliothèque Numérique</h1>
         <p className="text-xs text-slate-500 mt-0.5">
-          Téléchargez les polycopiés, fiches de révision, exercices d'entraînement et capsules vidéo mis en ligne par vos enseignants.
+          Consultez et téléchargez les polycopiés, manuels PDF de la bibliothèque, fiches de révision et capsules vidéo.
         </p>
       </div>
 
@@ -65,7 +87,7 @@ export const StudentCoursesView: React.FC = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher par chapitre, notion ou nom du professeur..."
+            placeholder="Rechercher par chapitre, manuel PDF ou nom du professeur..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-blue-100 text-xs text-blue-950 placeholder-slate-400 focus:outline-hidden focus:border-blue-500"
           />
         </div>
@@ -134,7 +156,9 @@ export const StudentCoursesView: React.FC = () => {
                       teacherName: course.teacherName,
                       date: course.date,
                       description: course.description,
-                      resourceName: `${course.title}.${course.type === 'Word' ? 'docx' : course.type === 'PowerPoint' ? 'pptx' : 'pdf'}`,
+                      resourceName:
+                        course.fileName ||
+                        `${course.title}.${course.type === 'Word' ? 'docx' : course.type === 'PowerPoint' ? 'pptx' : 'pdf'}`,
                       resourceType: course.type,
                       fileUrl: course.downloadUrl
                     });
@@ -168,6 +192,8 @@ export const StudentCoursesView: React.FC = () => {
             state: 'Neuf',
             yearPublished: 2026,
             qrCodeId: `QR-MEPUA-${viewerModalCourse.id}`,
+            fileData: viewerModalCourse.downloadUrl,
+            fileName: viewerModalCourse.fileName,
             content: `${viewerModalCourse.description}\n\nPROGRAMME ACADÉMIQUE OFFICIEL MEPU-A\nLycée d'Excellence de Conakry · Année 2026-2027\nMatière : ${viewerModalCourse.subject} · Titulaire : ${viewerModalCourse.teacherName}\n\nCe document officiel comprend le cours magistral complet, les théorèmes fondamentaux et les séries d'exercices à préparer pour le prochain TD sous la direction de l'enseignant titulaire.\n\nConsultez l'ensemble des modules pour votre niveau académique.`
           }}
           onClose={() => setViewerModalCourse(null)}

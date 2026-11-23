@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   LibrarianNavTab,
   BookItem,
@@ -179,13 +179,26 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
   }, [schoolKey]);
 
-  // Persist school-scoped library data to localStorage, IndexedDB, and Cloud Sync only after real local mutations
+  const lastPersistedSnapshotRef = useRef<string>('');
   useEffect(() => {
-    if (hydratedSchoolKey !== schoolKey) return;
-    if (skipPersistRef.current) {
-      skipPersistRef.current = false;
+    if (hydratedSchoolKey !== schoolKey) {
+      lastPersistedSnapshotRef.current = '';
       return;
     }
+    const serialized = JSON.stringify({ profile, books, ebooks, loans, libraryAuditLogs });
+    if (!lastPersistedSnapshotRef.current) {
+      lastPersistedSnapshotRef.current = serialized;
+      return;
+    }
+    if (skipPersistRef.current) {
+      skipPersistRef.current = false;
+      lastPersistedSnapshotRef.current = serialized;
+      return;
+    }
+    if (serialized === lastPersistedSnapshotRef.current) {
+      return;
+    }
+    lastPersistedSnapshotRef.current = serialized;
     const now = getMonotonicWriteTimestamp();
     lastProfileWriteTsRef.current = now;
     saveDualStorage(`smartschool_lib_profile_${schoolKey}`, profile, now, 'local');

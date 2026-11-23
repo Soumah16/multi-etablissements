@@ -34,6 +34,7 @@ import { StudentProfile } from '../types/student';
 import { SupervisorProfile } from '../types/supervisor';
 import { TeacherProfile } from '../types/teacher';
 import {
+  getLocalTimestamp,
   getMonotonicWriteTimestamp,
   loadLocalStorage,
   saveDualStorage,
@@ -80,7 +81,8 @@ export const splitFullName = (fullName: string): { firstName: string; lastName: 
 const writeProfileIfChanged = <T extends Record<string, any>>(
   key: string,
   nextValue: T,
-  source: StorageWriteSource = 'local'
+  source: StorageWriteSource = 'local',
+  explicitTimestamp?: number
 ): void => {
   if (typeof window === 'undefined') return;
   try {
@@ -91,7 +93,11 @@ const writeProfileIfChanged = <T extends Record<string, any>>(
   } catch {
     // ignore parse error and write fresh
   }
-  saveDualStorage(key, nextValue, getMonotonicWriteTimestamp(), source);
+  const ts =
+    typeof explicitTimestamp === 'number' && Number.isFinite(explicitTimestamp) && explicitTimestamp > 0
+      ? explicitTimestamp
+      : getMonotonicWriteTimestamp();
+  saveDualStorage(key, nextValue, ts, source);
 };
 
 export const syncCurrentUserSession = (
@@ -144,9 +150,32 @@ export const syncCurrentUserSession = (
 
 export const hydrateActiveRoleProfileOnLogin = (
   sessionUser: CurrentSessionUserLike | DemoAccount,
-  source: StorageWriteSource = 'local'
+  source: StorageWriteSource = 'local',
+  options?: { seedOnlyIfEmpty?: boolean; explicitTimestamp?: number }
 ): void => {
   if (typeof window === 'undefined') return;
+  const seedOnlyIfEmpty = Boolean(options?.seedOnlyIfEmpty);
+  const resolveWriteMode = (targetKey: string): { shouldSkip: boolean; writeSource: StorageWriteSource; writeTs?: number } => {
+    if (seedOnlyIfEmpty) {
+      if (getLocalTimestamp(targetKey) > 0) {
+        return { shouldSkip: true, writeSource: 'remote' };
+      }
+      // Hydration on login from seed/cached user must NOT stamp Date.now() as a local edit
+      return { shouldSkip: false, writeSource: 'remote', writeTs: 1 };
+    }
+    return {
+      shouldSkip: false,
+      writeSource: source,
+      writeTs: options?.explicitTimestamp
+    };
+  };
+
+  const writeHydratedProfile = <T extends Record<string, any>>(targetKey: string, nextValue: T): void => {
+    const mode = resolveWriteMode(targetKey);
+    if (mode.shouldSkip) return;
+    writeProfileIfChanged(targetKey, nextValue, mode.writeSource, mode.writeTs);
+  };
+
   const accounts = getStoredAccounts();
   const matchedAcc = accounts.find(
     a =>
@@ -160,7 +189,7 @@ export const hydrateActiveRoleProfileOnLogin = (
   const resolvedEmail = sessionUser.email || matchedAcc?.email || '';
   const resolvedMatricule = sessionUser.matricule || matchedAcc?.matricule || '';
   const resolvedPhone = matchedAcc?.phone;
-  const resolvedPhoto = sessionUser.photo || matchedAcc?.photo;
+  const resolvedPhoto = sessionUser.photo !== undefined ? sessionUser.photo : matchedAcc?.photo;
   const resolvedTitle = matchedAcc?.title;
   const resolvedSchoolName = sessionUser.schoolName || matchedAcc?.schoolName;
   const resolvedSchoolId = normalizeSchoolId(sessionUser.ecoleId || matchedAcc?.ecoleId) || 'ECOLE-001';
@@ -176,9 +205,9 @@ export const hydrateActiveRoleProfileOnLogin = (
         name: resolvedName || current.name,
         email: resolvedEmail || current.email,
         ...(resolvedPhone ? { phone: resolvedPhone } : {}),
-        ...(resolvedPhoto ? { photo: resolvedPhoto } : {})
+        ...(resolvedPhoto !== undefined ? { photo: resolvedPhoto || undefined } : {})
       };
-      writeProfileIfChanged('smartschool_profile', next, source);
+      writeHydratedProfile('smartschool_profile', next);
       break;
     }
     case 'director': {
@@ -195,7 +224,7 @@ export const hydrateActiveRoleProfileOnLogin = (
         photo: resolvedPhoto || current.photo,
         badgeNumber: sessionUser.badgeNumber || matchedAcc?.badgeNumber || current.badgeNumber
       };
-      writeProfileIfChanged('smartschool_director_profile_v1', next, source);
+      writeHydratedProfile('smartschool_director_profile_v1', next);
       break;
     }
     case 'secretary': {
@@ -211,7 +240,7 @@ export const hydrateActiveRoleProfileOnLogin = (
         schoolName: resolvedSchoolName || current.schoolName,
         photo: resolvedPhoto || current.photo
       };
-      writeProfileIfChanged('smartschool_secretary_profile_v1', next, source);
+      writeHydratedProfile('smartschool_secretary_profile_v1', next);
       break;
     }
     case 'teacher': {
@@ -227,7 +256,7 @@ export const hydrateActiveRoleProfileOnLogin = (
         schoolName: resolvedSchoolName || current.schoolName,
         photo: resolvedPhoto || current.photo
       };
-      writeProfileIfChanged('smartschool_teacher_profile_v1', next, source);
+      writeHydratedProfile('smartschool_teacher_profile_v1', next);
       break;
     }
     case 'supervisor': {
@@ -244,7 +273,7 @@ export const hydrateActiveRoleProfileOnLogin = (
         schoolName: resolvedSchoolName || current.schoolName,
         photo: resolvedPhoto || current.photo
       };
-      writeProfileIfChanged('smartschool_supervisor_profile_v1', next, source);
+      writeHydratedProfile('smartschool_supervisor_profile_v1', next);
       break;
     }
     case 'accountant': {
@@ -261,7 +290,7 @@ export const hydrateActiveRoleProfileOnLogin = (
         schoolName: resolvedSchoolName || current.schoolName,
         photo: resolvedPhoto || current.photo
       };
-      writeProfileIfChanged('smartschool_accountant_profile_v1', next, source);
+      writeHydratedProfile('smartschool_accountant_profile_v1', next);
       break;
     }
     case 'librarian': {
@@ -277,7 +306,7 @@ export const hydrateActiveRoleProfileOnLogin = (
         schoolName: resolvedSchoolName || current.schoolName,
         photo: resolvedPhoto || current.photo
       };
-      writeProfileIfChanged(libKey, next, source);
+      writeHydratedProfile(libKey, next);
       break;
     }
     case 'parent': {
@@ -290,7 +319,7 @@ export const hydrateActiveRoleProfileOnLogin = (
         schoolName: resolvedSchoolName || current.schoolName,
         photo: resolvedPhoto || current.photo
       };
-      writeProfileIfChanged('smartschool_parent_profile_v1', next, source);
+      writeHydratedProfile('smartschool_parent_profile_v1', next);
       break;
     }
     case 'student': {
@@ -303,7 +332,7 @@ export const hydrateActiveRoleProfileOnLogin = (
         schoolName: resolvedSchoolName || current.schoolName,
         photo: resolvedPhoto || current.photo
       };
-      writeProfileIfChanged('smartschool_student_profile_v1', next, source);
+      writeHydratedProfile('smartschool_student_profile_v1', next);
       break;
     }
     default:
@@ -323,6 +352,9 @@ export const propagateSuperAdminProfileChange = (
       a.email.toLowerCase() === nextProfile.email.toLowerCase()
   );
 
+  const resolvedPhoto =
+    nextProfile.photo !== undefined ? nextProfile.photo : existing?.photo;
+
   upsertUserAccount(
     {
       id: existing?.id || 'USR-SADM-001',
@@ -336,7 +368,7 @@ export const propagateSuperAdminProfileChange = (
       ecoleId: 'NATIONAL',
       schoolName: nextProfile.enterprise || existing?.schoolName || 'Ministère MEPU-A · Direction Nationale',
       title: nextProfile.title || existing?.title,
-      photo: nextProfile.photo || existing?.photo,
+      photo: resolvedPhoto,
       mustChangePassword: existing?.mustChangePassword ?? false,
       status: existing?.status || 'actif'
     },
@@ -353,7 +385,7 @@ export const propagateSuperAdminProfileChange = (
       name: nextProfile.name,
       email: nextProfile.email,
       schoolName: nextProfile.enterprise || undefined,
-      ...(nextProfile.photo ? { photo: nextProfile.photo } : {})
+      ...(resolvedPhoto !== undefined ? { photo: resolvedPhoto } : {})
     }
   );
 };
@@ -912,7 +944,8 @@ export const propagateAccountEditToDomain = (params: {
       name: fullName,
       title: account.title || current.title,
       email: account.email,
-      phone: account.phone || current.phone
+      phone: account.phone || current.phone,
+      ...(account.photo !== undefined ? { photo: account.photo || undefined } : {})
     });
   }
 

@@ -48,8 +48,11 @@ export const BooksCatalogView: React.FC = () => {
     shelfLocation: 'Rayon A - Étagère 1',
     state: 'Neuf',
     yearPublished: 2024,
-    content: ''
+    content: '',
+    fileData: '',
+    fileName: ''
   });
+  const [isReadingFile, setIsReadingFile] = useState(false);
 
   // Quick Loan Form state
   const [borrowerName, setBorrowerName] = useState('');
@@ -83,7 +86,10 @@ export const BooksCatalogView: React.FC = () => {
       availableQuantity: 15,
       shelfLocation: 'Rayon B - Étagère 2',
       state: 'Neuf',
-      yearPublished: 2025
+      yearPublished: 2025,
+      content: '',
+      fileData: '',
+      fileName: ''
     });
     setModalOpen(true);
   };
@@ -103,18 +109,22 @@ export const BooksCatalogView: React.FC = () => {
       shelfLocation: b.shelfLocation,
       state: b.state,
       yearPublished: b.yearPublished,
-      content: b.content
+      content: b.content || '',
+      fileData: b.fileData || '',
+      fileName: b.fileName || ''
     });
     setModalOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canManageLibrary) return;
+    if (!canManageLibrary || isReadingFile) return;
     if (editingBook) {
       updateBook(editingBook.id, formData);
     } else {
       addBook(formData);
+      setSearch('');
+      setSelectedCategory('all');
     }
     setModalOpen(false);
   };
@@ -212,7 +222,14 @@ export const BooksCatalogView: React.FC = () => {
                 return (
                   <tr key={book.id} className="hover:bg-blue-50 transition-colors">
                     <td className="py-3 px-4">
-                      <div className="font-bold text-blue-950 text-xs">{book.title}</div>
+                      <div className="font-bold text-blue-950 text-xs flex items-center gap-1.5 flex-wrap">
+                        <span>{book.title}</span>
+                        {book.fileData && (
+                          <span className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-[9px] font-bold">
+                            PDF
+                          </span>
+                        )}
+                      </div>
                       <div className="text-[11px] text-slate-500 mt-0.5">{book.author} · {book.yearPublished}</div>
                     </td>
                     <td className="py-3 px-4">
@@ -435,37 +452,69 @@ export const BooksCatalogView: React.FC = () => {
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
                     <label className="text-[11px] font-semibold text-slate-700">
-                      Contenu ou texte intégral à lire dans la bibliothèque (Optionnel)
+                      Fichier PDF / Texte intégral à lire dans la bibliothèque (Optionnel)
                     </label>
-                    <label className="text-[10px] text-blue-600 hover:text-blue-700 cursor-pointer flex items-center gap-1">
+                    <label className="text-[10px] text-blue-600 hover:text-blue-700 cursor-pointer flex items-center gap-1 font-semibold">
                       <Upload className="w-3 h-3" />
-                      <span>Charger un fichier texte</span>
+                      <span>{isReadingFile ? 'Chargement...' : 'Déposer un PDF ou fichier texte'}</span>
                       <input
+                        ref={fileInputRef}
                         type="file"
                         accept=".txt,.md,.pdf,.epub"
                         className="hidden"
                         onChange={(e) => {
                           if (e.target.files && e.target.files[0]) {
                             const file = e.target.files[0];
+                            const isTextFile = /\.(txt|md|csv)$/i.test(file.name);
+                            const baseTitle = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+                            setIsReadingFile(true);
                             const reader = new FileReader();
                             reader.onload = () => {
                               if (typeof reader.result === 'string') {
+                                const resStr = reader.result;
                                 setFormData(prev => ({
                                   ...prev,
-                                  content: reader.result as string,
+                                  title: prev.title.trim() ? prev.title : baseTitle,
+                                  ...(isTextFile
+                                    ? { content: resStr }
+                                    : { fileData: resStr, fileName: file.name, type: 'numerique' }),
                                   description: prev.description || `Ouvrage importé : ${file.name}`
                                 }));
                               }
+                              setIsReadingFile(false);
                             };
-                            reader.readAsText(file);
+                            reader.onerror = () => {
+                              setIsReadingFile(false);
+                            };
+                            if (isTextFile) {
+                              reader.readAsText(file);
+                            } else {
+                              reader.readAsDataURL(file);
+                            }
                           }
+                          e.target.value = '';
                         }}
                       />
                     </label>
                   </div>
+                  {formData.fileData && (
+                    <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span className="truncate font-semibold">{formData.fileName || 'Fichier PDF joint'}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, fileData: '', fileName: '' }))}
+                        className="text-[11px] text-rose-600 hover:underline font-semibold shrink-0 cursor-pointer"
+                      >
+                        Retirer
+                      </button>
+                    </div>
+                  )}
                   <textarea
                     rows={3}
                     value={formData.content || ''}
@@ -487,9 +536,10 @@ export const BooksCatalogView: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer shadow-md shadow-blue-600/30"
+                  disabled={isReadingFile}
+                  className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer shadow-md shadow-blue-600/30 disabled:opacity-50"
                 >
-                  {editingBook ? 'Mettre à jour' : 'Ajouter au catalogue'}
+                  {isReadingFile ? 'Chargement...' : editingBook ? 'Mettre à jour' : 'Ajouter au catalogue'}
                 </button>
               </div>
             </form>
