@@ -414,7 +414,7 @@ export const ParentManagementView: React.FC = () => {
 
               <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800">
                 <span className="font-semibold block mb-0.5">Génération Automatique du Compte Parent :</span>
-                Un identifiant unique et un mot de passe temporaire seront instantanément générés et notifiés par SMS/Email pour donner accès aux bulletins, présences et reçus de scolarité.
+                Un identifiant unique et un mot de passe temporaire seront instantanément générés et notifiés par Email / WhatsApp pour donner accès aux bulletins, présences et reçus de scolarité.
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-blue-100">

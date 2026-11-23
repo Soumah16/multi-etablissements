@@ -9,8 +9,7 @@ import {
   Send, 
   Mail, 
   MessageSquare, 
-  Smartphone, 
-  Users, 
+  Users,  
   Bell, 
   CheckCircle2, 
   Filter, 
@@ -93,7 +92,7 @@ export const DirectorCommunicationView: React.FC = () => {
             <span>Communication Omnicanale du Directeur</span>
           </h1>
           <p className="text-xs text-slate-700 mt-1">
-            Émission d'avis de service, notes de rentrée, alertes parents et communiqués officiels sur In-App, Email, SMS et WhatsApp ({schoolWaPhone || 'Non configuré'}).
+            Émission d'avis de service, notes de rentrée, alertes parents et communiqués officiels sur Messagerie Interne (In-App), Email et WhatsApp ({schoolWaPhone || 'Non configuré'}).
           </p>
         </div>
 
@@ -187,7 +186,7 @@ export const DirectorCommunicationView: React.FC = () => {
                     <div className="flex flex-wrap items-center gap-1.5">
                       {ann.channels.map(ch => (
                         <span key={ch} className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-50 text-slate-700 border border-slate-200">
-                          {ch === 'in_app' ? 'In-App' : ch === 'sms' ? 'SMS Guinée' : ch === 'whatsapp' ? 'WhatsApp' : 'Email'}
+                          {ch === 'in_app' ? 'In-App (Interne)' : ch === 'whatsapp' ? 'WhatsApp' : 'Email'}
                         </span>
                       ))}
                       {annWaUrl && (
@@ -299,11 +298,10 @@ export const DirectorCommunicationView: React.FC = () => {
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Canaux de distribution simultanée :
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: 'in_app', label: 'In-App', icon: <Bell className="w-3.5 h-3.5" /> },
-                    { id: 'email', label: 'Email', icon: <Mail className="w-3.5 h-3.5" /> },
-                    { id: 'sms', label: 'SMS', icon: <Smartphone className="w-3.5 h-3.5" /> },
+                    { id: 'in_app', label: 'Interne (App)', icon: <Bell className="w-3.5 h-3.5" /> },
+                    { id: 'email', label: 'Email (Mail)', icon: <Mail className="w-3.5 h-3.5" /> },
                     { id: 'whatsapp', label: 'WhatsApp', icon: <MessageSquare className="w-3.5 h-3.5" /> }
                   ].map(ch => (
                     <button

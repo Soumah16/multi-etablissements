@@ -395,7 +395,7 @@ export const initialLoanRecords: LoanRecord[] = [
     status: 'en_retard',
     renewCount: 0,
     fineGnf: 15000,
-    notes: 'Retard de 11 jours. Relance SMS envoyée aux parents.'
+    notes: 'Retard de 11 jours. Relance Email envoyée aux parents.'
   },
   {
     id: 'loan-004',

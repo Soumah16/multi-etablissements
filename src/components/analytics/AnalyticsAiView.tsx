@@ -37,7 +37,7 @@ export const AnalyticsAiView: React.FC = () => {
     { name: "Portail Administratif & Inscriptions", usage: 98, trend: "+4%" },
     { name: "Bulletins & Relevés Automatisés", usage: 91, trend: "+12%" },
     { name: "Comptabilité & Encaissement Scolaire", usage: 84, trend: "+9%" },
-    { name: "Passerelle SMS & Alertes Parents", usage: 76, trend: "+22%" },
+    { name: "Alertes Email & Messagerie Parents", usage: 76, trend: "+22%" },
     { name: "Générateur Cartes Scolaires QR", usage: 68, trend: "+15%" },
     { name: "Application Mobile Familles", usage: 59, trend: "+30%" }
   ];

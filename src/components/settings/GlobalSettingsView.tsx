@@ -4,7 +4,6 @@ import {
   Sliders, 
   Globe, 
   Mail, 
-  Smartphone, 
   MessageSquare, 
   Bell, 
   ShieldAlert, 
@@ -130,7 +129,7 @@ export const GlobalSettingsView: React.FC = () => {
             {t.nav.settings}
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Contrôle global de l'infrastructure, marque blanche, passerelles SMS/Email et internationalisation
+            Contrôle global de l'infrastructure, marque blanche, passerelles Email, WhatsApp & Notifications et internationalisation
           </p>
         </div>
       </div>
@@ -355,12 +354,12 @@ export const GlobalSettingsView: React.FC = () => {
             </div>
           </div>
 
-          {/* Toggles for SMS & WhatsApp */}
+          {/* Toggles for Email Relay, WhatsApp & Push */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 text-xs">
             <div className="p-3.5 rounded-lg bg-white border border-slate-200 flex items-center justify-between">
               <div>
-                <div className="font-semibold text-blue-950">Passerelle SMS Guinée</div>
-                <div className="text-[10px] text-slate-500 mt-0.5">{smsProvider}</div>
+                <div className="font-semibold text-blue-950">Passerelle Email Sortant</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">Envoi externe via Gmail, Mailto & Serveur Email</div>
               </div>
               <input
                 type="checkbox"

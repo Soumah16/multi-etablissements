@@ -472,7 +472,7 @@ export const initialSecretaryMessages: SecretaryMessage[] = [
     title: 'Rappel solennel : Dépôt impératif des pièces administratives manquantes',
     content: 'Chers parents d\'élèves dont le dossier d\'inscription est encore incomplet, nous vous prions de bien vouloir déposer les originaux ou copies légalisées des extraits de naissance avant le vendredi 14 novembre 17h.',
     target: 'all_parents',
-    channels: ['app', 'sms', 'whatsapp'],
+    channels: ['app', 'email', 'whatsapp'],
     date: '2026-11-01 09:30',
     status: 'envoye'
   },
@@ -493,7 +493,7 @@ export const initialSecretarySecurityLogs: SecretarySecurityLog[] = [
     timestamp: '2026-11-03 08:05:12',
     ip: '197.149.214.45 (Conakry, Kipé)',
     device: 'Desktop HP EliteBook / Chrome 128 / Windows 11',
-    action: 'Connexion réussie Espace Secrétariat Général (2FA SMS validé)',
+    action: 'Connexion réussie Espace Secrétariat Général (2FA Email validé)',
     status: 'succes'
   },
   {

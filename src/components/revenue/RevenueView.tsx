@@ -415,7 +415,7 @@ export const RevenueView: React.FC = () => {
                   rows={2}
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  placeholder="Ex: Abonnement trimestriel serveurs et passerelle SMS"
+                  placeholder="Ex: Abonnement trimestriel serveurs et notifications Email"
                   className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none focus:border-blue-500"
                 />
               </div>

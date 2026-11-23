@@ -132,7 +132,7 @@ export const EmailSendModal: React.FC<EmailSendModalProps> = ({
         {/* Body */}
         <div className="p-5 overflow-y-auto space-y-4 text-xs">
           <div className="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-[11px] font-medium">
-            <strong>Envoi sans SMS :</strong> Vous pouvez envoyer ce message directement par <strong>Gmail</strong>, votre application <strong>Mail</strong>, ou <strong>WhatsApp</strong> gratuitement sans passerelle SMS.
+            <strong>Envoi externe par Email ou WhatsApp :</strong> Vous pouvez envoyer ce message directement par <strong>Gmail</strong>, votre application <strong>Mail</strong>, ou <strong>WhatsApp</strong>.
           </div>
 
           {validOptions.length > 0 && (

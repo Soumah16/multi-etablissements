@@ -85,12 +85,12 @@ export const initialSubscriptionPlans: SubscriptionPlan[] = [
     maxStudents: 2500,
     maxTeachers: 200,
     storageGb: 250,
-    modules: ['Tout le Standard', 'Passerelle SMS & WhatsApp', 'Application Mobile Parents/Élèves', 'Module Biométrie & Badge QR', 'Analyses Pédagogiques Avancées', 'Gestion Examens Nationaux'],
+    modules: ['Tout le Standard', 'Passerelle Email & WhatsApp', 'Application Mobile Parents/Élèves', 'Module Biométrie & Badge QR', 'Analyses Pédagogiques Avancées', 'Gestion Examens Nationaux'],
     supportLevel: 'Support Prioritaire 7j/7 avec Responsable Dédié',
     backupFrequency: 'Quotidienne (Chiffrée)',
     features: [
       'Jusqu\'à 2 500 élèves et 200 enseignants',
-      'Passerelle SMS/WhatsApp Orange & MTN intégrée',
+      'Notifications Email & WhatsApp intégrées',
       'Application Mobile native pour les familles',
       'Pointage biométrique et scan QR badges',
       'Stockage 250 Go haute vitesse'
@@ -185,7 +185,7 @@ export const initialTransactions: PaymentTransaction[] = [
     paymentMethod: 'Orange Money Guinée',
     reference: 'OM-GN-8839201',
     status: 'payé',
-    notes: 'Renouvellement mensuel pack Premium + SMS passerelle'
+    notes: 'Renouvellement mensuel pack Premium + Notifications Email'
   }
 ];
 
@@ -346,7 +346,7 @@ export const initialSettings: GlobalSettings = {
   smtpHost: "smtp.mailgun.org",
   smtpPort: 587,
   smsGatewayEnabled: true,
-  smsProvider: "Orange Guinée SMS Gateway (API B2B)",
+  smsProvider: "Relais Email Sortant & SMTP SmartSchool",
   whatsAppEnabled: true,
   pushNotificationsEnabled: true,
   maintenanceMode: false,

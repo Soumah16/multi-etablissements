@@ -6,7 +6,6 @@ import {
   Send, 
   Mail, 
   MessageSquare, 
-  Smartphone, 
   Bell, 
   CheckCircle2, 
   Building2, 
@@ -30,7 +29,6 @@ export const CommunicationView: React.FC = () => {
   const [type, setType] = useState<GlobalAnnouncement['type']>('info');
   const [channelInApp, setChannelInApp] = useState(true);
   const [channelEmail, setChannelEmail] = useState(true);
-  const [channelSms, setChannelSms] = useState(false);
   const [channelWhatsApp, setChannelWhatsApp] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
 
@@ -49,7 +47,6 @@ export const CommunicationView: React.FC = () => {
     const channels: ('in_app' | 'email' | 'sms' | 'whatsapp')[] = [];
     if (channelInApp) channels.push('in_app');
     if (channelEmail) channels.push('email');
-    if (channelSms) channels.push('sms');
     if (channelWhatsApp) channels.push('whatsapp');
 
     if (channels.length === 0) {
@@ -81,7 +78,7 @@ export const CommunicationView: React.FC = () => {
             {t.nav.communication}
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Diffusion centralisée d'annonces, alertes par email, SMS Orange/MTN et WhatsApp
+            Diffusion centralisée d'annonces internes, alertes par Email et WhatsApp
           </p>
         </div>
       </div>
@@ -174,7 +171,7 @@ export const CommunicationView: React.FC = () => {
             {/* Channels Multi-Select */}
             <div className="space-y-1.5">
               <label className="text-slate-700 font-medium">Canaux de transmission activés :</label>
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                 <label className="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-200 cursor-pointer text-slate-700">
                   <input
                     type="checkbox"
@@ -183,7 +180,7 @@ export const CommunicationView: React.FC = () => {
                     className="rounded text-blue-600 focus:ring-0 bg-slate-50"
                   />
                   <Bell className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Bannière In-App ERP</span>
+                  <span>Messagerie Interne (ERP)</span>
                 </label>
 
                 <label className="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-200 cursor-pointer text-slate-700">
@@ -194,18 +191,7 @@ export const CommunicationView: React.FC = () => {
                     className="rounded text-blue-600 focus:ring-0 bg-slate-50"
                   />
                   <Mail className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Email Automatisé</span>
-                </label>
-
-                <label className="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-200 cursor-pointer text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={channelSms}
-                    onChange={e => setChannelSms(e.target.checked)}
-                    className="rounded text-blue-600 focus:ring-0 bg-slate-50"
-                  />
-                  <Smartphone className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Passerelle SMS Guinée</span>
+                  <span>Email (Gmail / Mail)</span>
                 </label>
 
                 <label className="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-200 cursor-pointer text-slate-700">
@@ -216,7 +202,7 @@ export const CommunicationView: React.FC = () => {
                     className="rounded text-blue-600 focus:ring-0 bg-slate-50"
                   />
                   <MessageSquare className="w-3.5 h-3.5 text-green-600" />
-                  <span>WhatsApp Business API</span>
+                  <span>WhatsApp Business</span>
                 </label>
               </div>
             </div>
@@ -320,7 +306,7 @@ export const CommunicationView: React.FC = () => {
                       <span>Canaux :</span>
                       {ann.channels.map(c => (
                         <span key={c} className="px-1.5 py-0.5 rounded bg-slate-50 text-slate-700 font-mono uppercase">
-                          {c}
+                          {c === 'sms' ? 'email' : c === 'in_app' ? 'interne' : c}
                         </span>
                       ))}
                     </div>

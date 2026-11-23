@@ -54,9 +54,9 @@ export const TeacherCommunicationView: React.FC = () => {
   };
 
   const automatedNotifications = [
-    { title: 'Devoir Maison N°2 publié', target: 'Élèves & Parents TSM', channel: 'Application + SMS', date: '01 Nov 2026' },
+    { title: 'Devoir Maison N°2 publié', target: 'Élèves & Parents TSM', channel: 'Application + Email', date: '01 Nov 2026' },
     { title: 'Notes Évaluation N°1 Complexes disponibles', target: 'Élèves TSM (Accès provisoire)', channel: 'Application', date: '28 Oct 2026' },
-    { title: 'Alerte Absence : Ousmane Barry', target: 'M. Amadou Barry (Parent)', channel: 'SMS automatique', date: '24 Oct 2026' },
+    { title: 'Alerte Absence : Ousmane Barry', target: 'M. Amadou Barry (Parent)', channel: 'Email automatique', date: '24 Oct 2026' },
     { title: 'Convocation Réunion Pédagogique Département', target: 'Enseignants Sciences', channel: 'Email + Application', date: '02 Nov 2026' }
   ];
 
@@ -236,9 +236,8 @@ export const TeacherCommunicationView: React.FC = () => {
                     className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-blue-950 focus:outline-none"
                   >
                     <option value="Application">Application SmartSchool (Interne)</option>
-                    <option value="SMS">SMS Téléphone</option>
+                    <option value="Email">Email officiel (Sortant)</option>
                     <option value="WhatsApp">Notification WhatsApp</option>
-                    <option value="Email">Email officiel</option>
                   </select>
                 </div>
               </div>

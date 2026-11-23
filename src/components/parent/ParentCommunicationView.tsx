@@ -102,7 +102,7 @@ export const ParentCommunicationView: React.FC = () => {
                 </p>
                 <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 font-medium">
                   <CheckCircle2 className="w-3 h-3" />
-                  <span>Transmis et notifié par email & SMS au destinataire</span>
+                  <span>Transmis dans la messagerie interne et notifié par Email au destinataire</span>
                 </div>
               </div>
             ))}

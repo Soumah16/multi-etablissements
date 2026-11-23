@@ -462,7 +462,7 @@ export const initialFinancialAuditLogs: FinancialAuditLog[] = [
     id: 'log-f-4',
     userId: 'cpt-001',
     userName: 'Ibrahima Kalil Camara',
-    action: 'Relance Débiteurs par SMS',
+    action: 'Relance Débiteurs par Email',
     details: 'Campagne de rappels pour 3 élèves en retard de paiement',
     date: '2026-11-02 11:15',
     ipAddress: '197.149.192.42',

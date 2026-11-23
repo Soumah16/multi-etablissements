@@ -813,6 +813,6 @@ export const initialTeacherMessages: TeacherMessage[] = [
     content: 'Chers parents, je vous prie de bien vouloir veiller à ce que vos enfants finalisent leur DM N°2 de Mathématiques sur les suites. C\'est un exercice préparatoire clé pour le Baccalauréat.',
     sentAt: '2026-11-03 09:15',
     isRead: true,
-    channel: 'SMS'
+    channel: 'Email'
   }
 ];

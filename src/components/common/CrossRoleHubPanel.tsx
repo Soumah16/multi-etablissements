@@ -8,8 +8,10 @@ import {
   Plus,
   Search,
   Send,
-  XCircle
+  XCircle,
+  Mail
 } from 'lucide-react';
+import { EmailSendModal } from './EmailSendModal';
 import {
   HUB_ROLE_LABELS,
   HubRole,
@@ -83,9 +85,10 @@ export const CrossRoleHubPanel: React.FC<CrossRoleHubPanelProps> = ({
   const [targetSchoolId, setTargetSchoolId] = useState<string>('NATIONAL');
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
-  const [channel, setChannel] = useState<'in_app' | 'email' | 'sms'>('in_app');
+  const [channel, setChannel] = useState<'in_app' | 'email'>('in_app');
   const [priority, setPriority] = useState<'normal' | 'urgent' | 'officiel'>('normal');
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [externalEmailDraft, setExternalEmailDraft] = useState<{ subject: string; body: string; recipientLabel?: string } | null>(null);
 
   // Request composer state
   const [requestComposerOpen, setRequestComposerOpen] = useState(false);
@@ -322,12 +325,11 @@ export const CrossRoleHubPanel: React.FC<CrossRoleHubPanelProps> = ({
                 <label className="block font-semibold text-slate-700 mb-1">Canal</label>
                 <select
                   value={channel}
-                  onChange={e => setChannel(e.target.value as 'in_app' | 'email' | 'sms')}
+                  onChange={e => setChannel(e.target.value as 'in_app' | 'email')}
                   className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950"
                 >
-                  <option value="in_app">Messagerie Interne</option>
-                  <option value="email">Interne + Email</option>
-                  <option value="sms">Interne + SMS</option>
+                  <option value="in_app">Messagerie Interne (Dans le site)</option>
+                  <option value="email">Interne + Email (Sortant)</option>
                 </select>
               </div>
               <div>
@@ -382,12 +384,26 @@ export const CrossRoleHubPanel: React.FC<CrossRoleHubPanelProps> = ({
                 className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-blue-950"
               />
             </div>
-            <div className="flex justify-end">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setExternalEmailDraft({
+                    subject: subject || `Message de ${userName}`,
+                    body: content || '',
+                    recipientLabel: HUB_ROLE_LABELS[recipientRole]
+                  })
+                }
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 font-bold cursor-pointer"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>Envoyer aussi par Email (Gmail / Mail)</span>
+              </button>
               <button
                 type="submit"
                 className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold cursor-pointer"
               >
-                Envoyer Maintenant
+                Envoyer dans le site
               </button>
             </div>
           </form>
@@ -507,9 +523,27 @@ export const CrossRoleHubPanel: React.FC<CrossRoleHubPanelProps> = ({
                       </span>
                     </div>
 
-                    <div className="text-[11px] text-slate-600">
-                      De <strong className="text-slate-900">{msg.senderName}</strong> ({HUB_ROLE_LABELS[msg.senderRole]}) →{' '}
-                      <strong className="text-slate-900">{msg.recipientLabel}</strong>
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600">
+                      <div>
+                        De <strong className="text-slate-900">{msg.senderName}</strong> ({HUB_ROLE_LABELS[msg.senderRole]}) →{' '}
+                        <strong className="text-slate-900">{msg.recipientLabel}</strong>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          setExternalEmailDraft({
+                            subject: msg.subject,
+                            body: `${msg.content}\n\n— ${msg.senderName} (${HUB_ROLE_LABELS[msg.senderRole]})`,
+                            recipientLabel: msg.recipientLabel
+                          });
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 text-[10px] font-bold cursor-pointer"
+                        title="Transférer ou notifier à l'extérieur par Email (Gmail / Mail)"
+                      >
+                        <Mail className="w-3 h-3" />
+                        <span>Envoyer par Email</span>
+                      </button>
                     </div>
 
                     <p className="text-slate-800 bg-white p-3 rounded-lg border border-slate-200 leading-relaxed">
@@ -694,6 +728,21 @@ export const CrossRoleHubPanel: React.FC<CrossRoleHubPanelProps> = ({
           </div>
         )}
       </div>
+
+      {externalEmailDraft && (
+        <EmailSendModal
+          isOpen={Boolean(externalEmailDraft)}
+          onClose={() => setExternalEmailDraft(null)}
+          title="Envoyer par Email (Sortant)"
+          subtitle={externalEmailDraft.recipientLabel ? `Destinataire : ${externalEmailDraft.recipientLabel}` : schoolName}
+          recipientOptions={[]}
+          defaultSubject={externalEmailDraft.subject}
+          defaultBody={externalEmailDraft.body}
+          onDispatched={(_ch, recipient) => {
+            showFeedback(`Copie transmise par Email (${recipient || 'Gmail / Mail'}).`);
+          }}
+        />
+      )}
     </section>
   );
 };

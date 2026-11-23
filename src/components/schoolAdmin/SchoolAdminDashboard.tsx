@@ -104,7 +104,7 @@ export const SchoolAdminDashboard: React.FC = () => {
           <div className="text-lg font-bold text-blue-950 mt-1 font-mono tabular-nums">
             {totalParents.toLocaleString('fr-FR')}
           </div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Portail SMS actif</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Portail Email & Interne actif</div>
         </div>
 
         {/* Classes */}
@@ -266,8 +266,8 @@ export const SchoolAdminDashboard: React.FC = () => {
           </div>
 
           <div className="pt-3 border-t border-blue-100 mt-4 text-[11px] text-slate-500 flex justify-between">
-            <span>Passerelle SMS :</span>
-            <span className="text-blue-600 font-mono">Orange Guinée Connectée</span>
+            <span>Passerelle Email :</span>
+            <span className="text-blue-600 font-mono">Gmail, Mail & SMTP actifs</span>
           </div>
         </div>
       </div>

@@ -9,7 +9,6 @@ import {
   Phone, 
   Mail, 
   MessageSquare, 
-  Smartphone, 
   Search,
   CheckCircle2,
   Clock,
@@ -26,7 +25,7 @@ export const DebtorsView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'en_retard' | 'relance_envoyee' | 'contentieux'>('all');
   const [selectedStudentForReminder, setSelectedStudentForReminder] = useState<DebtorStudent | null>(null);
-  const [reminderChannel, setReminderChannel] = useState<'SMS' | 'WhatsApp' | 'Email' | 'App'>('Email');
+  const [reminderChannel, setReminderChannel] = useState<'WhatsApp' | 'Email' | 'App'>('Email');
   const [emailModalDebtor, setEmailModalDebtor] = useState<DebtorStudent | null>(null);
 
   const totalOverdueGnf = debtors.reduce((sum, d) => sum + d.balanceRemainingGnf, 0);
@@ -64,7 +63,7 @@ export const DebtorsView: React.FC = () => {
             <span>Gestion des Débiteurs & Relances d'Impayés</span>
           </h1>
           <p className="text-xs text-slate-500">
-            Suivi des retards de scolarité, notifications automatiques (SMS, WhatsApp, Email) et relevés
+            Suivi des retards de scolarité, notifications automatiques (Email, WhatsApp, Portail Parent) et relevés
           </p>
         </div>
 
@@ -262,12 +261,11 @@ export const DebtorsView: React.FC = () => {
 
               <div>
                 <label className="block text-slate-700 font-semibold mb-1">Canal de notification *</label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
                     { id: 'Email', label: 'Email (Gmail / Mail)', icon: <Mail className="w-3.5 h-3.5" /> },
                     { id: 'WhatsApp', label: 'WhatsApp', icon: <MessageSquare className="w-3.5 h-3.5" /> },
-                    { id: 'App', label: 'Portail Parent', icon: <Users className="w-3.5 h-3.5" /> },
-                    { id: 'SMS', label: 'SMS Guinée', icon: <Smartphone className="w-3.5 h-3.5" /> }
+                    { id: 'App', label: 'Portail Parent', icon: <Users className="w-3.5 h-3.5" /> }
                   ].map(c => (
                     <button
                       key={c.id}
