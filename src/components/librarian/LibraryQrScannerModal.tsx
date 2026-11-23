@@ -76,6 +76,7 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
   const streamRef = useRef<MediaStream | null>(null);
   const scanTimerRef = useRef<number | null>(null);
   const imageUploadRef = useRef<HTMLInputElement | null>(null);
+  const nativeCameraCaptureRef = useRef<HTMLInputElement | null>(null);
 
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraStarting, setCameraStarting] = useState(false);
@@ -170,18 +171,38 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
         }
 
         streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
+        const videoEl = videoRef.current;
+        if (videoEl) {
+          videoEl.srcObject = stream;
+          videoEl.muted = true;
+          setCameraActive(true);
+          try {
+            await videoEl.play();
+          } catch {
+            // Wait briefly for metadata if immediate play rejects
+            await new Promise<void>((resolve) => {
+              const onMeta = () => {
+                videoEl.removeEventListener('loadedmetadata', onMeta);
+                resolve();
+              };
+              videoEl.addEventListener('loadedmetadata', onMeta);
+              setTimeout(resolve, 400);
+            });
+            await videoEl.play().catch(() => {});
+          }
+        } else {
+          setCameraActive(true);
         }
-        setCameraActive(true);
         setCameraStarting(false);
       } catch (err: any) {
         stopCamera();
         const errName = err?.name || '';
+        const inIframe = typeof window !== 'undefined' && window.self !== window.top;
         if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError') {
           setCameraError(
-            "Permission caméra refusée. Autorisez la caméra dans votre navigateur, ou utilisez « Importer image QR » / saisie manuelle."
+            inIframe
+              ? "La caméra en direct est bloquée par les permissions de cet aperçu (ou refusée dans le navigateur). Cliquez sur « Photo Caméra » (ci-dessus) ou ouvrez l'application dans un onglet dédié."
+              : "Permission caméra refusée. Autorisez la caméra dans la barre d'adresse du navigateur, ou utilisez « Photo Caméra » / « Importer image QR »."
           );
         } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
           setCameraError(
@@ -189,7 +210,7 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
           );
         } else {
           setCameraError(
-            "Impossible de démarrer la caméra dans cet environnement (iFrame ou HTTPS requis). Utilisez « Importer image QR » ou le code ci-dessous."
+            "Impossible de démarrer le flux vidéo en direct ici. Utilisez « Photo Caméra », « Importer image QR » ou saisissez le code ci-dessous."
           );
         }
       }
@@ -197,14 +218,21 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
     [facingMode, stopCamera]
   );
 
-  // Clean up camera when modal closes or unmounts
+  const startCameraRef = useRef(startCamera);
+  startCameraRef.current = startCamera;
+
+  // Auto-start camera when modal opens & clean up when it closes
   useEffect(() => {
     if (!isOpen) {
       stopCamera();
       setCameraError(null);
       return;
     }
+    const timer = window.setTimeout(() => {
+      void startCameraRef.current();
+    }, 120);
     return () => {
+      window.clearTimeout(timer);
       stopCamera();
     };
   }, [isOpen, stopCamera]);
@@ -450,18 +478,20 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
         <div className="p-5 overflow-y-auto space-y-4 text-xs">
           {/* Live Camera Viewport */}
           <div className="rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden relative">
-            <div className="relative aspect-video w-full flex items-center justify-center bg-slate-900">
+            <div className="relative aspect-video w-full flex items-center justify-center bg-slate-900 overflow-hidden">
               <video
                 ref={videoRef}
                 playsInline
                 muted
                 autoPlay
-                className={`w-full h-full object-cover ${cameraActive ? 'block' : 'hidden'}`}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${
+                  cameraActive ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
               />
               <canvas ref={canvasRef} className="hidden" />
 
               {cameraActive ? (
-                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
+                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-10">
                   <div className="w-44 h-44 sm:w-52 sm:h-52 rounded-2xl border-2 border-emerald-400/90 shadow-[0_0_0_9999px_rgba(15,23,42,0.45)] relative">
                     <div className="absolute inset-x-2 top-1/2 h-0.5 bg-emerald-400 animate-pulse" />
                   </div>
@@ -470,7 +500,7 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
                   </span>
                 </div>
               ) : (
-                <div className="p-6 text-center space-y-2.5">
+                <div className="relative z-10 p-6 text-center space-y-2.5">
                   <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 flex items-center justify-center mx-auto">
                     <Camera className="w-6 h-6" />
                   </div>
@@ -478,7 +508,7 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
                     {cameraStarting ? 'Activation de la caméra en cours...' : 'Caméra prête à scanner'}
                   </div>
                   <p className="text-[11px] text-slate-300 max-w-sm mx-auto">
-                    Cliquez sur <strong>« Activer la Caméra »</strong> pour lire un QR Code livre/badge ou importez une photo de QR Code.
+                    Cliquez sur <strong>« Activer la Caméra »</strong> pour le scan vidéo direct, ou utilisez <strong>« Photo Caméra »</strong> / <strong>« Importer image QR »</strong>.
                   </p>
                 </div>
               )}
@@ -519,7 +549,25 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
                 </button>
               </div>
 
-              <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  ref={nativeCameraCaptureRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleImageFileScan}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => nativeCameraCaptureRef.current?.click()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer"
+                  title="Prendre une photo directe avec la caméra du téléphone"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Photo Caméra</span>
+                </button>
+
                 <input
                   ref={imageUploadRef}
                   type="file"
