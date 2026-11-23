@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { 
-  buildPvcPrintSheetHtml, 
   drawPvcCardToCanvas, 
   downloadCanvasImage, 
   downloadPvcBadgePdf,
@@ -10,7 +9,6 @@ import {
   PvcRenderData 
 } from '../../utils/pvcCardRenderer';
 import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
-import { exportPrintableDocument } from '../../utils/printHelper';
 import { 
   CreditCard, 
   Printer, 
@@ -37,7 +35,6 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import { triggerPrint } from '../../utils/printHelper';
 import { ACCOUNTS_STORAGE_KEY, DemoAccount, getStoredAccounts } from '../../data/accountsData';
 import { subscribeStorageKey } from '../../utils/storage';
 
@@ -223,41 +220,15 @@ export const PvcCardStudio: React.FC = () => {
     const data = getRenderData();
     setIsExporting(true);
     try {
-      const fullHtml = await buildPvcPrintSheetHtml(data, activeFace);
-      const title = `Planche_PVC_CR80_${selectedSchool?.code}_${customMatricule}`;
-
-      // Infallible export of self-contained print-ready file with exact 85.60 x 53.98 mm sizing
-      exportPrintableDocument(title, fullHtml, 'landscape');
-
-      // Direct browser print modal trigger
-      try {
-        let printFrame = document.getElementById('smartschool-pvc-print-frame') as HTMLIFrameElement;
-        if (printFrame) printFrame.remove();
-
-        printFrame = document.createElement('iframe');
-        printFrame.id = 'smartschool-pvc-print-frame';
-        printFrame.setAttribute('style', 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:none;opacity:0.01;pointer-events:none;z-index:-999;');
-        document.body.appendChild(printFrame);
-
-        const frameDoc = printFrame.contentWindow?.document;
-        if (frameDoc) {
-          frameDoc.open();
-          frameDoc.write(fullHtml);
-          frameDoc.close();
-          setTimeout(() => {
-            try {
-              printFrame.contentWindow?.focus();
-              printFrame.contentWindow?.print();
-            } catch (e) {
-              console.warn('Iframe print blocked, file downloaded.', e);
-            }
-          }, 400);
-        }
-      } catch (err) {
-        console.warn(err);
-      }
-
-      showToast("Planche PVC CR-80 (85.60 × 53.98 mm) générée à taille réelle 100% !");
+      const filename = await downloadPvcBadgeA4Pdf(
+        data,
+        activeFace,
+        `Planche_PVC_CR80_${selectedSchool?.code || 'EC'}`
+      );
+      showToast(`Planche PDF PVC CR-80 couleur (85.60 × 53.98 mm, échelle 100%) générée : ${filename}`);
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur lors de la génération de la planche PDF PVC.");
     } finally {
       setIsExporting(false);
     }

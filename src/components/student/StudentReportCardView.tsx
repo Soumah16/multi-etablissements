@@ -54,7 +54,7 @@ export const StudentReportCardView: React.FC = () => {
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-50 hover:bg-blue-100 text-slate-900 border border-slate-200 text-xs font-semibold cursor-pointer"
           >
             <Download className="w-4 h-4 text-blue-600" />
-            <span>Télécharger (HTML/PDF)</span>
+            <span>Télécharger PDF Couleur</span>
           </button>
           <button
             onClick={() => triggerPrint('student-bulletin-printable')}
