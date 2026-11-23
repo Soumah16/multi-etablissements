@@ -129,7 +129,7 @@ export const DirectorFinancesView: React.FC = () => {
             Reliquat dû : <span className="font-bold">{formatGnf(financialOverview.totalDebtAmountGnf)}</span>
           </div>
           <div className="text-[10px] text-slate-500">
-            Relances automatiques envoyées par SMS
+            Relances par Email, WhatsApp &amp; Portail
           </div>
         </div>
       </div>

@@ -11,15 +11,18 @@ import {
   CheckCircle2, 
   Clock, 
   User,
-  Send
+  Send,
+  Mail
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { EmailSendModal } from '../common/EmailSendModal';
 
 export const SupervisorMeetingsView: React.FC = () => {
   const { meetings, scheduleMeeting, profile, triggerToast } = useSupervisor();
   const [modalOpen, setModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [printMeeting, setPrintMeeting] = useState<DisciplinaryParentMeeting | null>(null);
+  const [emailModalMeeting, setEmailModalMeeting] = useState<DisciplinaryParentMeeting | null>(null);
 
   // Form states
   const [studentName, setStudentName] = useState('');
@@ -126,11 +129,12 @@ export const SupervisorMeetingsView: React.FC = () => {
 
             <div className="pt-2 border-t border-blue-100 flex items-center justify-between text-xs">
               <button
-                onClick={() => triggerToast(`Convocation par SMS transmise au ${m.parentPhone}`)}
-                className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-semibold"
+                type="button"
+                onClick={() => setEmailModalMeeting(m)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold cursor-pointer"
               >
-                <Send className="w-3.5 h-3.5" />
-                <span>Rappel SMS</span>
+                <Mail className="w-3.5 h-3.5" />
+                <span>Convocation Email</span>
               </button>
               <button
                 onClick={() => setPrintMeeting(m)}
@@ -316,6 +320,33 @@ export const SupervisorMeetingsView: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+      {/* Email / Gmail / WhatsApp Parent Convocation Modal */}
+      {emailModalMeeting && (
+        <EmailSendModal
+          isOpen={Boolean(emailModalMeeting)}
+          onClose={() => setEmailModalMeeting(null)}
+          title="Envoyer la Convocation Disciplinaire"
+          subtitle={`${emailModalMeeting.parentName} · Parent de ${emailModalMeeting.studentName}`}
+          recipientOptions={[]}
+          defaultSubject={`Convocation Vie Scolaire - ${emailModalMeeting.studentName} (${emailModalMeeting.date} à ${emailModalMeeting.time})`}
+          defaultBody={[
+            `Bonjour ${emailModalMeeting.parentName},`,
+            '',
+            `Vous êtes prié(e) de vous présenter au bureau de la Vie Scolaire & Discipline (${profile.schoolName}) concernant votre enfant ${emailModalMeeting.studentName} (${emailModalMeeting.className}).`,
+            `- Date et heure : ${emailModalMeeting.date} à ${emailModalMeeting.time}`,
+            `- Motif officiel : ${emailModalMeeting.reason}`,
+            '',
+            `Votre présence est indispensable.`,
+            '',
+            'Cordialement,',
+            `${profile.firstName} ${profile.lastName} · ${profile.roleTitle}`
+          ].join('\n')}
+          whatsappPhone={emailModalMeeting.parentPhone}
+          onDispatched={(channel, recipient) => {
+            triggerToast(`Convocation transmise par ${channel === 'whatsapp' ? 'WhatsApp' : 'Email'}${recipient ? ` (${recipient})` : ''}.`);
+          }}
+        />
       )}
     </div>
   );

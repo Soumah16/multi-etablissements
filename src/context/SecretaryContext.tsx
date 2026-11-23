@@ -69,7 +69,7 @@ interface SecretaryContextType {
   archiveStudent: (id: string) => void;
   restoreStudent: (id: string) => void;
   transferStudent: (id: string, targetSchool: string, reason: string) => void;
-  sendStudentCredentials: (id: string) => void;
+  sendStudentCredentials: (id: string, channel?: 'email' | 'sms' | 'whatsapp', recipient?: string) => void;
   
   // Parents
   parents: ParentRecord[];
@@ -85,7 +85,7 @@ interface SecretaryContextType {
   }) => ParentRecord;
   updateParent: (id: string, partial: Partial<ParentRecord>) => void;
   toggleParentStatus: (id: string) => void;
-  sendParentCredentials: (id: string) => void;
+  sendParentCredentials: (id: string, channel?: 'email' | 'sms' | 'whatsapp', recipient?: string) => void;
   linkChildToParent: (parentId: string, studentId: string) => void;
   
   // Certificates & Official Docs
@@ -384,21 +384,34 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     showToast(`Transfert sortant enregistré pour ${student.firstName} ${student.lastName}.`);
   };
 
-  const sendStudentCredentials = (id: string) => {
+  const sendStudentCredentials = (
+    id: string,
+    channel: 'email' | 'sms' | 'whatsapp' = 'email',
+    recipient?: string
+  ) => {
+    const target = students.find(s => s.id === id);
     setStudents(prev => prev.map(s => {
       if (s.id === id) {
         return {
           ...s,
           credentials: {
             ...s.credentials,
-            sentViaEmail: true,
-            sentViaSms: true
+            sentViaEmail: channel === 'email' ? true : s.credentials.sentViaEmail,
+            sentViaSms: channel === 'sms' ? true : s.credentials.sentViaSms
           }
         };
       }
       return s;
     }));
-    showToast('Identifiants et QR Code renvoyés par SMS et Email.');
+    const channelLabel = channel === 'whatsapp' ? 'WhatsApp' : channel === 'sms' ? 'SMS' : 'Email';
+    if (target) {
+      addSecurityLog(
+        `Envoi des identifiants élève (${target.firstName} ${target.lastName}) par ${channelLabel}${recipient ? ` à ${recipient}` : ''}`
+      );
+    }
+    showToast(
+      `Identifiants préparés/envoyés par ${channelLabel}${recipient ? ` (${recipient})` : ''}.`
+    );
   };
 
   // Parent Management with Auto Credentials
@@ -477,9 +490,22 @@ export const SecretaryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     showToast('Statut du compte parent modifié.');
   };
 
-  const sendParentCredentials = (id: string) => {
+  const sendParentCredentials = (
+    id: string,
+    channel: 'email' | 'sms' | 'whatsapp' = 'email',
+    recipient?: string
+  ) => {
+    const target = parents.find(p => p.id === id);
     setParents(prev => prev.map(p => p.id === id ? { ...p, credentials: { ...p.credentials, sent: true } } : p));
-    showToast('Identifiants de connexion réexpédiés au parent.');
+    const channelLabel = channel === 'whatsapp' ? 'WhatsApp' : channel === 'sms' ? 'SMS' : 'Email';
+    if (target) {
+      addSecurityLog(
+        `Envoi des identifiants parent (${target.firstName} ${target.lastName}) par ${channelLabel}${recipient ? ` à ${recipient}` : ''}`
+      );
+    }
+    showToast(
+      `Identifiants parent préparés/envoyés par ${channelLabel}${recipient ? ` (${recipient})` : ''}.`
+    );
   };
 
   const linkChildToParent = (parentId: string, studentId: string) => {

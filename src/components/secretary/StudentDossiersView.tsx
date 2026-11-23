@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSecretary } from '../../context/SecretaryContext';
 import { StudentEnrollment } from '../../types/secretary';
+import { EmailSendModal } from '../common/EmailSendModal';
 import { 
   FolderArchive, 
   Search, 
@@ -22,6 +23,7 @@ export const StudentDossiersView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'incomplet' | 'complet'>('all');
   const [selectedStudentForDossier, setSelectedStudentForDossier] = useState<StudentEnrollment | null>(null);
+  const [relanceStudent, setRelanceStudent] = useState<StudentEnrollment | null>(null);
 
   const standardDocuments = [
     { key: 'fiche_inscription', label: 'Fiche d\'inscription signée par le tuteur' },
@@ -54,7 +56,7 @@ export const StudentDossiersView: React.FC = () => {
   };
 
   const handleRelanceParent = (student: StudentEnrollment) => {
-    showToast(`SMS de relance envoyé au parent de ${student.firstName} (${student.parentPhone})`);
+    setRelanceStudent(student);
   };
 
   const filteredStudents = students.filter(st => {
@@ -204,11 +206,11 @@ export const StudentDossiersView: React.FC = () => {
                 {isIncomplete && (
                   <button
                     onClick={() => handleRelanceParent(student)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-xs transition-colors"
-                    title="Envoyer un rappel par SMS pour dépôt des pièces"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-xs transition-colors cursor-pointer"
+                    title="Envoyer un rappel par Email ou WhatsApp pour dépôt des pièces"
                   >
                     <Send className="w-3 h-3" />
-                    <span>Relancer Parent</span>
+                    <span>Relancer (Email)</span>
                   </button>
                 )}
               </div>
@@ -309,6 +311,37 @@ export const StudentDossiersView: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {relanceStudent && (
+        <EmailSendModal
+          isOpen={Boolean(relanceStudent)}
+          onClose={() => setRelanceStudent(null)}
+          title="Relance Dossier Incomplet par Email"
+          subtitle={`${relanceStudent.firstName} ${relanceStudent.lastName} · ${relanceStudent.matricule}`}
+          recipientOptions={[
+            { label: 'Parent / Tuteur', email: relanceStudent.parentEmail },
+            { label: 'Élève', email: relanceStudent.email }
+          ]}
+          defaultSubject={`Rappel pièces manquantes au dossier - ${relanceStudent.firstName} ${relanceStudent.lastName}`}
+          defaultBody={[
+            `Bonjour ${relanceStudent.parentName || 'Madame / Monsieur'},`,
+            '',
+            `Le dossier scolaire de ${relanceStudent.firstName} ${relanceStudent.lastName} (${relanceStudent.className}, matricule ${relanceStudent.matricule}) est actuellement incomplet.`,
+            '',
+            `Pièces manquantes à déposer au secrétariat :`,
+            ...relanceStudent.missingDocuments.map(d => `- ${d}`),
+            '',
+            'Merci de bien vouloir régulariser le dossier dans les meilleurs délais.',
+            '',
+            'Cordialement,',
+            'Le Secrétariat Général'
+          ].join('\n')}
+          whatsappPhone={relanceStudent.parentPhone || relanceStudent.phone}
+          onDispatched={(channel, recipient) => {
+            showToast(`Relance préparée/envoyée par ${channel === 'whatsapp' ? 'WhatsApp' : 'Email'} (${recipient}).`);
+          }}
+        />
       )}
     </div>
   );

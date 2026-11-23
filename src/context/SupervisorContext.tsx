@@ -33,7 +33,7 @@ interface SupervisorContextType {
   // Attendance & Late tracking
   attendanceRecords: AttendanceRecordItem[];
   justifyAttendanceRecord: (id: string, reason: string) => void;
-  notifyParentSms: (id: string) => void;
+  notifyParentSms: (id: string, channel?: 'email' | 'whatsapp', recipient?: string) => void;
 
   // Admission slips (Billets de rentrée)
   admissionSlips: AdmissionSlip[];
@@ -134,14 +134,15 @@ export const SupervisorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     triggerToast('Absence/Retard régularisé avec succès.');
   };
 
-  const notifyParentSms = (id: string) => {
+  const notifyParentSms = (id: string, channel: 'email' | 'whatsapp' = 'email', recipient?: string) => {
     const target = attendanceRecords.find(r => r.id === id);
     setAttendanceRecords(prev => prev.map(rec => {
       if (rec.id !== id) return rec;
       return { ...rec, notifiedParent: true };
     }));
-    logSupervisorAudit(`Notification SMS tuteur : ${target?.studentName || id}`, 'Vie Scolaire');
-    triggerToast('Alerte SMS transmise au tuteur de l\'élève.');
+    const via = channel === 'whatsapp' ? 'WhatsApp' : 'Email';
+    logSupervisorAudit(`Notification tuteur (${via}) : ${target?.studentName || id}`, recipient || 'Vie Scolaire');
+    triggerToast(`Alerte transmise au tuteur par ${via}${recipient ? ` (${recipient})` : ''}.`);
   };
 
   const issueAdmissionSlip = (slip: Omit<AdmissionSlip, 'id' | 'slipNumber' | 'supervisorSignature'>) => {

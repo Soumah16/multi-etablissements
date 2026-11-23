@@ -59,7 +59,7 @@ export default defineConfig(() => {
           clientsClaim: true,
           skipWaiting: true,
           navigateFallbackDenylist: [/^\/api\//],
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}'],
+          globPatterns: ['**/*.{js,mjs,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}'],
           maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
           runtimeCaching: [
             {

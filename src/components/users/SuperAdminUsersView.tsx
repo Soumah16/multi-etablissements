@@ -38,11 +38,13 @@ import {
   ExternalLink,
   Download,
   AlertCircle,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Mail
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
 import { RealQrCode } from '../common/RealQrCode';
 import { downloadUsersExcel } from '../../utils/exportDocuments';
+import { EmailSendModal } from '../common/EmailSendModal';
 
 interface SuperAdminUsersViewProps {
   onSwitchToUser?: (user: any) => void;
@@ -70,6 +72,7 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
   const [newPasswordValue, setNewPasswordValue] = useState('');
   const [visiblePasswords, setVisiblePasswords] = useState<{ [email: string]: boolean }>({});
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [emailModalAccount, setEmailModalAccount] = useState<DemoAccount | null>(null);
 
   // New account form state
   const [newRole, setNewRole] = useState<WorkspaceMode>('teacher');
@@ -672,6 +675,17 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
 
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
+                        {/* Envoyer identifiants par Email / Gmail / WhatsApp */}
+                        <button
+                          type="button"
+                          onClick={() => setEmailModalAccount(acc)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 transition-colors cursor-pointer"
+                          title="Envoyer les identifiants par Email (Gmail / Mail) ou WhatsApp"
+                        >
+                          <Mail className="w-3.5 h-3.5 text-teal-700" />
+                          <span>Email</span>
+                        </button>
+
                         {/* Imprimer Fiche d'Accès Officielle */}
                         <button
                           onClick={() => setSelectedAccountForSlip(acc)}
@@ -1400,6 +1414,38 @@ export const SuperAdminUsersView: React.FC<SuperAdminUsersViewProps> = ({ onSwit
             </form>
           </div>
         </div>
+      )}
+      {/* Email / Gmail / WhatsApp Account Credentials Dispatch Modal */}
+      {emailModalAccount && (
+        <EmailSendModal
+          isOpen={Boolean(emailModalAccount)}
+          onClose={() => setEmailModalAccount(null)}
+          title="Envoyer les Identifiants Utilisateur par Email"
+          subtitle={`${emailModalAccount.name} · ${emailModalAccount.title}`}
+          recipientOptions={[
+            { label: 'Email Compte', email: emailModalAccount.email }
+          ]}
+          defaultSubject={`Identifiants SmartSchool - ${emailModalAccount.name} (${emailModalAccount.matricule})`}
+          defaultBody={[
+            `Bonjour ${emailModalAccount.name},`,
+            '',
+            `Voici vos identifiants officiels d'accès au portail SmartSchool (${emailModalAccount.schoolName}) :`,
+            `- Rôle : ${emailModalAccount.title}`,
+            `- Matricule : ${emailModalAccount.matricule}`,
+            `- Email de connexion : ${emailModalAccount.email}`,
+            `- Mot de passe : ${emailModalAccount.plainPassword || emailModalAccount.password || '(Votre mot de passe personnel)'}`,
+            '',
+            `Lien de l'application : ${typeof window !== 'undefined' ? window.location.origin : ''}`,
+            '',
+            'Cordialement,',
+            'Administration Centrale SmartSchool'
+          ].join('\n')}
+          whatsappPhone={emailModalAccount.phone}
+          onDispatched={(channel, recipient) => {
+            showToast(`Identifiants envoyés par ${channel === 'whatsapp' ? 'WhatsApp' : 'Email'} à ${recipient}`);
+            addLog(`Envoi identifiants (${channel})`, `${emailModalAccount.name} · ${recipient}`, 'admin');
+          }}
+        />
       )}
     </div>
   );

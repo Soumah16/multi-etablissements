@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSecretary } from '../../context/SecretaryContext';
 import { ParentRecord } from '../../types/secretary';
 import { ImageUploadField } from '../common/ImageUploadField';
+import { EmailSendModal } from '../common/EmailSendModal';
 import { 
   UserCheck, 
   UserPlus, 
@@ -38,6 +39,7 @@ export const ParentManagementView: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingParent, setEditingParent] = useState<ParentRecord | null>(null);
   const [createdCredentialsParent, setCreatedCredentialsParent] = useState<ParentRecord | null>(null);
+  const [emailModalParent, setEmailModalParent] = useState<ParentRecord | null>(null);
   const [copiedPwd, setCopiedPwd] = useState(false);
 
   // Link children modal
@@ -284,12 +286,12 @@ export const ParentManagementView: React.FC = () => {
             {/* Actions */}
             <div className="pt-3 border-t border-blue-100 flex items-center justify-between">
               <button
-                onClick={() => sendParentCredentials(parent.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-50 border border-emerald-200 transition-colors"
-                title="Renvoyer le mot de passe et l'identifiant par SMS"
+                onClick={() => setEmailModalParent(parent)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
+                title="Envoyer l'identifiant et le mot de passe par Email (Gmail / Mail) ou WhatsApp"
               >
-                <Send className="w-3 h-3" />
-                <span>Renvoyer SMS</span>
+                <Mail className="w-3.5 h-3.5" />
+                <span>Envoyer Email</span>
               </button>
 
               <div className="flex items-center gap-1">
@@ -544,17 +546,60 @@ export const ParentManagementView: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const target = createdCredentialsParent;
+                  setCreatedCredentialsParent(null);
+                  setEmailModalParent(target);
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold cursor-pointer"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>Envoyer par Email</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setCreatedCredentialsParent(null)}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold"
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold cursor-pointer"
               >
                 Fermer
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Email / Gmail / WhatsApp Parent Credentials Dispatch Modal */}
+      {emailModalParent && (
+        <EmailSendModal
+          isOpen={Boolean(emailModalParent)}
+          onClose={() => setEmailModalParent(null)}
+          title="Envoyer les Identifiants Parent par Email"
+          subtitle={`${emailModalParent.firstName} ${emailModalParent.lastName}`}
+          recipientOptions={[
+            { label: 'Parent / Tuteur', email: emailModalParent.email }
+          ]}
+          defaultSubject={`Identifiants Portail Parent SmartSchool - ${emailModalParent.firstName} ${emailModalParent.lastName}`}
+          defaultBody={[
+            `Bonjour ${emailModalParent.firstName} ${emailModalParent.lastName},`,
+            '',
+            'Voici vos identifiants personnels pour accéder au Portail Parent SmartSchool :',
+            `- Identifiant : ${emailModalParent.credentials.username}`,
+            `- Email de connexion : ${emailModalParent.email}`,
+            `- Mot de passe initial : ${emailModalParent.credentials.tempPassword}`,
+            '',
+            `Lien de l'application : ${typeof window !== 'undefined' ? window.location.origin : ''}`,
+            '',
+            'Cordialement,',
+            'Le Secrétariat Général'
+          ].join('\n')}
+          whatsappPhone={emailModalParent.phone}
+          onDispatched={(channel, recipient) => {
+            sendParentCredentials(emailModalParent.id, channel, recipient);
+          }}
+        />
       )}
     </div>
   );

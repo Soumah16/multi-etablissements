@@ -23,12 +23,14 @@ import {
   Download
 } from 'lucide-react';
 import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
+import { LibraryQrScannerModal } from './LibraryQrScannerModal';
 
 export const BooksCatalogView: React.FC = () => {
   const { books, addBook, updateBook, deleteBook, registerLoan, canManageLibrary } = useLibrarian();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [modalOpen, setModalOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<BookItem | null>(null);
   const [loanModalBook, setLoanModalBook] = useState<BookItem | null>(null);
   const [qrModalBook, setQrModalBook] = useState<BookItem | null>(null);
@@ -161,13 +163,23 @@ export const BooksCatalogView: React.FC = () => {
           </p>
         </div>
         {canManageLibrary && (
-          <button
-            onClick={handleOpenAdd}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/20 transition-all cursor-pointer self-start sm:self-auto"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Ajouter un Ouvrage</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setScannerOpen(true)}
+              className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>Scanner QR / ISBN</span>
+            </button>
+            <button
+              onClick={handleOpenAdd}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/20 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Ajouter un Ouvrage</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -515,6 +527,26 @@ export const BooksCatalogView: React.FC = () => {
                       </button>
                     </div>
                   )}
+                  <input
+                    type="url"
+                    value={
+                      formData.fileData && !formData.fileData.startsWith('data:')
+                        ? formData.fileData
+                        : ''
+                    }
+                    onChange={(e) => {
+                      const nextUrl = e.target.value.trim();
+                      setFormData(prev => ({
+                        ...prev,
+                        fileData: nextUrl,
+                        fileName: nextUrl
+                          ? prev.fileName || nextUrl.split('/').pop()?.split('?')[0] || 'Lien PDF externe'
+                          : ''
+                      }));
+                    }}
+                    placeholder="Ou coller un lien PDF gratuit (Google Drive, Archive.org, URL directe...)"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950 font-mono"
+                  />
                   <textarea
                     rows={3}
                     value={formData.content || ''}
@@ -694,6 +726,17 @@ export const BooksCatalogView: React.FC = () => {
         <BookReaderModal
           book={readingBook}
           onClose={() => setReadingBook(null)}
+        />
+      )}
+
+      {canManageLibrary && (
+        <LibraryQrScannerModal
+          isOpen={scannerOpen}
+          onClose={() => setScannerOpen(false)}
+          onOpenReader={(book) => {
+            setScannerOpen(false);
+            setReadingBook(book);
+          }}
         />
       )}
     </div>

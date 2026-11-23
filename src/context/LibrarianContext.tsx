@@ -188,6 +188,7 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const serialized = JSON.stringify({ profile, books, ebooks, loans, libraryAuditLogs });
     if (!lastPersistedSnapshotRef.current) {
       lastPersistedSnapshotRef.current = serialized;
+      skipPersistRef.current = false;
       return;
     }
     if (skipPersistRef.current) {

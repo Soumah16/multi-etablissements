@@ -262,7 +262,7 @@ export const AccountantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       };
     }));
     addAuditLog('Relance d\'impayé', `Rappel envoyé à l'élève ${studentId} par ${channel}`);
-    triggerToast(`Rappel de paiement envoyé au parent par ${channel} avec succès.`);
+    triggerToast(`Rappel de paiement (${channel}) enregistré avec succès.`);
   };
 
   const addExpense = (expenseData: Omit<ExpenseRecord, 'id' | 'reference' | 'status'>) => {

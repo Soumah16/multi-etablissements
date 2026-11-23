@@ -475,6 +475,7 @@ const MainLayout: React.FC = () => {
           onReturnToTeacher={handleSwitchToTeacher}
           onReturnToAccountant={handleSwitchToAccountant}
           onReturnToSuperAdmin={handleSwitchToSuperAdmin}
+          onSwitchToLibrarian={handleSwitchToLibrarian}
         />
       );
     }
@@ -489,6 +490,7 @@ const MainLayout: React.FC = () => {
           onReturnToTeacher={handleSwitchToTeacher}
           onReturnToSuperAdmin={handleSwitchToSuperAdmin}
           onSwitchToSupervisor={handleSwitchToSupervisor}
+          onSwitchToLibrarian={handleSwitchToLibrarian}
         />
       );
     }
@@ -503,6 +505,7 @@ const MainLayout: React.FC = () => {
           onReturnToSuperAdmin={handleSwitchToSuperAdmin}
           onSwitchToAccountant={handleSwitchToAccountant}
           onSwitchToSupervisor={handleSwitchToSupervisor}
+          onSwitchToLibrarian={handleSwitchToLibrarian}
         />
       );
     }
@@ -517,6 +520,7 @@ const MainLayout: React.FC = () => {
           onSwitchToTeacher={handleSwitchToTeacher}
           onSwitchToAccountant={handleSwitchToAccountant}
           onSwitchToSupervisor={handleSwitchToSupervisor}
+          onSwitchToLibrarian={handleSwitchToLibrarian}
         />
       );
     }
@@ -548,6 +552,7 @@ const MainLayout: React.FC = () => {
           onSwitchToTeacher={handleSwitchToTeacher}
           onSwitchToAccountant={handleSwitchToAccountant}
           onSwitchToSupervisor={handleSwitchToSupervisor}
+          onSwitchToLibrarian={handleSwitchToLibrarian}
         />
       );
     }
@@ -594,6 +599,7 @@ const MainLayout: React.FC = () => {
         <Sidebar 
           mobileOpen={mobileSidebarOpen}
           onCloseMobile={() => setMobileSidebarOpen(false)}
+          onSwitchToLibrarian={handleSwitchToLibrarian}
         />
 
         {/* Main Content Area */}

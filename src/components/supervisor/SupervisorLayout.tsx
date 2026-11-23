@@ -22,7 +22,8 @@ import {
   ArrowRightLeft,
   LogOut,
   MessageCircle,
-  MessageSquare
+  MessageSquare,
+  Library
 } from 'lucide-react';
 import { SupervisorDashboardView } from './SupervisorDashboardView';
 import { SupervisorAttendanceView } from './SupervisorAttendanceView';
@@ -44,6 +45,7 @@ interface SupervisorLayoutProps {
   onReturnToAccountant: () => void;
   onReturnToSuperAdmin: () => void;
   onLogout?: () => void;
+  onSwitchToLibrarian?: () => void;
 }
 
 export const SupervisorLayout: React.FC<SupervisorLayoutProps> = ({
@@ -53,7 +55,8 @@ export const SupervisorLayout: React.FC<SupervisorLayoutProps> = ({
   onReturnToTeacher,
   onReturnToAccountant,
   onReturnToSuperAdmin,
-  onLogout
+  onLogout,
+  onSwitchToLibrarian
 }) => {
   const { 
     activeSupervisorTab, 
@@ -294,6 +297,28 @@ export const SupervisorLayout: React.FC<SupervisorLayoutProps> = ({
               </div>
             </div>
           ))}
+
+          {onSwitchToLibrarian && (
+            <div className="space-y-1">
+              <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                MÉDIATHÈQUE &amp; LIVRES
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onSwitchToLibrarian();
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100 border border-indigo-200 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  <Library className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span className="truncate">Bibliothèque &amp; E-Books</span>
+                </div>
+                <span className="text-[10px] font-bold text-indigo-600 shrink-0">Ouvrir →</span>
+              </button>
+            </div>
+          )}
         </nav>
 
         {/* Compact Workspace Role Switcher */}
@@ -342,6 +367,15 @@ export const SupervisorLayout: React.FC<SupervisorLayoutProps> = ({
                 <span>Espace Comptabilité</span>
                 <span className="text-[10px] text-emerald-600">Finances</span>
               </button>
+              {onSwitchToLibrarian && (
+                <button
+                  onClick={() => { setRoleSwitcherOpen(false); onSwitchToLibrarian(); }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 text-indigo-800 font-medium flex items-center justify-between"
+                >
+                  <span>Espace Bibliothécaire</span>
+                  <span className="text-[10px] text-indigo-600">Médiathèque</span>
+                </button>
+              )}
               <button
                 onClick={() => { setRoleSwitcherOpen(false); onReturnToSchoolAdmin(); }}
                 className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-blue-50 text-blue-900 font-semibold flex items-center justify-between border-t border-blue-100 mt-1 pt-1.5"

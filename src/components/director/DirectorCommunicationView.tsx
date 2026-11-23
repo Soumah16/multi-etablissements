@@ -3,6 +3,7 @@ import { useDirector } from '../../context/DirectorContext';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { CrossRoleHubPanel } from '../common/CrossRoleHubPanel';
+import { EmailSendModal } from '../common/EmailSendModal';
 import { 
   Megaphone, 
   Send, 
@@ -34,7 +35,8 @@ export const DirectorCommunicationView: React.FC = () => {
   const [targetClassName, setTargetClassName] = useState('Terminale Sciences Mathématiques 1');
   const [priority, setPriority] = useState<'normal' | 'urgent' | 'officiel'>('officiel');
   const [isOfficialCommunique, setIsOfficialCommunique] = useState(true);
-  const [channels, setChannels] = useState<('in_app' | 'email' | 'sms' | 'whatsapp')[]>(['in_app', 'email', 'sms']);
+  const [channels, setChannels] = useState<('in_app' | 'email' | 'sms' | 'whatsapp')[]>(['in_app', 'email']);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
 
   const toggleChannel = (ch: 'in_app' | 'email' | 'sms' | 'whatsapp') => {
     if (channels.includes(ch)) {
@@ -351,26 +353,51 @@ export const DirectorCommunicationView: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2 border-t border-blue-100">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-blue-100">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-xs text-slate-500 hover:text-blue-950"
+                  onClick={() => setEmailModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 cursor-pointer"
                 >
-                  Annuler
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Envoyer via Gmail / Mail</span>
                 </button>
-                <button
-                  type="submit"
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/30"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>Diffuser Immédiatement</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2 rounded-lg text-xs text-slate-500 hover:text-blue-950"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/30 cursor-pointer"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>Diffuser Immédiatement</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      <EmailSendModal
+        isOpen={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        title="Diffuser le Communiqué par Email"
+        subtitle={`${currentSchool.name} · Direction des Études`}
+        recipientOptions={[]}
+        defaultSubject={title || `[${currentSchool.name}] Communiqué Officiel`}
+        defaultBody={[
+          content || 'Rédigez votre communiqué ici...',
+          '',
+          `— ${profile.name} (${currentSchool.name})`
+        ].join('\n')}
+        whatsappPhone={schoolWaPhone}
+      />
     </div>
   );
 };

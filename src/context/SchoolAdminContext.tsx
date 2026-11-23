@@ -232,7 +232,7 @@ interface SchoolAdminContextType {
   toggleStaffStatus: (id: string) => void;
   resetStaffPassword: (id: string, customPassword?: string) => void;
   deleteStaff: (id: string) => void;
-  sendStaffCredentials: (id: string) => void;
+  sendStaffCredentials: (id: string, channel?: 'email' | 'whatsapp', recipient?: string) => void;
   selectedStaffForBadge: StaffMember | null;
   setSelectedStaffForBadge: (staff: StaffMember | null) => void;
   lastStaffCredentialReceipt: StaffCredentialReceipt | null;
@@ -794,18 +794,19 @@ export const SchoolAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     });
   };
 
-  const sendStaffCredentials = (id: string) => {
+  const sendStaffCredentials = (id: string, channel: 'email' | 'whatsapp' = 'email', recipient?: string) => {
     const member = staff.find(s => s.id === id);
     if (!member) return;
 
+    const target = recipient || (channel === 'whatsapp' ? member.phone : member.email);
     setStaff(prev => prev.map(s => s.id === id ? { ...s, credentialsSent: true } : s));
     logAdminAudit(
-      `Envoi des identifiants de connexion à ${member.firstName} ${member.lastName}`,
-      `${member.email} · ${member.phone}`,
+      `Envoi des identifiants de connexion (${channel === 'whatsapp' ? 'WhatsApp' : 'Email'}) à ${member.firstName} ${member.lastName}`,
+      `${target} · ${member.matricule}`,
       'admin',
       'info'
     );
-    showToast(`Identifiants transmis avec succès à ${member.email} et par SMS au ${member.phone} !`);
+    showToast(`Identifiants prêts / transmis par ${channel === 'whatsapp' ? 'WhatsApp' : 'Email'} à ${target} !`);
   };
 
   // Classes CRUD

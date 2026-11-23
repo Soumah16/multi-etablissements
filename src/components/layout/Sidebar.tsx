@@ -16,16 +16,18 @@ import {
   X,
   Lock,
   Server,
-  BookOpen
+  BookOpen,
+  Library
 } from 'lucide-react';
 import { useUnreadSharedMessagesCount } from '../../utils/communicationHub';
 
 interface SidebarProps {
   mobileOpen: boolean;
   onCloseMobile: () => void;
+  onSwitchToLibrarian?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile, onSwitchToLibrarian }) => {
   const { activeTab, setActiveTab, t, schools, admins, isRtl } = useApp();
   const unreadMessagesCount = useUnreadSharedMessagesCount('super_admin');
 
@@ -173,6 +175,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
               </div>
             </div>
           ))}
+
+          {onSwitchToLibrarian && (
+            <div className="space-y-1 pt-1">
+              <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                MÉDIATHÈQUE &amp; LIVRES
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  onCloseMobile();
+                  onSwitchToLibrarian();
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100 border border-indigo-200 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  <Library className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span className="truncate">Bibliothèque &amp; E-Books</span>
+                </div>
+                <span className="text-[10px] font-bold text-indigo-600 shrink-0">Ouvrir →</span>
+              </button>
+            </div>
+          )}
         </nav>
 
         {/* Bottom system isolation indicator */}

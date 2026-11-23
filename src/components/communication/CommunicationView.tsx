@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { CrossRoleHubPanel } from '../common/CrossRoleHubPanel';
+import { EmailSendModal } from '../common/EmailSendModal';
 
 export const CommunicationView: React.FC = () => {
   const { announcements, createAnnouncement, schools, t, showToast, profile } = useApp();
@@ -31,6 +32,7 @@ export const CommunicationView: React.FC = () => {
   const [channelEmail, setChannelEmail] = useState(true);
   const [channelSms, setChannelSms] = useState(false);
   const [channelWhatsApp, setChannelWhatsApp] = useState(false);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
 
   const handleToggleSchool = (schoolId: string) => {
     setSelectedSchoolIds(prev => 
@@ -268,7 +270,15 @@ export const CommunicationView: React.FC = () => {
               </div>
             )}
 
-            <div className="pt-2 flex justify-end">
+            <div className="pt-2 flex flex-wrap items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setEmailModalOpen(true)}
+                className="flex items-center gap-1.5 px-3.5 py-2 font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg text-xs cursor-pointer"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>Envoyer via Gmail / Mail</span>
+              </button>
               <button
                 type="submit"
                 className="flex items-center gap-2 px-5 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-sm transition-colors text-xs cursor-pointer"
@@ -325,6 +335,22 @@ export const CommunicationView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <EmailSendModal
+        isOpen={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        title="Diffuser l'Annonce Nationale par Email"
+        subtitle="Réseau SmartSchool · Administration Centrale"
+        recipientOptions={schools
+          .filter(s => Boolean(s.email))
+          .map(s => ({ label: s.code || s.name, email: s.email }))}
+        defaultSubject={title || 'Communiqué Officiel SmartSchool Guinée'}
+        defaultBody={[
+          content || 'Rédigez votre communiqué ici...',
+          '',
+          `— ${profile.name} · SmartSchool Guinée`
+        ].join('\n')}
+      />
     </div>
   );
 };

@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { StaffBadgeModal } from './StaffBadgeModal';
 import { ImageUploadField } from '../common/ImageUploadField';
+import { EmailSendModal } from '../common/EmailSendModal';
 
 export const StaffManagementView: React.FC = () => {
   const { 
@@ -67,6 +68,7 @@ export const StaffManagementView: React.FC = () => {
   const [copiedRowId, setCopiedRowId] = useState<string | null>(null);
   const [passwordResetTarget, setPasswordResetTarget] = useState<StaffMember | null>(null);
   const [customResetPassword, setCustomResetPassword] = useState('');
+  const [emailModalStaff, setEmailModalStaff] = useState<{ member: StaffMember; password?: string } | null>(null);
 
   const filteredStaff = staff.filter(s => {
     const matchesSearch = 
@@ -368,16 +370,17 @@ export const StaffManagementView: React.FC = () => {
                         </button>
 
                         <button
-                          onClick={() => sendStaffCredentials(member.id)}
+                          type="button"
+                          onClick={() => setEmailModalStaff({ member, password: member.temporaryPassword })}
                           className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded transition-colors cursor-pointer ${
                             member.credentialsSent
                               ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
                               : 'bg-slate-50 text-slate-700 hover:text-blue-950 border border-slate-200'
                           }`}
-                          title="Transmettre par Email & SMS"
+                          title="Envoyer les identifiants par Email (Gmail / Mail) ou WhatsApp"
                         >
-                          <Send className="w-3 h-3" />
-                          <span>{member.credentialsSent ? 'Envoyé ✓' : 'Envoyer SMS/Mail'}</span>
+                          <Mail className="w-3 h-3" />
+                          <span>{member.credentialsSent ? 'Envoyé ✓' : 'Envoyer Email'}</span>
                         </button>
                       </div>
                     </td>
@@ -793,29 +796,75 @@ export const StaffManagementView: React.FC = () => {
               Ce collaborateur peut se connecter immédiatement sur le portail avec son email ou son matricule et ce mot de passe.
             </p>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <button
                 type="button"
                 onClick={() => {
-                  const m = lastStaffCredentialReceipt.member;
-                  const summary = `SmartSchool Guinée - Identifiants ${m.role}\nNom: ${m.firstName} ${m.lastName}\nEmail: ${m.email}\nMatricule: ${m.matricule}\nMot de passe: ${lastStaffCredentialReceipt.password}`;
-                  navigator.clipboard?.writeText(summary);
-                  setCopiedPwd(true);
+                  const receipt = lastStaffCredentialReceipt;
+                  setLastStaffCredentialReceipt(null);
+                  setEmailModalStaff({ member: receipt.member, password: receipt.password });
                 }}
-                className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold cursor-pointer"
               >
-                Copier la fiche complète
+                <Mail className="w-3.5 h-3.5" />
+                <span>Envoyer par Email</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setLastStaffCredentialReceipt(null)}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold cursor-pointer"
-              >
-                Fermer
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const m = lastStaffCredentialReceipt.member;
+                    const summary = `SmartSchool Guinée - Identifiants ${m.role}\nNom: ${m.firstName} ${m.lastName}\nEmail: ${m.email}\nMatricule: ${m.matricule}\nMot de passe: ${lastStaffCredentialReceipt.password}`;
+                    navigator.clipboard?.writeText(summary);
+                    setCopiedPwd(true);
+                  }}
+                  className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
+                >
+                  Copier la fiche
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLastStaffCredentialReceipt(null)}
+                  className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold cursor-pointer"
+                >
+                  Fermer
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Email / Gmail / WhatsApp Staff Credentials Modal */}
+      {emailModalStaff && (
+        <EmailSendModal
+          isOpen={Boolean(emailModalStaff)}
+          onClose={() => setEmailModalStaff(null)}
+          title="Envoyer les Identifiants Personnel par Email"
+          subtitle={`${emailModalStaff.member.firstName} ${emailModalStaff.member.lastName} · ${emailModalStaff.member.role}`}
+          recipientOptions={[
+            { label: 'Email Pro', email: emailModalStaff.member.email }
+          ]}
+          defaultSubject={`Identifiants SmartSchool - ${emailModalStaff.member.firstName} ${emailModalStaff.member.lastName} (${emailModalStaff.member.role})`}
+          defaultBody={[
+            `Bonjour ${emailModalStaff.member.firstName} ${emailModalStaff.member.lastName},`,
+            '',
+            `Voici vos identifiants d'accès au portail SmartSchool (${currentSchool?.name || 'Établissement'}) en qualité de ${emailModalStaff.member.role} :`,
+            `- Matricule : ${emailModalStaff.member.matricule}`,
+            `- Identifiant : ${emailModalStaff.member.username || emailModalStaff.member.email}`,
+            `- Email de connexion : ${emailModalStaff.member.email}`,
+            `- Mot de passe : ${emailModalStaff.password || emailModalStaff.member.temporaryPassword || '(Défini lors de la création)'}`,
+            '',
+            `Lien de l'application : ${typeof window !== 'undefined' ? window.location.origin : ''}`,
+            '',
+            'Cordialement,',
+            `L'Administration · ${currentSchool?.name || 'SmartSchool'}`
+          ].join('\n')}
+          whatsappPhone={emailModalStaff.member.phone}
+          onDispatched={(channel, recipient) => {
+            sendStaffCredentials(emailModalStaff.member.id, channel, recipient);
+          }}
+        />
       )}
     </div>
   );

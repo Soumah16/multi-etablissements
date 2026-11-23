@@ -10,7 +10,8 @@ import {
   User, 
   Menu,
   ChevronDown,
-  LogOut
+  LogOut,
+  Library
 } from 'lucide-react';
 
 import { WorkspaceMode } from '../../App';
@@ -254,6 +255,22 @@ export const Header: React.FC<HeaderProps> = ({
                   </span>
                   <span className="text-[11px] font-mono shrink-0 ml-2">Consulter →</span>
                 </button>
+
+                {onSwitchToLibrarian && (
+                  <button
+                    onClick={() => {
+                      setAccountMenuOpen(false);
+                      onSwitchToLibrarian();
+                    }}
+                    className="w-full mt-1.5 flex items-center justify-between p-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-xs transition-colors cursor-pointer"
+                  >
+                    <span className="flex items-center gap-1.5 truncate">
+                      <Library className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                      <span className="truncate">Bibliothèque &amp; E-Books (Biblio)</span>
+                    </span>
+                    <span className="text-[11px] font-mono text-indigo-700 shrink-0 ml-2">Ouvrir →</span>
+                  </button>
+                )}
               </div>
 
               {/* Subtabs: Espaces Métiers vs Écoles (Only Super Admin can see/switch schools) */}
@@ -288,7 +305,7 @@ export const Header: React.FC<HeaderProps> = ({
               )}
 
               {/* Scrollable Roles Body */}
-              <div className="flex-1 overflow-y-auto p-2 space-y-1.5 overscroll-contain max-h-[52vh] sm:max-h-[380px]">
+              <div className="flex-1 overflow-y-auto p-2 space-y-1.5 overscroll-contain max-h-[60vh] sm:max-h-[440px]">
                 {switcherTab === 'roles' ? (
                   <>
                     {/* Directeur */}

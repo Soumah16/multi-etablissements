@@ -799,6 +799,21 @@ function triggerDirectUrlDownload(url: string, filename: string): void {
   }
 
   if (url.startsWith('http://') || url.startsWith('https://')) {
+    const driveMatch =
+      url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i) ||
+      url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/i);
+    if (driveMatch?.[1]) {
+      const dlUrl = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`;
+      const link = document.createElement('a');
+      link.href = dlUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
     fetch(url)
       .then(res => {
         if (!res.ok) throw new Error('HTTP download error');

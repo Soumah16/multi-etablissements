@@ -18,6 +18,7 @@ import {
 import { triggerPrint } from '../../utils/printHelper';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
+import { EmailSendModal } from '../common/EmailSendModal';
 
 export const DebtorsView: React.FC = () => {
   const { debtors, sendDebtorReminder, formatGnf } = useAccountant();
@@ -25,7 +26,8 @@ export const DebtorsView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'en_retard' | 'relance_envoyee' | 'contentieux'>('all');
   const [selectedStudentForReminder, setSelectedStudentForReminder] = useState<DebtorStudent | null>(null);
-  const [reminderChannel, setReminderChannel] = useState<'SMS' | 'WhatsApp' | 'Email' | 'App'>('SMS');
+  const [reminderChannel, setReminderChannel] = useState<'SMS' | 'WhatsApp' | 'Email' | 'App'>('Email');
+  const [emailModalDebtor, setEmailModalDebtor] = useState<DebtorStudent | null>(null);
 
   const totalOverdueGnf = debtors.reduce((sum, d) => sum + d.balanceRemainingGnf, 0);
 
@@ -41,10 +43,15 @@ export const DebtorsView: React.FC = () => {
 
   const handleSendReminder = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedStudentForReminder) {
-      sendDebtorReminder(selectedStudentForReminder.studentId, reminderChannel);
+    if (!selectedStudentForReminder) return;
+    if (reminderChannel === 'Email') {
+      const target = selectedStudentForReminder;
       setSelectedStudentForReminder(null);
+      setEmailModalDebtor(target);
+      return;
     }
+    sendDebtorReminder(selectedStudentForReminder.studentId, reminderChannel);
+    setSelectedStudentForReminder(null);
   };
 
   return (
@@ -192,10 +199,18 @@ export const DebtorsView: React.FC = () => {
                   <div className="flex items-center justify-center gap-2">
                     <button
                       onClick={() => setSelectedStudentForReminder(debtor)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-colors shadow-sm"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-colors shadow-sm cursor-pointer"
                     >
                       <Send className="w-3.5 h-3.5" />
                       <span>Relancer</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEmailModalDebtor(debtor)}
+                      className="p-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
+                      title="Envoyer une relance par Email (Gmail / Mail)"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
                     </button>
                     <a
                       href={`tel:${debtor.parentPhone}`}
@@ -249,10 +264,10 @@ export const DebtorsView: React.FC = () => {
                 <label className="block text-slate-700 font-semibold mb-1">Canal de notification *</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { id: 'SMS', label: 'SMS Guinée', icon: <Smartphone className="w-3.5 h-3.5" /> },
+                    { id: 'Email', label: 'Email (Gmail / Mail)', icon: <Mail className="w-3.5 h-3.5" /> },
                     { id: 'WhatsApp', label: 'WhatsApp', icon: <MessageSquare className="w-3.5 h-3.5" /> },
-                    { id: 'Email', label: 'Email', icon: <Mail className="w-3.5 h-3.5" /> },
-                    { id: 'App', label: 'Portail Parent', icon: <Users className="w-3.5 h-3.5" /> }
+                    { id: 'App', label: 'Portail Parent', icon: <Users className="w-3.5 h-3.5" /> },
+                    { id: 'SMS', label: 'SMS Guinée', icon: <Smartphone className="w-3.5 h-3.5" /> }
                   ].map(c => (
                     <button
                       key={c.id}
@@ -333,6 +348,34 @@ export const DebtorsView: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+      {/* Email / Gmail / WhatsApp Debtor Reminder Modal */}
+      {emailModalDebtor && (
+        <EmailSendModal
+          isOpen={Boolean(emailModalDebtor)}
+          onClose={() => setEmailModalDebtor(null)}
+          title="Envoyer une Relance de Scolarité par Email"
+          subtitle={`${emailModalDebtor.studentName} (${emailModalDebtor.className}) · Solde : ${formatGnf(emailModalDebtor.balanceRemainingGnf)}`}
+          recipientOptions={[]}
+          defaultSubject={`Rappel de scolarité - ${emailModalDebtor.studentName} (${emailModalDebtor.studentMatricule})`}
+          defaultBody={[
+            `Bonjour ${emailModalDebtor.parentName},`,
+            '',
+            `L'Intendance & Comptabilité de ${currentSchool.name} vous rappelle que les frais de scolarité de votre enfant ${emailModalDebtor.studentName} (Classe : ${emailModalDebtor.className}, Matricule : ${emailModalDebtor.studentMatricule}) présentent un solde restant à régler :`,
+            `- Montant total dû : ${formatGnf(emailModalDebtor.totalDueGnf)}`,
+            `- Déjà réglé : ${formatGnf(emailModalDebtor.amountPaidGnf)}`,
+            `- Reste à payer : ${formatGnf(emailModalDebtor.balanceRemainingGnf)} (Retard : +${emailModalDebtor.overdueDays} jours)`,
+            '',
+            `Merci de bien vouloir régulariser cette situation auprès de la comptabilité ou nous contacter sur WhatsApp (${getSchoolWhatsAppNumber(currentSchool)}).`,
+            '',
+            'Cordialement,',
+            `Service Comptabilité · ${currentSchool.name}`
+          ].join('\n')}
+          whatsappPhone={emailModalDebtor.parentPhone}
+          onDispatched={(channel) => {
+            sendDebtorReminder(emailModalDebtor.studentId, channel === 'whatsapp' ? 'WhatsApp' : 'Email');
+          }}
+        />
       )}
     </div>
   );

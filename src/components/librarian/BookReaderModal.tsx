@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { exportPrintableDocument } from '../../utils/printHelper';
 import { downloadLibraryResourcePdf } from '../../utils/exportDocuments';
+import { PdfCanvasViewer } from './PdfCanvasViewer';
 
 interface BookReaderModalProps {
   book: BookItem | EbookItem;
@@ -364,11 +365,11 @@ export const BookReaderModal: React.FC<BookReaderModalProps> = ({ book, onClose 
                   <p className="text-xs text-slate-500">{book.description}</p>
                   <audio src={viewerBlobUrl} controls className="w-full" />
                 </div>
-              ) : isPdfFile && viewerBlobUrl ? (
-                <iframe
-                  src={viewerBlobUrl}
+              ) : isPdfFile && rawFileSource ? (
+                <PdfCanvasViewer
+                  source={rawFileSource}
                   title={book.title}
-                  className="w-full h-full flex-1 rounded-xl border border-slate-200 bg-white shadow-inner"
+                  onDownload={handleDownload}
                 />
               ) : (
                 <div className="max-w-md w-full p-6 rounded-2xl bg-white border border-slate-200 shadow-md text-center space-y-4">

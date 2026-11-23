@@ -901,6 +901,7 @@ async function startServer() {
       deliveryStatus = await dispatchRealSms(to, 'INFO', subject || body.slice(0, 60));
     } else if (channel === 'email' && to) {
       const resendKey = process.env.RESEND_API_KEY?.trim();
+      const webhookUrl = process.env.EMAIL_WEBHOOK_URL?.trim();
       const fromEmail = process.env.EMAIL_FROM?.trim() || 'SmartSchool ERP <noreply@smartschool.gn>';
       if (resendKey) {
         try {
@@ -908,6 +909,17 @@ async function startServer() {
             method: 'POST',
             headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ from: fromEmail, to: [to], subject: subject || 'Notification SmartSchool', text: body })
+          });
+          deliveryStatus = resp.ok ? 'sent' : 'failed';
+        } catch {
+          deliveryStatus = 'failed';
+        }
+      } else if (webhookUrl) {
+        try {
+          const resp = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to, subject: subject || 'Notification SmartSchool', text: body })
           });
           deliveryStatus = resp.ok ? 'sent' : 'failed';
         } catch {

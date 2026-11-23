@@ -14,6 +14,9 @@ import {
   CheckCircle2,
   Lock
 } from 'lucide-react';
+import { LibraryQrScannerModal } from './LibraryQrScannerModal';
+import { BookReaderModal } from './BookReaderModal';
+import { BookItem } from '../../types/librarian';
 
 export const LibrarianDashboardView: React.FC = () => {
   const {
@@ -26,8 +29,7 @@ export const LibrarianDashboardView: React.FC = () => {
     libraryUser
   } = useLibrarian();
   const [scannerOpen, setScannerOpen] = useState(false);
-  const [scannedCode, setScannedCode] = useState('');
-  const [scanResult, setScanResult] = useState<string | null>(null);
+  const [readingBook, setReadingBook] = useState<BookItem | null>(null);
 
   const visibleLoans = canManageLibrary
     ? loans
@@ -47,22 +49,6 @@ export const LibrarianDashboardView: React.FC = () => {
 
   // Unique active borrowers
   const uniqueBorrowers = new Set(loans.map(l => l.borrowerMatricule)).size;
-
-  const handleSimulatedScan = () => {
-    if (!scannedCode.trim()) return;
-    const foundBook = books.find(
-      b =>
-        b.qrCodeId.toLowerCase() === scannedCode.trim().toLowerCase() ||
-        b.isbn === scannedCode.trim()
-    );
-    if (foundBook) {
-      setScanResult(
-        `Livre identifié : « ${foundBook.title} » par ${foundBook.author} (Rayon : ${foundBook.shelfLocation}, Dispo : ${foundBook.availableQuantity}/${foundBook.totalQuantity})`
-      );
-    } else {
-      setScanResult(`Code QR / ISBN "${scannedCode}" reconnu. Prêt élève prêt à être associé.`);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -381,69 +367,23 @@ export const LibrarianDashboardView: React.FC = () => {
         </div>
       </div>
 
-      {/* QR Code Scanner Modal (Librarian Admin only) */}
-      {canManageLibrary && scannerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/55 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-4 max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <QrCode className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-sm font-bold text-blue-950">Scanner / Vérifier un QR Code Livre</h3>
-              </div>
-              <button
-                onClick={() => {
-                  setScannerOpen(false);
-                  setScanResult(null);
-                  setScannedCode('');
-                }}
-                className="text-slate-500 hover:text-blue-950 text-xs font-semibold"
-              >
-                Fermer
-              </button>
-            </div>
+      {/* Real Camera & Code QR Scanner Modal */}
+      {canManageLibrary && (
+        <LibraryQrScannerModal
+          isOpen={scannerOpen}
+          onClose={() => setScannerOpen(false)}
+          onOpenReader={(book) => {
+            setScannerOpen(false);
+            setReadingBook(book);
+          }}
+        />
+      )}
 
-            <p className="text-xs text-slate-500">
-              Scannez le code QR d'un livre ou saisissez manuellement son identifiant (ex: <code>QR-BIB-101</code> ou ISBN).
-            </p>
-
-            <div className="p-4 rounded-xl bg-[#F0F5FA] border border-blue-100 text-center space-y-3">
-              <div className="w-32 h-32 mx-auto rounded-lg bg-white p-2 flex items-center justify-center shadow-inner">
-                <div className="w-full h-full border-2 border-dashed border-slate-900 flex flex-col items-center justify-center text-slate-900 text-[10px] font-mono">
-                  <span>[SCANNER ACTIF]</span>
-                  <span className="font-bold mt-1">{scannedCode || 'QR-BIB-101'}</span>
-                </div>
-              </div>
-              <div className="text-[11px] text-slate-500">
-                Caméra opérationnelle · Détection automatique
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[11px] font-semibold text-slate-700">Code / ISBN à tester :</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={scannedCode}
-                  onChange={e => setScannedCode(e.target.value)}
-                  placeholder="ex: QR-BIB-101 ou 978-2-09-172534-5"
-                  className="flex-1 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950 placeholder-slate-400 focus:outline-hidden focus:border-indigo-500 font-mono"
-                />
-                <button
-                  onClick={handleSimulatedScan}
-                  className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold cursor-pointer"
-                >
-                  Tester
-                </button>
-              </div>
-            </div>
-
-            {scanResult && (
-              <div className="p-3 rounded-lg bg-indigo-50 border border-indigo-200 text-xs text-indigo-800">
-                {scanResult}
-              </div>
-            )}
-          </div>
-        </div>
+      {readingBook && (
+        <BookReaderModal
+          book={readingBook}
+          onClose={() => setReadingBook(null)}
+        />
       )}
     </div>
   );

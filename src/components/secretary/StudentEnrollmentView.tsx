@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSecretary } from '../../context/SecretaryContext';
 import { StudentEnrollment } from '../../types/secretary';
 import { ImageUploadField } from '../common/ImageUploadField';
+import { EmailSendModal } from '../common/EmailSendModal';
 import { 
   Users, 
   UserPlus, 
@@ -47,6 +48,7 @@ export const StudentEnrollmentView: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentEnrollment | null>(null);
   const [createdCredentialsStudent, setCreatedCredentialsStudent] = useState<StudentEnrollment | null>(null);
+  const [emailModalStudent, setEmailModalStudent] = useState<StudentEnrollment | null>(null);
   const [copiedPwd, setCopiedPwd] = useState(false);
 
   // Transfer modal
@@ -395,9 +397,9 @@ export const StudentEnrollmentView: React.FC = () => {
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
-                          onClick={() => sendStudentCredentials(student.id)}
-                          className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-blue-50 rounded transition-colors"
-                          title="Renvoyer identifiants et mot de passe par SMS & Email"
+                          onClick={() => setEmailModalStudent(student)}
+                          className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                          title="Envoyer les identifiants par Email (Gmail / Mail) ou WhatsApp"
                         >
                           <Send className="w-3.5 h-3.5" />
                         </button>
@@ -854,17 +856,62 @@ export const StudentEnrollmentView: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const target = createdCredentialsStudent;
+                  setCreatedCredentialsStudent(null);
+                  setEmailModalStudent(target);
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold cursor-pointer"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>Envoyer par Email</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setCreatedCredentialsStudent(null)}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold"
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold cursor-pointer"
               >
                 Fermer
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Email / Gmail / WhatsApp Credentials Dispatch Modal */}
+      {emailModalStudent && (
+        <EmailSendModal
+          isOpen={Boolean(emailModalStudent)}
+          onClose={() => setEmailModalStudent(null)}
+          title="Envoyer les Identifiants par Email"
+          subtitle={`${emailModalStudent.firstName} ${emailModalStudent.lastName} · ${emailModalStudent.matricule}`}
+          recipientOptions={[
+            { label: 'Parent / Tuteur', email: emailModalStudent.parentEmail },
+            { label: 'Élève', email: emailModalStudent.email }
+          ]}
+          defaultSubject={`Identifiants SmartSchool - ${emailModalStudent.firstName} ${emailModalStudent.lastName} (${emailModalStudent.matricule})`}
+          defaultBody={[
+            `Bonjour ${emailModalStudent.parentName || emailModalStudent.firstName},`,
+            '',
+            `Voici les identifiants d'accès au portail SmartSchool pour l'élève ${emailModalStudent.firstName} ${emailModalStudent.lastName} (${emailModalStudent.className}) :`,
+            `- Matricule : ${emailModalStudent.matricule}`,
+            `- Identifiant : ${emailModalStudent.credentials.username}`,
+            `- Email de connexion : ${emailModalStudent.email}`,
+            `- Mot de passe initial : ${emailModalStudent.credentials.tempPassword}`,
+            '',
+            `Lien de l'application : ${typeof window !== 'undefined' ? window.location.origin : ''}`,
+            '',
+            'Cordialement,',
+            'Le Secrétariat Général'
+          ].join('\n')}
+          whatsappPhone={emailModalStudent.parentPhone || emailModalStudent.phone}
+          onDispatched={(channel, recipient) => {
+            sendStudentCredentials(emailModalStudent.id, channel, recipient);
+          }}
+        />
       )}
     </div>
   );

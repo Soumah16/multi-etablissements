@@ -86,7 +86,7 @@ export const EbooksDigitalView: React.FC = () => {
           format: isTextFile ? prev.format : detectedFormat,
           ...(isTextFile
             ? { content: resultStr }
-            : { url: resultStr, fileData: resultStr }),
+            : { url: resultStr, fileData: undefined }),
           fileName: file.name,
           fileSize: sizeLabel,
           description: prev.description || `Document numérique importé : ${file.name}`
@@ -227,9 +227,13 @@ export const EbooksDigitalView: React.FC = () => {
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-sm text-blue-950 group-hover:text-purple-700 transition-colors line-clamp-2">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewEbook(eb)}
+                    className="text-left font-bold text-sm text-blue-950 group-hover:text-purple-700 transition-colors line-clamp-2 cursor-pointer"
+                  >
                     {eb.title}
-                  </h3>
+                  </button>
                   <div className="text-xs text-slate-500 mt-1">
                     Par <span className="text-slate-700 font-medium">{eb.author}</span> · {eb.subject}
                   </div>
@@ -453,6 +457,35 @@ export const EbooksDigitalView: React.FC = () => {
                     className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-700">
+                  Ou lien URL gratuit du document (Google Drive, Archive.org, lien PDF direct)
+                </label>
+                <input
+                  type="url"
+                  value={
+                    formData.url &&
+                    formData.url !== '#' &&
+                    !formData.url.startsWith('data:')
+                      ? formData.url
+                      : ''
+                  }
+                  onChange={(e) => {
+                    const nextUrl = e.target.value.trim();
+                    setFormData(prev => ({
+                      ...prev,
+                      url: nextUrl || '#',
+                      fileData: undefined,
+                      fileName: nextUrl
+                        ? prev.fileName || nextUrl.split('/').pop()?.split('?')[0] || 'Lien externe'
+                        : ''
+                    }));
+                  }}
+                  placeholder="https://drive.google.com/file/d/... ou https://archive.org/..."
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-blue-950 font-mono"
+                />
               </div>
 
               <div className="space-y-1">

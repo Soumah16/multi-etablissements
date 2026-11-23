@@ -11,9 +11,12 @@ import {
   FileCheck, 
   Printer, 
   PhoneCall, 
-  MessageSquare
+  MessageSquare,
+  Mail
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
+import { EmailSendModal } from '../common/EmailSendModal';
+import { AttendanceRecordItem } from '../../types/supervisor';
 
 export const SupervisorAttendanceView: React.FC = () => {
   const { 
@@ -21,13 +24,14 @@ export const SupervisorAttendanceView: React.FC = () => {
     justifyAttendanceRecord, 
     notifyParentSms, 
     setActiveSupervisorTab,
-    triggerToast 
+    profile
   } = useSupervisor();
 
   const [filterType, setFilterType] = useState<'all' | 'absent' | 'retard' | 'non_justifie'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRecordForJustify, setSelectedRecordForJustify] = useState<string | null>(null);
   const [justifyReason, setJustifyReason] = useState('');
+  const [emailAlertRecord, setEmailAlertRecord] = useState<AttendanceRecordItem | null>(null);
 
   const filteredRecords = attendanceRecords.filter(r => {
     const matchesSearch = r.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -206,15 +210,17 @@ export const SupervisorAttendanceView: React.FC = () => {
                     )}
 
                     <button
-                      onClick={() => notifyParentSms(rec.id)}
-                      className={`p-1.5 rounded-lg border text-xs transition-colors ${
+                      type="button"
+                      onClick={() => setEmailAlertRecord(rec)}
+                      className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-semibold transition-colors cursor-pointer ${
                         rec.notifiedParent 
                           ? 'bg-blue-50 text-blue-700 border-blue-200' 
-                          : 'bg-slate-50 text-slate-500 border-slate-200 hover:text-blue-950'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:text-blue-950 hover:bg-blue-50'
                       }`}
-                      title={rec.notifiedParent ? 'SMS déjà envoyé au parent' : 'Envoyer alerte SMS au tuteur'}
+                      title={rec.notifiedParent ? 'Tuteur déjà notifié (renvoyer par Email)' : 'Notifier le parent par Email'}
                     >
-                      <MessageSquare className="w-3.5 h-3.5" />
+                      <Mail className="w-3.5 h-3.5" />
+                      <span>{rec.notifiedParent ? 'Notifié ✓' : 'Email Parent'}</span>
                     </button>
                   </div>
                 </td>
@@ -264,6 +270,33 @@ export const SupervisorAttendanceView: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+      {/* Email / Gmail Parent Alert Modal */}
+      {emailAlertRecord && (
+        <EmailSendModal
+          isOpen={Boolean(emailAlertRecord)}
+          onClose={() => setEmailAlertRecord(null)}
+          title="Notifier le Tuteur par Email"
+          subtitle={`${emailAlertRecord.studentName} · ${emailAlertRecord.className}`}
+          recipientOptions={[]}
+          defaultSubject={`Alerte Vie Scolaire (${emailAlertRecord.type === 'absent' ? 'Absence' : 'Retard'}) - ${emailAlertRecord.studentName}`}
+          defaultBody={[
+            `Bonjour Madame, Monsieur,`,
+            '',
+            `La Vie Scolaire de ${profile.schoolName} vous informe que votre enfant ${emailAlertRecord.studentName} (Matricule : ${emailAlertRecord.studentMatricule}, Classe : ${emailAlertRecord.className}) a été signalé(e) :`,
+            `- Motif : ${emailAlertRecord.type === 'absent' ? 'Absence en cours' : `Retard${emailAlertRecord.minutesLate ? ` de ${emailAlertRecord.minutesLate} min` : ''}`}`,
+            `- Date & Heure : ${emailAlertRecord.date} à ${emailAlertRecord.time}`,
+            `- Cours / Enseignant : ${emailAlertRecord.subjectTaught} (${emailAlertRecord.teacherName})`,
+            '',
+            `Merci de bien vouloir contacter le bureau du Surveillant Général pour régulariser la situation.`,
+            '',
+            'Cordialement,',
+            `${profile.firstName} ${profile.lastName} · ${profile.roleTitle}`
+          ].join('\n')}
+          onDispatched={(channel, recipient) => {
+            notifyParentSms(emailAlertRecord.id, channel, recipient);
+          }}
+        />
       )}
     </div>
   );

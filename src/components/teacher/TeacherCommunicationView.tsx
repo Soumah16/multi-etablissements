@@ -3,6 +3,7 @@ import { useTeacher } from '../../context/TeacherContext';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { CrossRoleHubPanel } from '../common/CrossRoleHubPanel';
+import { EmailSendModal } from '../common/EmailSendModal';
 import { 
   Megaphone, 
   Send, 
@@ -32,6 +33,7 @@ export const TeacherCommunicationView: React.FC = () => {
   const [formChannel, setFormChannel] = useState<'Application' | 'Email' | 'SMS' | 'WhatsApp'>('Application');
   const [formSubject, setFormSubject] = useState('');
   const [formContent, setFormContent] = useState('');
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -293,25 +295,50 @@ export const TeacherCommunicationView: React.FC = () => {
                 />
               </div>
 
-              <div className="pt-3 border-t border-blue-100 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-blue-100 flex flex-wrap items-center justify-between gap-2">
                 <button
                   type="button"
-                  onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-blue-950 bg-slate-50 text-xs font-semibold"
+                  onClick={() => setEmailModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 text-xs font-bold cursor-pointer"
                 >
-                  Annuler
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Ouvrir dans Gmail / Mail</span>
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold"
-                >
-                  Envoyer via {formChannel}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setModalOpen(false)}
+                    className="px-4 py-2 rounded-xl text-slate-500 hover:text-blue-950 bg-slate-50 text-xs font-semibold"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer"
+                  >
+                    Envoyer via {formChannel}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      <EmailSendModal
+        isOpen={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        title="Envoyer le Message Pédagogique par Email"
+        subtitle={`${formRecipient} · ${currentSchool.name}`}
+        recipientOptions={[]}
+        defaultSubject={formSubject || `[${currentSchool.name}] Message Pédagogique`}
+        defaultBody={[
+          formContent || 'Saisissez votre message...',
+          '',
+          `— ${profile.firstName} ${profile.lastName} (${currentSchool.name})`
+        ].join('\n')}
+        whatsappPhone={schoolWaPhone}
+      />
     </div>
   );
 };

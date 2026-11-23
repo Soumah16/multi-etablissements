@@ -4,6 +4,7 @@ import { useSchoolAdmin } from '../../context/SchoolAdminContext';
 import { buildWhatsAppUrl, getSchoolWhatsAppNumber } from '../../utils/whatsapp';
 import { SecretaryMessage } from '../../types/secretary';
 import { CrossRoleHubPanel } from '../common/CrossRoleHubPanel';
+import { EmailSendModal } from '../common/EmailSendModal';
 import { 
   Megaphone, 
   Send, 
@@ -33,7 +34,8 @@ export const SecretaryCommunicationView: React.FC = () => {
   const [content, setContent] = useState('');
   const [target, setTarget] = useState<SecretaryMessage['target']>('all_parents');
   const [targetDetail, setTargetDetail] = useState('');
-  const [channels, setChannels] = useState<('app' | 'email' | 'sms' | 'whatsapp')[]>(['app', 'sms']);
+  const [channels, setChannels] = useState<('app' | 'email' | 'sms' | 'whatsapp')[]>(['app', 'email']);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
 
   const toggleChannel = (ch: 'app' | 'email' | 'sms' | 'whatsapp') => {
     if (channels.includes(ch)) {
@@ -315,26 +317,51 @@ export const SecretaryCommunicationView: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-blue-100">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-blue-100">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-slate-500 hover:text-blue-950"
+                  onClick={() => setEmailModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 cursor-pointer"
                 >
-                  Annuler
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Envoyer via Gmail / Mail</span>
                 </button>
-                <button
-                  type="submit"
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-white bg-teal-600 hover:bg-teal-500 shadow-md shadow-teal-600/30"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>Diffuser aux Familles</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2 rounded-lg text-slate-500 hover:text-blue-950"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-white bg-teal-600 hover:bg-teal-500 shadow-md shadow-teal-600/30 cursor-pointer"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>Diffuser aux Familles</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      <EmailSendModal
+        isOpen={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        title="Envoyer la Note aux Familles par Email"
+        subtitle={`${currentSchool.name} · Secrétariat Général`}
+        recipientOptions={[]}
+        defaultSubject={title || `[${currentSchool.name}] Information Secrétariat`}
+        defaultBody={[
+          content || 'Rédigez votre message aux familles ici...',
+          '',
+          `— ${profile.name} · Secrétariat Général (${currentSchool.name})`
+        ].join('\n')}
+        whatsappPhone={schoolWaPhone}
+      />
     </div>
   );
 };

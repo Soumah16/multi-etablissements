@@ -29,7 +29,8 @@ import {
   ArrowLeftRight,
   ShieldCheck,
   LogOut,
-  MessageCircle
+  MessageCircle,
+  Library
 } from 'lucide-react';
 
 interface ParentLayoutProps {
@@ -236,6 +237,28 @@ export const ParentLayout: React.FC<ParentLayoutProps> = ({
               })}
             </div>
           ))}
+
+          {onSwitchToLibrarian && (
+            <div className="space-y-1">
+              <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                MÉDIATHÈQUE &amp; LIVRES
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onSwitchToLibrarian();
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100 border border-indigo-200 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  <Library className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span className="truncate">Bibliothèque &amp; E-Books</span>
+                </div>
+                <span className="text-[10px] font-bold text-indigo-600 shrink-0">Ouvrir →</span>
+              </button>
+            </div>
+          )}
         </nav>
 
         {/* Bottom Switcher */}

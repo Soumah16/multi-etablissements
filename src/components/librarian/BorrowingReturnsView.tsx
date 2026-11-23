@@ -6,8 +6,10 @@ import {
   RefreshCw,
   FileWarning,
   ShieldAlert,
-  Lock
+  Lock,
+  QrCode
 } from 'lucide-react';
+import { LibraryQrScannerModal } from './LibraryQrScannerModal';
 
 export const BorrowingReturnsView: React.FC = () => {
   const {
@@ -22,6 +24,7 @@ export const BorrowingReturnsView: React.FC = () => {
   } = useLibrarian();
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   // Modals
   const [damagedModalLoan, setDamagedModalLoan] = useState<LoanRecord | null>(null);
@@ -81,6 +84,17 @@ export const BorrowingReturnsView: React.FC = () => {
               : "Consultation de votre historique d'emprunts personnels (validation des prêts/retours réservée à l'Admin de la Bibliothèque)."}
           </p>
         </div>
+
+        {canManageLibrary && (
+          <button
+            type="button"
+            onClick={() => setScannerOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/20 transition-all cursor-pointer self-start sm:self-auto"
+          >
+            <QrCode className="w-4 h-4" />
+            <span>Scanner Caméra / QR</span>
+          </button>
+        )}
       </div>
 
       {/* Search and Filters */}
@@ -354,6 +368,12 @@ export const BorrowingReturnsView: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+      {canManageLibrary && (
+        <LibraryQrScannerModal
+          isOpen={scannerOpen}
+          onClose={() => setScannerOpen(false)}
+        />
       )}
     </div>
   );

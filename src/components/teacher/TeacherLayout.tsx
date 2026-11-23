@@ -27,7 +27,8 @@ import {
   ChevronDown,
   LogOut,
   MessageCircle,
-  Users
+  Users,
+  Library
 } from 'lucide-react';
 import { TeacherDashboardView } from './TeacherDashboardView';
 import { TeacherClassesView } from './TeacherClassesView';
@@ -54,6 +55,7 @@ interface TeacherLayoutProps {
   onLogout?: () => void;
   onSwitchToAccountant?: () => void;
   onSwitchToSupervisor?: () => void;
+  onSwitchToLibrarian?: () => void;
 }
 
 export const TeacherLayout: React.FC<TeacherLayoutProps> = ({ 
@@ -63,7 +65,8 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({
   onReturnToSuperAdmin,
   onLogout,
   onSwitchToAccountant,
-  onSwitchToSupervisor
+  onSwitchToSupervisor,
+  onSwitchToLibrarian
 }) => {
   const { 
     activeTeacherTab, 
@@ -284,6 +287,28 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({
               </div>
             </div>
           ))}
+
+          {onSwitchToLibrarian && (
+            <div className="space-y-1">
+              <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                MÉDIATHÈQUE &amp; LIVRES
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onSwitchToLibrarian();
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100 border border-indigo-200 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  <Library className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span className="truncate">Espace Bibliothèque (Complet)</span>
+                </div>
+                <span className="text-[10px] font-bold text-indigo-600 shrink-0">Ouvrir →</span>
+              </button>
+            </div>
+          )}
         </nav>
 
         {/* Compact Role Switcher Popover */}
@@ -300,7 +325,7 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({
           </button>
 
           {roleSwitcherOpen && (
-            <div className="absolute bottom-14 left-3 right-3 bg-white border border-blue-100 rounded-xl p-2 shadow-2xl z-50 space-y-1 animate-in fade-in slide-in-from-bottom-2 text-xs">
+            <div className="absolute bottom-14 left-3 right-3 bg-white border border-blue-100 rounded-xl p-2 shadow-2xl z-50 space-y-1 animate-in fade-in slide-in-from-bottom-2 text-xs max-h-72 overflow-y-auto">
               <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-blue-100">
                 Basculer vers un rôle
               </div>
@@ -334,6 +359,15 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({
                 >
                   <span>Espace Comptabilité</span>
                   <span className="text-[10px] text-emerald-600">Finances</span>
+                </button>
+              )}
+              {onSwitchToLibrarian && (
+                <button
+                  onClick={() => { setRoleSwitcherOpen(false); onSwitchToLibrarian(); }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 text-indigo-800 font-medium flex items-center justify-between"
+                >
+                  <span>Espace Bibliothécaire</span>
+                  <span className="text-[10px] text-indigo-600">Médiathèque</span>
                 </button>
               )}
               <button
