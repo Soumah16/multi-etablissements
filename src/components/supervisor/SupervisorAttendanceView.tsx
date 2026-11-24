@@ -12,10 +12,12 @@ import {
   Printer, 
   PhoneCall, 
   MessageSquare,
-  Mail
+  Mail,
+  Camera
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
 import { EmailSendModal } from '../common/EmailSendModal';
+import { CameraQrScanModal } from '../common/CameraQrScanModal';
 import { AttendanceRecordItem } from '../../types/supervisor';
 
 export const SupervisorAttendanceView: React.FC = () => {
@@ -32,6 +34,7 @@ export const SupervisorAttendanceView: React.FC = () => {
   const [selectedRecordForJustify, setSelectedRecordForJustify] = useState<string | null>(null);
   const [justifyReason, setJustifyReason] = useState('');
   const [emailAlertRecord, setEmailAlertRecord] = useState<AttendanceRecordItem | null>(null);
+  const [cameraScanOpen, setCameraScanOpen] = useState(false);
 
   const filteredRecords = attendanceRecords.filter(r => {
     const matchesSearch = r.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,7 +70,15 @@ export const SupervisorAttendanceView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setCameraScanOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
+          >
+            <Camera className="w-4 h-4" />
+            <span>Scanner Badge Élève</span>
+          </button>
           <button
             onClick={() => setActiveSupervisorTab('admission_slips')}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-md shadow-red-600/30 transition-colors"
@@ -298,6 +309,18 @@ export const SupervisorAttendanceView: React.FC = () => {
           }}
         />
       )}
+
+      <CameraQrScanModal
+        isOpen={cameraScanOpen}
+        onClose={() => setCameraScanOpen(false)}
+        title="Scanner Badge Élève (Téléphone & Ordinateur)"
+        subtitle="Utilisez la caméra du téléphone ou la webcam du PC pour rechercher instantanément un élève"
+        onCodeDetected={(code) => {
+          const match = code.match(/\b(?:MAT|ELV|LEC)[A-Z0-9-]*\b/i);
+          setSearchTerm(match ? match[0] : code.trim());
+          setCameraScanOpen(false);
+        }}
+      />
     </div>
   );
 };

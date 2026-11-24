@@ -17,12 +17,14 @@ import {
 import { triggerPrint } from '../../utils/printHelper';
 import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
 import { downloadPvcBadgePdf, downloadPvcBadgeA4Pdf, PvcRenderData } from '../../utils/pvcCardRenderer';
+import { CameraQrScanModal } from '../common/CameraQrScanModal';
 
 export const DirectorBadgeModal: React.FC = () => {
   const { profile, updateProfile, showToast } = useDirector();
   const [photoEditOpen, setPhotoEditOpen] = useState(false);
   const [newPhotoUrl, setNewPhotoUrl] = useState(profile.photo);
   const [isScanTested, setIsScanTested] = useState(false);
+  const [cameraScanOpen, setCameraScanOpen] = useState(false);
 
   useEffect(() => {
     setNewPhotoUrl(profile.photo);
@@ -243,12 +245,22 @@ export const DirectorBadgeModal: React.FC = () => {
               Simulateur de Contrôle & Scan QR Code en Temps Réel
             </h3>
           </div>
-          <button
-            onClick={() => setIsScanTested(!isScanTested)}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
-          >
-            {isScanTested ? 'Réinitialiser le test' : 'Tester le Scan QR Code'}
-          </button>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setCameraScanOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-xs cursor-pointer"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>Scanner par Caméra</span>
+            </button>
+            <button
+              onClick={() => setIsScanTested(!isScanTested)}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-xs cursor-pointer"
+            >
+              {isScanTested ? 'Réinitialiser le test' : 'Tester le Scan QR Code'}
+            </button>
+          </div>
         </div>
 
         {isScanTested && (
@@ -310,6 +322,16 @@ export const DirectorBadgeModal: React.FC = () => {
           </div>
         </div>
       )}
+      <CameraQrScanModal
+        isOpen={cameraScanOpen}
+        onClose={() => setCameraScanOpen(false)}
+        title="Contrôle Badge Directeur (Téléphone & Ordinateur)"
+        subtitle="Utilisez la caméra du téléphone ou la webcam du PC pour lire le QR Code du badge"
+        onCodeDetected={(code) => {
+          setIsScanTested(true);
+          showToast(`Badge scanné par caméra : ${code}`);
+        }}
+      />
     </div>
   );
 };

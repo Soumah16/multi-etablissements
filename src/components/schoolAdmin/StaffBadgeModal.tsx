@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { StaffMember } from '../../types';
 import { useSchoolAdmin } from '../../context/SchoolAdminContext';
-import { X, Printer, QrCode, CheckCircle2, ShieldCheck, Download, Scan } from 'lucide-react';
+import { X, Printer, QrCode, CheckCircle2, Download, Scan, Camera } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
 import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
 import { downloadPvcBadgePdf, downloadPvcBadgeA4Pdf, PvcRenderData } from '../../utils/pvcCardRenderer';
+import { CameraQrScanModal } from '../common/CameraQrScanModal';
 
 interface StaffBadgeModalProps {
   staff: StaffMember;
@@ -14,6 +15,7 @@ interface StaffBadgeModalProps {
 export const StaffBadgeModal: React.FC<StaffBadgeModalProps> = ({ staff, onClose }) => {
   const { currentSchool } = useSchoolAdmin();
   const [scanVerified, setScanVerified] = useState(false);
+  const [cameraScanOpen, setCameraScanOpen] = useState(false);
 
   const qrPayload = `STAFF|${currentSchool.code}|${staff.matricule}|${staff.firstName} ${staff.lastName}|${staff.role}`;
 
@@ -152,12 +154,22 @@ export const StaffBadgeModal: React.FC<StaffBadgeModalProps> = ({ staff, onClose
               <p className="text-[11px] text-slate-600">
                 Simulez la lecture optique de la borne de contrôle d'accès :
               </p>
-              <button
-                onClick={handleTestScan}
-                className="w-full py-1.5 text-xs font-semibold rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer"
-              >
-                Simuler le Scan du Badge
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCameraScanOpen(true)}
+                  className="py-1.5 text-xs font-semibold rounded bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer inline-flex items-center justify-center gap-1"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Caméra</span>
+                </button>
+                <button
+                  onClick={handleTestScan}
+                  className="py-1.5 text-xs font-semibold rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer"
+                >
+                  Simuler Scan
+                </button>
+              </div>
 
               {scanVerified && (
                 <div className="p-2 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] animate-in fade-in">
@@ -211,6 +223,13 @@ export const StaffBadgeModal: React.FC<StaffBadgeModalProps> = ({ staff, onClose
           </button>
         </div>
       </div>
+      <CameraQrScanModal
+        isOpen={cameraScanOpen}
+        onClose={() => setCameraScanOpen(false)}
+        title="Scanner Badge Personnel (Téléphone & Ordinateur)"
+        subtitle="Utilisez la caméra du téléphone ou la webcam du PC pour vérifier ce badge"
+        onCodeDetected={() => setScanVerified(true)}
+      />
     </div>
   );
 };

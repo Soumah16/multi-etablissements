@@ -33,8 +33,10 @@ import {
   Palette,
   Layers,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Camera
 } from 'lucide-react';
+import { CameraQrScanModal } from '../common/CameraQrScanModal';
 import { ACCOUNTS_STORAGE_KEY, DemoAccount, getStoredAccounts } from '../../data/accountsData';
 import { subscribeStorageKey } from '../../utils/storage';
 
@@ -160,8 +162,9 @@ export const PvcCardStudio: React.FC = () => {
   const [customBloodGroup, setCustomBloodGroup] = useState<string>('O+');
   const [customBirthDate, setCustomBirthDate] = useState<string>('14/05/2008');
 
-  // Verification modal simulation
+  // Verification modal simulation & live camera scanner
   const [showVerifyModal, setShowVerifyModal] = useState<boolean>(false);
+  const [showCameraScanner, setShowCameraScanner] = useState<boolean>(false);
 
   const selectedTemplate = PVC_TEMPLATES.find(t => t.id === selectedTemplateId) || PVC_TEMPLATES[0];
   const selectedSchool = schools.find(s => s.id === selectedSchoolId) || schools[0];
@@ -312,6 +315,16 @@ export const PvcCardStudio: React.FC = () => {
 
         {/* Action Buttons with high-fidelity outputs */}
         <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setShowCameraScanner(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold cursor-pointer shadow-xs"
+            title="Scanner un badge avec la caméra du téléphone ou la webcam de l'ordinateur"
+          >
+            <Camera className="w-4 h-4" />
+            <span>Scanner par Caméra</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setShowVerifyModal(true)}
@@ -973,7 +986,18 @@ export const PvcCardStudio: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-2 flex justify-end">
+            <div className="pt-2 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowVerifyModal(false);
+                  setShowCameraScanner(true);
+                }}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>Ouvrir Scanner Caméra</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setShowVerifyModal(false)}
@@ -985,6 +1009,15 @@ export const PvcCardStudio: React.FC = () => {
           </div>
         </div>
       )}
+
+      <CameraQrScanModal
+        isOpen={showCameraScanner}
+        onClose={() => setShowCameraScanner(false)}
+        title="Scanner Badge PVC (Téléphone & Ordinateur)"
+        subtitle="Présentez le QR Code d'une carte PVC devant la caméra du téléphone ou la webcam de votre ordinateur"
+        expectedHint="Code QR du badge détecté :"
+        onCodeDetected={(code) => showToast(`Badge PVC scanné : ${code}`)}
+      />
     </div>
   );
 };

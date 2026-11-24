@@ -10,8 +10,7 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  ArrowUpRight,
-  Code2
+  ArrowUpRight
 } from 'lucide-react';
 import { 
   DemoAccount, 
@@ -662,36 +661,6 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLogin }) => {
                 </div>
               </div>
             </button>
-          </div>
-        </section>
-
-        {/* =========================================================================
-            SECTION 4: SIGNATURE & CONTACT DU DÉVELOPPEUR SAÏD SOUMAH
-        ========================================================================= */}
-        <section className="rounded-3xl bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white p-6 sm:p-8 shadow-xl">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-left">
-            <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 text-xs font-mono border border-blue-400/30">
-                <Code2 className="w-3.5 h-3.5 text-blue-300" />
-                <span>Ingénierie & Architecture Logicielle</span>
-              </div>
-              <h3 className="text-xl sm:text-2xl font-black text-white">
-                Développé par Saïd Soumah
-              </h3>
-              <p className="text-xs sm:text-sm text-blue-200 leading-relaxed">
-                Expert en conception de plateformes numériques scolaires, sécurité applicative et architectures distribuées pour la République de Guinée.
-              </p>
-            </div>
-
-            <div className="shrink-0 flex flex-col sm:flex-row items-center gap-3">
-              <a
-                href="mailto:saidsoumah23@gmail.com"
-                className="px-5 py-3 rounded-xl bg-white text-blue-950 hover:bg-blue-50 text-xs font-bold shadow-md transition-all flex items-center gap-2"
-              >
-                <Mail className="w-4 h-4 text-blue-600" />
-                <span>saidsoumah23@gmail.com</span>
-              </a>
-            </div>
           </div>
         </section>
       </main>

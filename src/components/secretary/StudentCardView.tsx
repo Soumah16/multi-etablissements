@@ -13,17 +13,20 @@ import {
   GraduationCap, 
   User, 
   Sparkles,
-  Eye
+  Eye,
+  Camera
 } from 'lucide-react';
 import { triggerPrint } from '../../utils/printHelper';
 import { RealQrCode, downloadQrCodePng } from '../common/RealQrCode';
 import { downloadPvcBadgePdf, downloadPvcBadgeA4Pdf, PvcRenderData } from '../../utils/pvcCardRenderer';
+import { CameraQrScanModal } from '../common/CameraQrScanModal';
 
 export const StudentCardView: React.FC = () => {
   const { students, profile } = useSecretary();
   const [selectedStudent, setSelectedStudent] = useState<StudentEnrollment>(students[0]);
   const [searchTerm, setSearchTerm] = useState('');
   const [simulatedScanResult, setSimulatedScanResult] = useState<string | null>(null);
+  const [cameraScanOpen, setCameraScanOpen] = useState(false);
 
   const filteredStudents = students.filter(s => 
     `${s.firstName} ${s.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -278,12 +281,22 @@ export const StudentCardView: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Smartphone className="w-5 h-5 text-teal-600 shrink-0" />
                 <h3 className="text-sm font-bold text-blue-950">
-                  Simulateur de Scan du QR Code Élève
+                  Contrôle &amp; Scan du QR Code Élève (Caméra Téléphone / PC)
                 </h3>
               </div>
-              <span className="text-xs text-slate-500 font-mono truncate">
-                Token : {selectedStudent.qrToken.substring(0, 18)}...
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCameraScanOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold cursor-pointer shadow-xs"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Scanner par Caméra</span>
+                </button>
+                <span className="text-xs text-slate-500 font-mono truncate">
+                  Token : {selectedStudent.qrToken.substring(0, 18)}...
+                </span>
+              </div>
             </div>
 
             <p className="text-xs text-slate-600">
@@ -316,6 +329,15 @@ export const StudentCardView: React.FC = () => {
           </div>
         </div>
       </div>
+      <CameraQrScanModal
+        isOpen={cameraScanOpen}
+        onClose={() => setCameraScanOpen(false)}
+        title="Scanner Carte Scolaire (Téléphone & Ordinateur)"
+        subtitle="Placez le QR Code de la carte élève devant la caméra du téléphone ou la webcam de l'ordinateur"
+        onCodeDetected={(code) => {
+          setSimulatedScanResult(`Caméra : QR Code lu (${code})`);
+        }}
+      />
     </div>
   );
 };

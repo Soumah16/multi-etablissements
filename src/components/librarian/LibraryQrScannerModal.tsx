@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import jsQR from 'jsqr';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   Camera,
   CameraOff,
@@ -14,10 +13,13 @@ import {
   PlusCircle,
   AlertCircle,
   Sparkles,
-  UserCheck
+  UserCheck,
+  Smartphone,
+  Laptop
 } from 'lucide-react';
 import { useLibrarian } from '../../context/LibrarianContext';
 import { BookItem, LoanRecord } from '../../types/librarian';
+import { useCameraScanner } from '../../hooks/useCameraScanner';
 
 interface LibraryQrScannerModalProps {
   isOpen: boolean;
@@ -71,17 +73,8 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
 }) => {
   const { books, loans, returnBook, registerLoan, canManageLibrary, showToast } = useLibrarian();
 
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const scanTimerRef = useRef<number | null>(null);
   const imageUploadRef = useRef<HTMLInputElement | null>(null);
   const nativeCameraCaptureRef = useRef<HTMLInputElement | null>(null);
-
-  const [cameraActive, setCameraActive] = useState(false);
-  const [cameraStarting, setCameraStarting] = useState(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
-  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
 
   const [manualCode, setManualCode] = useState('');
   const [activeCode, setActiveCode] = useState('');
@@ -99,21 +92,7 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
     return d.toISOString().split('T')[0];
   });
 
-  const stopCamera = useCallback(() => {
-    if (scanTimerRef.current !== null) {
-      window.clearInterval(scanTimerRef.current);
-      scanTimerRef.current = null;
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setCameraActive(false);
-    setCameraStarting(false);
-  }, []);
+  const stopCameraRef = useRef<() => void>(() => {});
 
   const handleDetectedCode = useCallback(
     (code: string, source: 'camera' | 'image' | 'manual') => {
@@ -124,7 +103,6 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
       setLastDetectedSource(source);
       setShowQuickLoanForm(false);
 
-      // If it looks like a borrower matricule on a badge, prefill borrowerMatricule for quick loan
       const parsed = parseScannedToken(cleaned);
       if (parsed.extractedMatricule) {
         setBorrowerMatricule(parsed.extractedMatricule);
@@ -132,238 +110,42 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
 
       if (source === 'camera') {
         showToast(`Code détecté par caméra : ${cleaned}`);
-        stopCamera();
+        stopCameraRef.current();
+      } else if (source === 'image') {
+        showToast(`Code décodé depuis l'image : ${cleaned}`);
       }
     },
-    [showToast, stopCamera]
+    [showToast]
   );
 
-  const startCamera = useCallback(
-    async (mode: 'environment' | 'user' = facingMode) => {
-      stopCamera();
-      setCameraError(null);
+  const {
+    videoRef,
+    canvasRef,
+    cameraActive,
+    cameraStarting,
+    cameraError,
+    setCameraError,
+    facingMode,
+    videoDevices,
+    selectedDeviceId,
+    startCamera,
+    stopCamera,
+    toggleFacingMode,
+    selectDevice,
+    scanImageFile
+  } = useCameraScanner({
+    isOpen,
+    autoStart: true,
+    onDetect: (code, source) => handleDetectedCode(code, source)
+  });
 
-      if (!navigator?.mediaDevices?.getUserMedia) {
-        setCameraError(
-          "Votre navigateur ou cet aperçu ne permet pas l'accès direct à la caméra. Utilisez « Importer image QR » ou la saisie du code / douchette ci-dessous."
-        );
-        return;
-      }
+  stopCameraRef.current = stopCamera;
 
-      setCameraStarting(true);
-      try {
-        let stream: MediaStream;
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: { ideal: mode },
-              width: { ideal: 1280 },
-              height: { ideal: 720 }
-            },
-            audio: false
-          });
-        } catch {
-          // Fallback without facingMode constraint (e.g. desktop webcam)
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false
-          });
-        }
-
-        streamRef.current = stream;
-        const videoEl = videoRef.current;
-        if (videoEl) {
-          videoEl.srcObject = stream;
-          videoEl.muted = true;
-          setCameraActive(true);
-          try {
-            await videoEl.play();
-          } catch {
-            // Wait briefly for metadata if immediate play rejects
-            await new Promise<void>((resolve) => {
-              const onMeta = () => {
-                videoEl.removeEventListener('loadedmetadata', onMeta);
-                resolve();
-              };
-              videoEl.addEventListener('loadedmetadata', onMeta);
-              setTimeout(resolve, 400);
-            });
-            await videoEl.play().catch(() => {});
-          }
-        } else {
-          setCameraActive(true);
-        }
-        setCameraStarting(false);
-      } catch (err: any) {
-        stopCamera();
-        const errName = err?.name || '';
-        const inIframe = typeof window !== 'undefined' && window.self !== window.top;
-        if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError') {
-          setCameraError(
-            inIframe
-              ? "La caméra en direct est bloquée par les permissions de cet aperçu (ou refusée dans le navigateur). Cliquez sur « Photo Caméra » (ci-dessus) ou ouvrez l'application dans un onglet dédié."
-              : "Permission caméra refusée. Autorisez la caméra dans la barre d'adresse du navigateur, ou utilisez « Photo Caméra » / « Importer image QR »."
-          );
-        } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
-          setCameraError(
-            "Aucune caméra détectée sur cet appareil. Utilisez « Importer image QR » ou saisissez le code manuellement."
-          );
-        } else {
-          setCameraError(
-            "Impossible de démarrer le flux vidéo en direct ici. Utilisez « Photo Caméra », « Importer image QR » ou saisissez le code ci-dessous."
-          );
-        }
-      }
-    },
-    [facingMode, stopCamera]
-  );
-
-  const startCameraRef = useRef(startCamera);
-  startCameraRef.current = startCamera;
-
-  // Auto-start camera when modal opens & clean up when it closes
-  useEffect(() => {
-    if (!isOpen) {
-      stopCamera();
-      setCameraError(null);
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      void startCameraRef.current();
-    }, 120);
-    return () => {
-      window.clearTimeout(timer);
-      stopCamera();
-    };
-  }, [isOpen, stopCamera]);
-
-  // Continuous live frame decoding loop when camera is active
-  useEffect(() => {
-    if (!isOpen || !cameraActive) return;
-
-    const BarcodeDetectorCtor = (window as any).BarcodeDetector;
-    let detector: any = null;
-    if (BarcodeDetectorCtor) {
-      try {
-        detector = new BarcodeDetectorCtor({
-          formats: ['qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e']
-        });
-      } catch {
-        detector = null;
-      }
-    }
-
-    let isDecoding = false;
-
-    scanTimerRef.current = window.setInterval(async () => {
-      if (isDecoding) return;
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      if (!video || !canvas || video.readyState < 2 || video.videoWidth === 0) return;
-
-      isDecoding = true;
-      try {
-        // 1. Native BarcodeDetector (supports QR + 1D ISBN barcodes)
-        if (detector) {
-          try {
-            const barcodes = await detector.detect(video);
-            if (Array.isArray(barcodes) && barcodes.length > 0 && barcodes[0]?.rawValue) {
-              handleDetectedCode(String(barcodes[0].rawValue), 'camera');
-              return;
-            }
-          } catch {
-            // fallback to jsQR below
-          }
-        }
-
-        // 2. Universal jsQR frame decoding via offscreen canvas
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        if (ctx) {
-          const maxDim = 640;
-          const scale = Math.min(1, maxDim / Math.max(video.videoWidth, video.videoHeight));
-          const w = Math.max(1, Math.floor(video.videoWidth * scale));
-          const h = Math.max(1, Math.floor(video.videoHeight * scale));
-          if (canvas.width !== w) canvas.width = w;
-          if (canvas.height !== h) canvas.height = h;
-          ctx.drawImage(video, 0, 0, w, h);
-          const imageData = ctx.getImageData(0, 0, w, h);
-          const decoded = jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' });
-          if (decoded?.data) {
-            handleDetectedCode(decoded.data, 'camera');
-          }
-        }
-      } finally {
-        isDecoding = false;
-      }
-    }, 200);
-
-    return () => {
-      if (scanTimerRef.current !== null) {
-        window.clearInterval(scanTimerRef.current);
-        scanTimerRef.current = null;
-      }
-    };
-  }, [isOpen, cameraActive, handleDetectedCode]);
-
-  const handleImageFileScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFileScan = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-
-    try {
-      const img = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      img.onload = async () => {
-        try {
-          const canvas = canvasRef.current || document.createElement('canvas');
-          const maxDim = 1024;
-          const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-          const w = Math.max(1, Math.floor(img.width * scale));
-          const h = Math.max(1, Math.floor(img.height * scale));
-          canvas.width = w;
-          canvas.height = h;
-          const ctx = canvas.getContext('2d', { willReadFrequently: true });
-          if (!ctx) return;
-          ctx.drawImage(img, 0, 0, w, h);
-
-          // Try native BarcodeDetector first if available
-          const BarcodeDetectorCtor = (window as any).BarcodeDetector;
-          if (BarcodeDetectorCtor) {
-            try {
-              const detector = new BarcodeDetectorCtor({
-                formats: ['qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39']
-              });
-              const barcodes = await detector.detect(canvas);
-              if (Array.isArray(barcodes) && barcodes.length > 0 && barcodes[0]?.rawValue) {
-                handleDetectedCode(String(barcodes[0].rawValue), 'image');
-                showToast(`Code décodé depuis l'image : ${barcodes[0].rawValue}`);
-                return;
-              }
-            } catch {
-              // continue to jsQR
-            }
-          }
-
-          const imageData = ctx.getImageData(0, 0, w, h);
-          const decoded = jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' });
-          if (decoded?.data) {
-            handleDetectedCode(decoded.data, 'image');
-            showToast(`QR Code décodé depuis l'image : ${decoded.data}`);
-          } else {
-            setCameraError("Aucun QR Code lisible détecté dans cette image. Vérifiez la netteté ou saisissez le code.");
-          }
-        } finally {
-          URL.revokeObjectURL(objectUrl);
-        }
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        setCameraError("Impossible de lire le fichier image sélectionné.");
-      };
-      img.src = objectUrl;
-    } catch {
-      setCameraError("Erreur lors du décodage de l'image QR.");
-    }
+    scanImageFile(file);
   };
 
   if (!isOpen) return null;
@@ -411,14 +193,6 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
     if (!manualCode.trim()) return;
     setCameraError(null);
     handleDetectedCode(manualCode, 'manual');
-  };
-
-  const handleToggleFacingMode = () => {
-    const nextMode = facingMode === 'environment' ? 'user' : 'environment';
-    setFacingMode(nextMode);
-    if (cameraActive) {
-      void startCamera(nextMode);
-    }
   };
 
   const handleQuickLoanSubmit = (e: React.FormEvent) => {
@@ -476,6 +250,34 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
 
         {/* Body */}
         <div className="p-5 overflow-y-auto space-y-4 text-xs">
+          {/* Device Compatibility & Selector Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-indigo-50/70 border border-indigo-100 text-[11px] text-indigo-950">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="inline-flex items-center gap-1 font-semibold">
+                <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
+                Téléphone (Arrière / Frontale)
+              </span>
+              <span className="inline-flex items-center gap-1 font-semibold">
+                <Laptop className="w-3.5 h-3.5 text-blue-600" />
+                Ordinateur (Webcam intégrée / USB)
+              </span>
+            </div>
+            {videoDevices.length > 0 && (
+              <select
+                value={selectedDeviceId}
+                onChange={e => selectDevice(e.target.value)}
+                aria-label="Sélectionner la caméra ou webcam"
+                className="px-2.5 py-1 rounded-lg bg-white border border-indigo-200 text-blue-950 font-semibold text-[11px] focus:outline-hidden focus:border-indigo-500 max-w-[230px]"
+              >
+                {videoDevices.map(dev => (
+                  <option key={dev.deviceId} value={dev.deviceId}>
+                    {dev.label}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
           {/* Live Camera Viewport */}
           <div className="rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden relative">
             <div className="relative aspect-video w-full flex items-center justify-center bg-slate-900 overflow-hidden">
@@ -505,10 +307,10 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
                     <Camera className="w-6 h-6" />
                   </div>
                   <div className="text-white font-bold text-xs">
-                    {cameraStarting ? 'Activation de la caméra en cours...' : 'Caméra prête à scanner'}
+                    {cameraStarting ? 'Activation de la caméra en cours...' : 'Caméra prête à scanner (Téléphone & Ordinateur)'}
                   </div>
                   <p className="text-[11px] text-slate-300 max-w-sm mx-auto">
-                    Cliquez sur <strong>« Activer la Caméra »</strong> pour le scan vidéo direct, ou utilisez <strong>« Photo Caméra »</strong> / <strong>« Importer image QR »</strong>.
+                    Cliquez sur <strong>« Activer la Caméra »</strong> pour utiliser la webcam du PC ou la caméra du téléphone, ou utilisez <strong>« Photo Caméra »</strong> / <strong>« Importer image QR »</strong>.
                   </p>
                 </div>
               )}
@@ -521,7 +323,7 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
                   <button
                     type="button"
                     disabled={cameraStarting}
-                    onClick={() => void startCamera()}
+                    onClick={() => void startCamera(selectedDeviceId ? { deviceId: selectedDeviceId } : undefined)}
                     className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] cursor-pointer disabled:opacity-60"
                   >
                     <Camera className="w-3.5 h-3.5" />
@@ -540,7 +342,7 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
 
                 <button
                   type="button"
-                  onClick={handleToggleFacingMode}
+                  onClick={toggleFacingMode}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-[11px] cursor-pointer"
                   title="Basculer caméra arrière / frontale"
                 >
@@ -665,17 +467,32 @@ export const LibraryQrScannerModal: React.FC<LibraryQrScannerModalProps> = ({
                     {activeCode}
                   </code>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveCode('');
-                    setManualCode('');
-                    setShowQuickLoanForm(false);
-                  }}
-                  className="text-[11px] text-slate-500 hover:text-blue-950 font-semibold cursor-pointer"
-                >
-                  Effacer
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveCode('');
+                      setManualCode('');
+                      setShowQuickLoanForm(false);
+                      void startCamera(selectedDeviceId ? { deviceId: selectedDeviceId } : undefined);
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] cursor-pointer"
+                  >
+                    <Camera className="w-3 h-3" />
+                    <span>Scanner un autre code</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveCode('');
+                      setManualCode('');
+                      setShowQuickLoanForm(false);
+                    }}
+                    className="text-[11px] text-slate-500 hover:text-blue-950 font-semibold cursor-pointer"
+                  >
+                    Effacer
+                  </button>
+                </div>
               </div>
 
               {matchedBook ? (
