@@ -312,16 +312,26 @@ const MainLayout: React.FC = () => {
 
   // Keep school & librarian session synchronized with logged-in user
   React.useEffect(() => {
-    if (currentUser?.ecoleId && currentUser.ecoleId !== 'NATIONAL') {
-      setCurrentSchoolId(currentUser.ecoleId);
-      setActiveSchoolId(currentUser.ecoleId);
+    const userSnapshot = currentUserRef.current;
+    if (userSnapshot?.ecoleId && userSnapshot.ecoleId !== 'NATIONAL') {
+      setCurrentSchoolId(userSnapshot.ecoleId);
+      setActiveSchoolId(userSnapshot.ecoleId);
     } else if (currentSchool?.id) {
       setActiveSchoolId(currentSchool.id);
     }
-    if (currentUser?.role === 'librarian') {
-      authorizeLibrarianSession(currentUser);
+    if (userSnapshot?.role === 'librarian') {
+      authorizeLibrarianSession(userSnapshot);
     }
-  }, [currentUser?.ecoleId, currentUser?.role, currentSchool?.id, setCurrentSchoolId, setActiveSchoolId]);
+  }, [
+    currentUser?.ecoleId,
+    currentUser?.role,
+    currentUser?.email,
+    currentUser?.matricule,
+    currentSchool?.id,
+    setCurrentSchoolId,
+    setActiveSchoolId,
+    authorizeLibrarianSession
+  ]);
 
   // Safe Role Switch Request: Always demands credentials verification & school isolation
   const requestRoleSwitch = (targetRole: WorkspaceMode, schoolId?: string) => {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   LibrarianNavTab,
   BookItem,
@@ -16,10 +16,10 @@ import { AuthenticatedUser } from '../components/auth/AuthPortal';
 import { authenticateUser, normalizeSchoolId } from '../data/accountsData';
 import {
   getLocalTimestamp,
-  getMonotonicWriteTimestamp,
   idbGetRecord,
   isIdbAuthoritative,
   loadLocalStorage,
+  resolveEffectiveWriteTimestamp,
   saveDualStorage,
   subscribeStorageKey
 } from '../utils/storage';
@@ -113,7 +113,12 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Every visitor entering the library MUST sign in with their own personal account
   const [libraryUser, setLibraryUser] = useState<AuthenticatedUser | null>(null);
+  const libraryUserRef = useRef<AuthenticatedUser | null>(null);
+  libraryUserRef.current = libraryUser;
+  const profileRef = useRef<LibrarianProfile>(profile);
+  profileRef.current = profile;
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
   const [hydratedSchoolKey, setHydratedSchoolKey] = useState<string | null>(null);
   const skipPersistRef = React.useRef<boolean>(true);
   const lastProfileWriteTsRef = React.useRef<number>(0);
@@ -200,13 +205,14 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return;
     }
     lastPersistedSnapshotRef.current = serialized;
-    const now = getMonotonicWriteTimestamp();
-    lastProfileWriteTsRef.current = now;
-    saveDualStorage(`smartschool_lib_profile_${schoolKey}`, profile, now, 'local');
-    saveDualStorage(`smartschool_lib_books_${schoolKey}`, books, now, 'local');
-    saveDualStorage(`smartschool_lib_ebooks_${schoolKey}`, ebooks, now, 'local');
-    saveDualStorage(`smartschool_lib_loans_${schoolKey}`, loans, now, 'local');
-    saveDualStorage(`smartschool_lib_logs_${schoolKey}`, libraryAuditLogs, now, 'local');
+    const profileStorageKey = `smartschool_lib_profile_${schoolKey}`;
+    const profileTs = resolveEffectiveWriteTimestamp(profileStorageKey);
+    lastProfileWriteTsRef.current = profileTs;
+    saveDualStorage(profileStorageKey, profile, profileTs, 'local');
+    saveDualStorage(`smartschool_lib_books_${schoolKey}`, books, profileTs, 'local');
+    saveDualStorage(`smartschool_lib_ebooks_${schoolKey}`, ebooks, profileTs, 'local');
+    saveDualStorage(`smartschool_lib_loans_${schoolKey}`, loans, profileTs, 'local');
+    saveDualStorage(`smartschool_lib_logs_${schoolKey}`, libraryAuditLogs, profileTs, 'local');
   }, [hydratedSchoolKey, schoolKey, profile, books, ebooks, loans, libraryAuditLogs]);
 
   // STRICT RULE: ONLY the Librarian Admin belonging to THIS school can modify anything in the library.
@@ -225,40 +231,50 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return true;
   }, [libraryUser, activeSchoolId]);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
-  };
+    if (toastTimerRef.current !== null) {
+      window.clearTimeout(toastTimerRef.current);
+    }
+    toastTimerRef.current = window.setTimeout(() => {
+      setToastMessage(null);
+      toastTimerRef.current = null;
+    }, 3500);
+  }, []);
 
-  const recordLibraryLog = (
-    action: string,
-    status: 'autorise' | 'refuse',
-    actor?: AuthenticatedUser | null
-  ) => {
-    const targetActor = actor ?? libraryUser;
-    const now = new Date();
-    const timestamp = `${now.toISOString().split('T')[0]} ${now.toTimeString().substring(0, 8)}`;
-    const entry: LibraryAccessLog = {
-      id: `liblog-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      timestamp,
-      userName: targetActor?.name || 'Visiteur non authentifié',
-      userMatricule: targetActor?.matricule || 'N/A',
-      userRole: targetActor?.role || 'inconnu',
-      action,
-      status
-    };
-    setLibraryAuditLogs(prev => [entry, ...prev].slice(0, 50));
-    recordGlobalAuditLog({
-      action: `[Bibliothèque] ${action}`,
-      target: targetActor?.schoolName || profile.schoolName || 'Bibliothèque Numérique',
-      actorName: targetActor?.name || `${profile.firstName} ${profile.lastName}`,
-      actorRole: targetActor?.role || 'librarian',
-      actorMatricule: targetActor?.matricule || profile.matricule,
-      schoolName: targetActor?.schoolName || profile.schoolName,
-      type: status === 'refuse' ? 'securite' : 'admin',
-      severity: status === 'refuse' ? 'warning' : 'info'
-    });
-  };
+  const recordLibraryLog = useCallback(
+    (
+      action: string,
+      status: 'autorise' | 'refuse',
+      actor?: AuthenticatedUser | null
+    ) => {
+      const targetActor = actor ?? libraryUserRef.current;
+      const activeProfile = profileRef.current;
+      const now = new Date();
+      const timestamp = `${now.toISOString().split('T')[0]} ${now.toTimeString().substring(0, 8)}`;
+      const entry: LibraryAccessLog = {
+        id: `liblog-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        timestamp,
+        userName: targetActor?.name || 'Visiteur non authentifié',
+        userMatricule: targetActor?.matricule || 'N/A',
+        userRole: targetActor?.role || 'inconnu',
+        action,
+        status
+      };
+      setLibraryAuditLogs(prev => [entry, ...prev].slice(0, 50));
+      recordGlobalAuditLog({
+        action: `[Bibliothèque] ${action}`,
+        target: targetActor?.schoolName || activeProfile.schoolName || 'Bibliothèque Numérique',
+        actorName: targetActor?.name || `${activeProfile.firstName} ${activeProfile.lastName}`,
+        actorRole: targetActor?.role || 'librarian',
+        actorMatricule: targetActor?.matricule || activeProfile.matricule,
+        schoolName: targetActor?.schoolName || activeProfile.schoolName,
+        type: status === 'refuse' ? 'securite' : 'admin',
+        severity: status === 'refuse' ? 'warning' : 'info'
+      });
+    },
+    []
+  );
 
   const guardWriteAccess = (actionName: string): boolean => {
     if (!canManageLibrary) {
@@ -323,24 +339,38 @@ export const LibrarianProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return { success: true };
   };
 
-  const logoutFromLibrary = () => {
-    if (libraryUser) {
-      recordLibraryLog('Déconnexion du terminal Bibliothèque', 'autorise', libraryUser);
+  const logoutFromLibrary = useCallback(() => {
+    if (libraryUserRef.current) {
+      recordLibraryLog('Déconnexion du terminal Bibliothèque', 'autorise', libraryUserRef.current);
+      libraryUserRef.current = null;
+      setLibraryUser(null);
+      setActiveLibrarianTab('dashboard');
+      showToast('Compte déconnecté de la bibliothèque. Veuillez vous identifier pour continuer.');
     }
-    setLibraryUser(null);
-    setActiveLibrarianTab('dashboard');
-    showToast('Compte déconnecté de la bibliothèque. Veuillez vous identifier pour continuer.');
-  };
+  }, [recordLibraryLog, showToast]);
 
-  const authorizeLibrarianSession = (user: AuthenticatedUser) => {
-    if (user.role === 'librarian') {
+  const authorizeLibrarianSession = useCallback(
+    (user: AuthenticatedUser) => {
+      if (user.role !== 'librarian') return;
+      const current = libraryUserRef.current;
+      if (
+        current &&
+        current.role === user.role &&
+        current.email === user.email &&
+        current.matricule === user.matricule &&
+        current.ecoleId === user.ecoleId
+      ) {
+        return;
+      }
+      libraryUserRef.current = user;
       setLibraryUser(user);
       if (user.ecoleId && user.ecoleId !== 'NATIONAL') {
         setActiveSchoolId(user.ecoleId);
       }
       recordLibraryLog('Ouverture directe session Admin Bibliothèque', 'autorise', user);
-    }
-  };
+    },
+    [recordLibraryLog]
+  );
 
   const updateProfile = (updated: Partial<LibrarianProfile>) => {
     if (!guardWriteAccess('Modification profil / sécurité bibliothécaire')) return;

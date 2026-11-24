@@ -11,7 +11,9 @@ import {
   Search,
   Smartphone,
   Upload,
-  X
+  X,
+  ExternalLink,
+  ScanLine
 } from 'lucide-react';
 import { useCameraScanner } from '../../hooks/useCameraScanner';
 
@@ -58,6 +60,8 @@ export const CameraQrScanModal: React.FC<CameraQrScanModalProps> = ({
     cameraStarting,
     cameraError,
     setCameraError,
+    activeCameraInfo,
+    isInIframe,
     facingMode,
     videoDevices,
     selectedDeviceId,
@@ -65,7 +69,8 @@ export const CameraQrScanModal: React.FC<CameraQrScanModalProps> = ({
     stopCamera,
     toggleFacingMode,
     selectDevice,
-    scanImageFile
+    scanImageFile,
+    captureAndScanNow
   } = useCameraScanner({
     isOpen,
     autoStart: true,
@@ -140,13 +145,14 @@ export const CameraQrScanModal: React.FC<CameraQrScanModalProps> = ({
                 Ordinateur (Webcam intégrée / USB)
               </span>
             </div>
-            {videoDevices.length > 1 && (
+            {videoDevices.length > 0 && (
               <select
                 value={selectedDeviceId}
                 onChange={e => selectDevice(e.target.value)}
                 aria-label="Sélectionner une caméra"
                 className="px-2 py-1 rounded-lg bg-white border border-blue-200 text-blue-950 font-semibold text-[11px] focus:outline-hidden focus:border-blue-500 max-w-[220px]"
               >
+                {!selectedDeviceId && <option value="">Caméra automatique</option>}
                 {videoDevices.map(dev => (
                   <option key={dev.deviceId} value={dev.deviceId}>
                     {dev.label}
@@ -158,7 +164,7 @@ export const CameraQrScanModal: React.FC<CameraQrScanModalProps> = ({
 
           {/* Live Video Viewport */}
           <div className="rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden">
-            <div className="relative aspect-video w-full flex items-center justify-center bg-slate-900 overflow-hidden">
+            <div className="relative aspect-[4/3] sm:aspect-video min-h-[240px] w-full flex items-center justify-center bg-slate-900 overflow-hidden">
               <video
                 ref={videoRef}
                 playsInline
@@ -171,12 +177,12 @@ export const CameraQrScanModal: React.FC<CameraQrScanModalProps> = ({
               <canvas ref={canvasRef} className="hidden" />
 
               {cameraActive ? (
-                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-10">
-                  <div className="w-44 h-44 sm:w-52 sm:h-52 rounded-2xl border-2 border-emerald-400/90 shadow-[0_0_0_9999px_rgba(15,23,42,0.45)] relative">
+                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-10 p-3">
+                  <div className="w-44 h-44 sm:w-52 sm:h-52 rounded-2xl border-2 border-emerald-400/90 shadow-[0_0_0_9999px_rgba(15,23,42,0.42)] relative">
                     <div className="absolute inset-x-2 top-1/2 h-0.5 bg-emerald-400 animate-pulse" />
                   </div>
-                  <span className="mt-3 px-3 py-1 rounded-full bg-slate-900/80 text-emerald-300 text-[11px] font-bold border border-emerald-500/40">
-                    Caméra active · Cadrez le QR Code devant l&apos;objectif
+                  <span className="mt-3 px-3 py-1 rounded-full bg-slate-900/85 text-emerald-300 text-[11px] font-bold border border-emerald-500/40 text-center max-w-full truncate">
+                    {activeCameraInfo || 'Caméra active'} · Cadrez le QR Code devant l&apos;objectif
                   </span>
                 </div>
               ) : (
@@ -208,14 +214,25 @@ export const CameraQrScanModal: React.FC<CameraQrScanModalProps> = ({
                     <span>{cameraStarting ? 'Démarrage...' : 'Activer la Caméra'}</span>
                   </button>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={stopCamera}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] cursor-pointer"
-                  >
-                    <CameraOff className="w-3.5 h-3.5" />
-                    <span>Arrêter Caméra</span>
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => void captureAndScanNow()}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer"
+                      title="Capturer et analyser immédiatement la vue caméra"
+                    >
+                      <ScanLine className="w-3.5 h-3.5" />
+                      <span>Analyser maintenant</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={stopCamera}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] cursor-pointer"
+                    >
+                      <CameraOff className="w-3.5 h-3.5" />
+                      <span>Arrêter</span>
+                    </button>
+                  </>
                 )}
 
                 <button
@@ -240,7 +257,7 @@ export const CameraQrScanModal: React.FC<CameraQrScanModalProps> = ({
                 <button
                   type="button"
                   onClick={() => nativeCameraCaptureRef.current?.click()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-[11px] cursor-pointer"
                 >
                   <Camera className="w-3.5 h-3.5" />
                   <span>Photo Caméra</span>
@@ -266,9 +283,24 @@ export const CameraQrScanModal: React.FC<CameraQrScanModalProps> = ({
           </div>
 
           {cameraError && (
-            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-2 text-[11px]">
-              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              <span>{cameraError}</span>
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-2 text-[11px]">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <span>{cameraError}</span>
+              </div>
+              {isInIframe && typeof window !== 'undefined' && (
+                <div className="pl-6">
+                  <a
+                    href={window.location.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px]"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Ouvrir hors aperçu (Activer la Caméra)</span>
+                  </a>
+                </div>
+              )}
             </div>
           )}
 

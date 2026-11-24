@@ -231,21 +231,25 @@ export const DirectorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const mountedSecRef = React.useRef(false);
   const remoteSecUpdateRef = React.useRef(false);
+  const directorPinRef = React.useRef(directorPin);
+  directorPinRef.current = directorPin;
+  const totpSecretRef = React.useRef(totpSecret);
+  totpSecretRef.current = totpSecret;
 
   useEffect(() => {
     return subscribeStorageKey(DIRECTOR_SECURITY_STORAGE_KEY, (data, _ts, src) => {
       if (src !== 'remote' || !data || typeof data !== 'object') return;
       const incoming = data as Partial<DirectorSecurityStorage>;
       const pinChanged =
-        typeof incoming.directorPin === 'string' && incoming.directorPin !== directorPin;
+        typeof incoming.directorPin === 'string' && incoming.directorPin !== directorPinRef.current;
       const secretChanged =
-        typeof incoming.totpSecret === 'string' && incoming.totpSecret !== totpSecret;
+        typeof incoming.totpSecret === 'string' && incoming.totpSecret !== totpSecretRef.current;
       if (!pinChanged && !secretChanged) return;
       remoteSecUpdateRef.current = true;
       if (pinChanged && incoming.directorPin) setDirectorPin(incoming.directorPin);
       if (secretChanged && incoming.totpSecret) setTotpSecret(incoming.totpSecret);
     });
-  }, [directorPin, totpSecret]);
+  }, []);
 
   useEffect(() => {
     if (!mountedSecRef.current) {

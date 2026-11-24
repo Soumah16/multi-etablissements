@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 const IDB_NAME = 'smartschool_persistent_db';
 const IDB_VERSION = 1;
@@ -322,22 +322,32 @@ export async function readDualStorageValue(key: string): Promise<{ found: boolea
   return { found: false, value: null };
 }
 
+export function resolveEffectiveWriteTimestamp(
+  key: string,
+  desiredTs = getMonotonicWriteTimestamp()
+): number {
+  const baseTs =
+    Number.isFinite(desiredTs) && desiredTs > 0 ? desiredTs : getMonotonicWriteTimestamp();
+  const prevLocalTs = getLocalTimestamp(key);
+  return Math.max(baseTs, highestRemoteTimestamp + 1, prevLocalTs + 1);
+}
+
 export function saveDualStorage<T>(
   key: string,
   value: T,
   timestamp = getMonotonicWriteTimestamp(),
   source: StorageWriteSource = 'local'
-): void {
-  if (typeof window === 'undefined') return;
+): number {
+  if (typeof window === 'undefined') return 0;
 
-  let effectiveTs = Number.isFinite(timestamp) && timestamp > 0 ? timestamp : getMonotonicWriteTimestamp();
+  let effectiveTs =
+    Number.isFinite(timestamp) && timestamp > 0 ? timestamp : getMonotonicWriteTimestamp();
   if (source === 'remote') {
     if (effectiveTs > highestRemoteTimestamp) {
       highestRemoteTimestamp = effectiveTs;
     }
   } else {
-    const prevLocalTs = getLocalTimestamp(key);
-    effectiveTs = Math.max(effectiveTs, highestRemoteTimestamp + 1, prevLocalTs + 1);
+    effectiveTs = resolveEffectiveWriteTimestamp(key, effectiveTs);
   }
 
   memoryDualStore.set(key, { value, updatedAt: effectiveTs });
@@ -381,6 +391,8 @@ export function saveDualStorage<T>(
       }
     });
   }
+
+  return effectiveTs;
 }
 
 /**
@@ -420,8 +432,10 @@ export function usePersistedState<T>(
       if (!hasLocal || idbAuthoritative || rec.updatedAt > liveTs) {
         memoryDualStore.set(key, { value: rec.data, updatedAt: rec.updatedAt });
         const next = transformRef.current ? transformRef.current(rec.data) : rec.data;
-        stateRef.current = next;
-        setState(next);
+        if (!Object.is(next, stateRef.current)) {
+          stateRef.current = next;
+          setState(next);
+        }
       }
     });
 
@@ -430,6 +444,7 @@ export function usePersistedState<T>(
       if (!active) return;
       if (source !== 'remote' && updatedAt === lastWrittenTsRef.current) return;
       const next = transformRef.current ? transformRef.current(data as T) : (data as T);
+      if (Object.is(next, stateRef.current)) return;
       stateRef.current = next;
       setState(next);
     });
@@ -441,27 +456,33 @@ export function usePersistedState<T>(
   }, [key]);
 
   // Persist every genuine local change synchronously outside React state updater
-  const setPersistedState: React.Dispatch<React.SetStateAction<T>> = valueOrUpdater => {
-    const prev = stateRef.current;
-    const next =
-      typeof valueOrUpdater === 'function'
-        ? (valueOrUpdater as (prevState: T) => T)(prev)
-        : valueOrUpdater;
+  const setPersistedState: React.Dispatch<React.SetStateAction<T>> = useCallback(
+    valueOrUpdater => {
+      const prev = stateRef.current;
+      const next =
+        typeof valueOrUpdater === 'function'
+          ? (valueOrUpdater as (prevState: T) => T)(prev)
+          : valueOrUpdater;
 
-    // Ignore no-op updates (e.g. updater returning `prev` unchanged) so we never stamp bogus timestamps
-    if (Object.is(next, prev)) {
-      return;
-    }
+      // Ignore no-op updates (e.g. updater returning `prev` unchanged) so we never stamp bogus timestamps
+      if (Object.is(next, prev)) {
+        return;
+      }
 
-    userMutatedRef.current = true;
-    stateRef.current = next;
-    const writeTs = getMonotonicWriteTimestamp(
-      Math.max(mountedAtRef.current + 1, lastWrittenTsRef.current + 1)
-    );
-    lastWrittenTsRef.current = writeTs;
-    setState(next);
-    saveDualStorage(key, next, writeTs, 'local');
-  };
+      userMutatedRef.current = true;
+      stateRef.current = next;
+      const writeTs = resolveEffectiveWriteTimestamp(
+        key,
+        getMonotonicWriteTimestamp(
+          Math.max(mountedAtRef.current + 1, lastWrittenTsRef.current + 1)
+        )
+      );
+      lastWrittenTsRef.current = writeTs;
+      setState(next);
+      saveDualStorage(key, next, writeTs, 'local');
+    },
+    [key]
+  );
 
   return [state, setPersistedState];
 }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useState, useEffect, useRef } from 'react';
 import { 
   School, 
   SchoolAdmin, 
@@ -275,12 +275,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
   }, [language, isRtl]);
 
-  const showToast = (msg: string) => {
+  const toastTimerRef = useRef<number | null>(null);
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => {
+    if (toastTimerRef.current !== null) {
+      window.clearTimeout(toastTimerRef.current);
+    }
+    toastTimerRef.current = window.setTimeout(() => {
       setToastMessage(null);
+      toastTimerRef.current = null;
     }, 3500);
-  };
+  }, []);
 
   const setLanguage = (lang: LanguageCode) => {
     setLanguageState(lang);
